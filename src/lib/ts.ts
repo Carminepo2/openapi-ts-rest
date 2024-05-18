@@ -40,7 +40,7 @@ export function tsNamedExport({ export_: names }: { export_: Array<string> }) {
 }
 
 type TsLiteral = string | number | boolean | null | Expression;
-type TsLiteralOrExpression = TsLiteral | Expression;
+export type TsLiteralOrExpression = TsLiteral | Expression;
 
 export function tsLiteralOrExpression(value: string): StringLiteral;
 export function tsLiteralOrExpression(value: number): NumericLiteral;
@@ -85,10 +85,10 @@ export function tsStatement(statement: TsStatement): NodeFlags {
 export function tsAssignment(
   statement: TsStatement,
   identifier: string,
-  { eq: value, exported }: { eq: TsLiteralOrExpression; exported?: boolean }
+  { eq: value, export_ }: { eq: TsLiteralOrExpression; export_?: boolean }
 ) {
   return factory.createVariableStatement(
-    exported ? [factory.createToken(SyntaxKind.ExportKeyword)] : undefined,
+    export_ ? [factory.createToken(SyntaxKind.ExportKeyword)] : undefined,
     factory.createVariableDeclarationList(
       [
         factory.createVariableDeclaration(
@@ -117,26 +117,22 @@ export function tsObject(...properties: Array<[key: string, value: TsLiteralOrEx
 
 export function tsPropertyCall(
   identifier: string,
-  [method, ...args]: [method: string, ...args: Expression[]],
-  ...chain: [method: string, ...args: Expression[]][]
+  [method, ...args]: [method: string, ...args: TsLiteralOrExpression[]],
+  ...chain: [method: string, ...args: TsLiteralOrExpression[]][]
 ) {
   let expression: Expression = factory.createCallExpression(
     factory.createPropertyAccessExpression(factory.createIdentifier(identifier), factory.createIdentifier(method)),
     undefined,
-    args
+    args.map(tsLiteralOrExpression)
   );
 
   for (const [method, ...args] of chain) {
     expression = factory.createCallExpression(
       factory.createPropertyAccessExpression(expression, factory.createIdentifier(method)),
       undefined,
-      args
+      args.map(tsLiteralOrExpression)
     );
   }
 
   return expression;
-}
-
-export function tsTsRestContract() {
-  return tsAssignment("const", "contract", { eq: factory.createIdentifier("z.record(z.any())") });
 }

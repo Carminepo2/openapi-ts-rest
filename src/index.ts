@@ -1,27 +1,50 @@
-import { tsAssignment, tsFunctionCall, tsNamedImport, tsObject, tsPropertyCall } from "./lib/ts.js";
+import {
+  TsLiteralOrExpression,
+  tsAssignment,
+  tsFunctionCall,
+  tsNamedImport,
+  tsObject,
+  tsPropertyCall,
+} from "./lib/ts.js";
 import { AstTsWriter } from "./lib/utils.js";
-import { getOperationObjects } from "./getOperationObjects.js";
+import { APIOperationObject, getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
 import { validateAndBundleOpenAPISchema } from "./lib/redoc.js";
+import { writeFileSync } from "fs";
+import { prettify } from "./lib/prettier.js";
 
 type GenerateTsRestContractFromOpenAPIOptions = {
   input: string;
 };
 
+/**
+ * Generates a ts-rest contract from an OpenAPI schema.
+ * @param {GenerateTsRestContractFromOpenAPIOptions} options - The options for the generation.
+ */
 async function generateTsRestContractFromOpenAPI({ input }: GenerateTsRestContractFromOpenAPIOptions) {
-  const openApiSchema = await validateAndBundleOpenAPISchema(input);
+  try {
+    const openApiSchema = await validateAndBundleOpenAPISchema(input);
 
-  const astWriter = new AstTsWriter();
+    const ast = new AstTsWriter();
 
-  astWriter
-    .add(tsNamedImport({ import_: ["initContract"], from: "@ts-rest/core" }))
-    .add(tsNamedImport({ import_: ["z"], from: "zod" }))
-    .add(tsAssignment("const", "c", { eq: tsFunctionCall("initContract") }));
+    ast
+      .add(tsNamedImport({ import_: ["initContract"], from: "@ts-rest/core" }))
+      .add(tsNamedImport({ import_: ["z"], from: "zod" }))
+      .add(tsAssignment("const", "c", { eq: tsFunctionCall("initContract") }));
 
-  const operationObjects = getOperationObjects(openApiSchema.paths);
+    const operationObjects = getAPIOperationsObjects(openApiSchema);
+    const tsRestRounterAst = tsPropertyCall("c", ["router", tsObject(...operationObjects.map(apiOperationToAst))]);
 
-  astWriter.add(tsAssignment("const", "contract", { eq: tsPropertyCall("c", ["router", tsObject()]), exported: true }));
+    ast.add(tsAssignment("const", "contract", { eq: tsRestRounterAst, export_: true }));
 
-  console.log(astWriter.toString());
+    const fileString = await prettify(ast.toString());
+    writeFileSync("src/contract.ts", fileString);
+  } catch (error) {
+    console.error("Error generating TypeScript REST contract:", error);
+  }
+}
+
+function apiOperationToAst(operation: APIOperationObject): [string, TsLiteralOrExpression] {
+  return [operation.operationId, tsObject(["method", operation.method], ["path", operation.path])];
 }
 
 generateTsRestContractFromOpenAPI({
