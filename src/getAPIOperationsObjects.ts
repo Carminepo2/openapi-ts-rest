@@ -1,6 +1,6 @@
 import camelcase from "camelcase";
-import { Method } from "./types.js";
-import { ParameterObject, OpenAPIObject, RequestBodyObject, ResponseObject } from "openapi3-ts/oas30";
+import type { Method } from "./types.js";
+import type { ParameterObject, OpenAPIObject, RequestBodyObject, ResponseObject } from "openapi3-ts/oas30";
 import { resolveOpenAPIComponent } from "./resolveOpenAPIComponent.js";
 
 export interface APIOperationObject {
@@ -45,9 +45,12 @@ export function getAPIOperationsObjects(doc: OpenAPIObject): APIOperationObject[
         ? resolveOpenAPIComponent(doc, "requestBodies", pathOperation.requestBody)
         : undefined;
 
-      const responses = Object.entries(pathOperation.responses).reduce((acc, [key, value]) => {
-        return { ...acc, [key]: resolveOpenAPIComponent(doc, "responses", value) };
-      }, {} as APIOperationObject["responses"]);
+      const responses = Object.entries(pathOperation.responses).reduce(
+        (acc, [key, value]) => {
+          return { ...acc, [key]: resolveOpenAPIComponent(doc, "responses", value) };
+        },
+        {} as APIOperationObject["responses"]
+      );
 
       const operationObject: APIOperationObject = {
         description: pathOperation.description,

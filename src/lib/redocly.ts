@@ -7,12 +7,12 @@ import {
   type Document,
   lintDocument,
   createConfig,
-  NormalizedProblem,
+  type NormalizedProblem,
 } from "@redocly/openapi-core";
 import { fileURLToPath } from "node:url";
 import parseJson from "parse-json";
 import { match, P } from "ts-pattern";
-import { OpenAPIObject } from "openapi3-ts/oas30";
+import type { OpenAPIObject } from "openapi3-ts/oas30";
 
 export async function validateAndBundleOpenAPISchema(
   source: string | URL | OpenAPIObject | Readable | Buffer

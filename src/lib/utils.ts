@@ -1,4 +1,3 @@
-import { ReferenceObject } from "openapi3-ts/oas30";
 import ts from "typescript";
 
 export interface AstToStringOptions {

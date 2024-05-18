@@ -1,5 +1,5 @@
 import {
-  TsLiteralOrExpression,
+  type TsLiteralOrExpression,
   tsAssignment,
   tsFunctionCall,
   tsNamedImport,
@@ -7,7 +7,7 @@ import {
   tsPropertyCall,
 } from "./lib/ts.js";
 import { AstTsWriter } from "./lib/utils.js";
-import { APIOperationObject, getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
+import { type APIOperationObject, getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
 import { validateAndBundleOpenAPISchema } from "./lib/redoc.js";
 import { writeFileSync } from "fs";
 import { prettify } from "./lib/prettier.js";

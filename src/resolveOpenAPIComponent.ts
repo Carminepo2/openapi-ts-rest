@@ -1,11 +1,11 @@
 import {
-  HeadersObject,
-  OpenAPIObject,
-  ParameterObject,
-  ReferenceObject,
-  RequestBodyObject,
-  ResponsesObject,
-  SchemaObject,
+  type HeadersObject,
+  type OpenAPIObject,
+  type ParameterObject,
+  type ReferenceObject,
+  type RequestBodyObject,
+  type ResponsesObject,
+  type SchemaObject,
   isReferenceObject,
 } from "openapi3-ts/oas30";
 

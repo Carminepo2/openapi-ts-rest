@@ -2,13 +2,13 @@ import { match, P } from "ts-pattern";
 import {
   factory,
   NodeFlags,
-  Expression,
+  type Expression,
   isExpression,
-  StringLiteral,
-  NumericLiteral,
-  TrueLiteral,
-  FalseLiteral,
-  NullLiteral,
+  type StringLiteral,
+  type NumericLiteral,
+  type TrueLiteral,
+  type FalseLiteral,
+  type NullLiteral,
   SyntaxKind,
 } from "typescript";
 
