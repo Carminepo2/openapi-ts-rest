@@ -1,0 +1,29 @@
+{
+  "name": "openapi-to-ts-rest",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@apidevtools/swagger-parser": "^10.1.0",
+    "@redocly/openapi-core": "^1.12.2",
+    "camelcase": "^8.0.0",
+    "openapi-typescript": "^6.7.5",
+    "openapi3-ts": "^4.3.1",
+    "parse-json": "^8.1.0",
+    "ts-pattern": "^5.1.1",
+    "typescript": "^5.4.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@ts-rest/core": "^3.45.2",
+    "@types/node": "^20.12.12",
+    "openapi-types": "^12.1.3"
+  }
+}
