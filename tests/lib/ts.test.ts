@@ -1,7 +1,7 @@
 import { describe, it, expect } from "bun:test";
 
 describe("ts", () => {
-  it("should work", () => {
+  it("TODO", () => {
     expect(true).toBe(true);
   });
 });

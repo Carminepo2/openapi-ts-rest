@@ -9,7 +9,6 @@ import {
 import { AstTsWriter } from "./lib/utils.js";
 import { type APIOperationObject, getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
 import { validateAndBundleOpenAPISchema } from "./lib/redocly.js";
-import { writeFileSync } from "fs";
 import { prettify } from "./lib/prettier.js";
 
 interface GenerateTsRestContractFromOpenAPIOptions {
@@ -20,7 +19,7 @@ interface GenerateTsRestContractFromOpenAPIOptions {
  * Generates a ts-rest contract from an OpenAPI schema.
  * @param {GenerateTsRestContractFromOpenAPIOptions} options - The options for the generation.
  */
-async function generateTsRestContractFromOpenAPI({ input }: GenerateTsRestContractFromOpenAPIOptions) {
+export async function generateTsRestContractFromOpenAPI({ input }: GenerateTsRestContractFromOpenAPIOptions) {
   try {
     const openApiSchema = await validateAndBundleOpenAPISchema(input);
 
@@ -43,8 +42,7 @@ async function generateTsRestContractFromOpenAPI({ input }: GenerateTsRestContra
     ]);
     ast.add(tsAssignment("const", "contract", { eq: tsRestRounterAst, export_: true }));
 
-    const fileString = await prettify(ast.toString());
-    writeFileSync("src/contract.ts", fileString);
+    return await prettify(ast.toString());
   } catch (error) {
     console.error("Error generating TypeScript REST contract:", error);
   }
@@ -53,8 +51,3 @@ async function generateTsRestContractFromOpenAPI({ input }: GenerateTsRestContra
 function apiOperationToAstTsRestContract(operation: APIOperationObject): [string, TsLiteralOrExpression] {
   return [operation.operationId, tsObject(["method", operation.method], ["path", operation.path])];
 }
-
-void generateTsRestContractFromOpenAPI({
-  input:
-    "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/tenant-process/open-api/tenant-service-spec.yml",
-});
