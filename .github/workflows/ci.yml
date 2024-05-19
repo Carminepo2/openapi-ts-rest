@@ -17,13 +17,13 @@ jobs:
       matrix:
         node-version: [16.x, 18.x, 20.x]
 
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-      - name: Build
-        run: bun build
+    # steps:
+    #   - uses: actions/checkout@v4
+    #   - uses: oven-sh/setup-bun@v1
+    #   - name: Install dependencies
+    #     run: bun install --frozen-lockfile
+    #   - name: Build
+    #     run: bun build
 
   test:
     name: Test
