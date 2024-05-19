@@ -1,12 +1,6 @@
 import camelcase from "camelcase";
-import type {
-  ParameterObject,
-  OpenAPIObject,
-  RequestBodyObject,
-  ResponseObject,
-  ReferenceObject,
-} from "openapi3-ts/oas30";
-import { resolveOpenAPIComponent } from "./resolveOpenAPIComponent.js";
+import type { ParameterObject, RequestBodyObject, ResponseObject, ReferenceObject } from "openapi3-ts/oas30";
+import type { Context } from "./context";
 
 const METHODS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"] as const;
 type Method = (typeof METHODS)[number];
@@ -21,8 +15,8 @@ export interface APIOperationObject {
   responses: Record<string, ResponseObject>;
 }
 
-export function getAPIOperationsObjects(doc: OpenAPIObject): APIOperationObject[] {
-  const pathsObject = doc.paths;
+export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
+  const pathsObject = ctx.openAPIDoc.paths;
   const paths = Object.entries(pathsObject);
   const operationObjects: APIOperationObject[] = [];
 
@@ -40,19 +34,19 @@ export function getAPIOperationsObjects(doc: OpenAPIObject): APIOperationObject[
 
       const parameters = (pathItem.parameters ?? [])
         .concat(pathOperation.parameters ?? [])
-        .map((param) => resolveOpenAPIComponent(doc, param));
+        .map((param) => ctx.resolveOpenAPIComponent(param));
 
       const requestBody = pathOperation.requestBody
-        ? resolveOpenAPIComponent(doc, pathOperation.requestBody)
+        ? ctx.resolveOpenAPIComponent(pathOperation.requestBody)
         : undefined;
 
       const responsesEntries = Object.entries(pathOperation.responses) as [string, ResponseObject | ReferenceObject][];
       const responses = responsesEntries.reduce<APIOperationObject["responses"]>((acc, [key, value]) => {
-        return { ...acc, [key]: resolveOpenAPIComponent(doc, value) };
+        return { ...acc, [key]: ctx.resolveOpenAPIComponent(value) };
       }, {});
 
       const operationObject: APIOperationObject = {
-        description: pathOperation.description,
+        description: pathOperation.summary ?? pathOperation.description,
         method: method.toUpperCase() as Uppercase<Method>,
         path,
         operationId: camelcase(operationId),

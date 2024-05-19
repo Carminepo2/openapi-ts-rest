@@ -29,6 +29,10 @@ export function astToString(
   return printer.printFile(sourceFile);
 }
 
+export function noop() {
+  return void 0;
+}
+
 export class AstTsWriter {
   private nodes: ts.Node[] = [];
 

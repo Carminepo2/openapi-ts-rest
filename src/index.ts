@@ -1,15 +1,11 @@
-import {
-  type TsLiteralOrExpression,
-  tsAssignment,
-  tsFunctionCall,
-  tsNamedImport,
-  tsObject,
-  tsPropertyCall,
-} from "./lib/ts.js";
+import { tsAssignment, tsFunctionCall, tsNamedImport, tsNewLine, tsObject, tsPropertyCall } from "./lib/ts.js";
 import { AstTsWriter } from "./lib/utils.js";
-import { type APIOperationObject, getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
+import { getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
 import { validateAndBundleOpenAPISchema } from "./lib/redocly.js";
 import { prettify } from "./lib/prettier.js";
+import { apiOperationToAstTsRestContract } from "./apiOperationToAstTsRestContract.js";
+import { generateContext } from "./context.js";
+import { openAPISchemaObjectToAstZodSchema } from "./openAPISchemaObjectToAstZodSchema.js";
 
 interface GenerateTsRestContractFromOpenAPIOptions {
   input: string;
@@ -22,6 +18,7 @@ interface GenerateTsRestContractFromOpenAPIOptions {
 export async function generateTsRestContractFromOpenAPI({ input }: GenerateTsRestContractFromOpenAPIOptions) {
   try {
     const openApiSchema = await validateAndBundleOpenAPISchema(input);
+    const ctx = generateContext(openApiSchema);
 
     const ast = new AstTsWriter();
 
@@ -30,18 +27,33 @@ export async function generateTsRestContractFromOpenAPI({ input }: GenerateTsRes
       .add(tsNamedImport({ import_: ["initContract"], from: "@ts-rest/core" }))
       // import { z } from "zod";
       .add(tsNamedImport({ import_: ["z"], from: "zod" }))
+      .add(tsNewLine())
       // const c = initContract();
-      .add(tsAssignment("const", "c", { eq: tsFunctionCall("initContract") }));
+      .add(tsAssignment("const", "c", { eq: tsFunctionCall("initContract") }))
+      .add(tsNewLine());
 
     // Gets the API operations objects from the OpenAPI schema, which are used to generate each contract.
-    const operationObjects = getAPIOperationsObjects(openApiSchema);
+    const operationObjects = getAPIOperationsObjects(ctx);
+
+    // Generates the Zod schemas for each component schema.
+    const componentSchemas = Object.entries(openApiSchema.components?.schemas ?? []);
+    for (const [identifier, schemaObjectOrRef] of componentSchemas) {
+      const schemaObject = ctx.resolveOpenAPIComponent(schemaObjectOrRef);
+      const schemaObjectZodAst = openAPISchemaObjectToAstZodSchema(schemaObject, ctx);
+
+      // const [identifier] = z.object({ ... }) | z.string() | z.number() | ...
+      ast.add(tsAssignment("const", identifier, { eq: schemaObjectZodAst }));
+    }
+
+    ast.add(tsNewLine());
 
     // export const contract = c.router({ ... });
-    const tsRestRounterAst = tsPropertyCall("c", [
-      "router",
-      tsObject(...operationObjects.map(apiOperationToAstTsRestContract)),
-    ]);
-    ast.add(tsAssignment("const", "contract", { eq: tsRestRounterAst, export_: true }));
+    ast.add(
+      tsAssignment("const", "contract", {
+        eq: tsPropertyCall("c", ["router", tsObject(...operationObjects.map(apiOperationToAstTsRestContract))]),
+        export_: true,
+      })
+    );
 
     return await prettify(ast.toString());
   } catch (error) {
@@ -49,6 +61,7 @@ export async function generateTsRestContractFromOpenAPI({ input }: GenerateTsRes
   }
 }
 
-function apiOperationToAstTsRestContract(operation: APIOperationObject): [string, TsLiteralOrExpression] {
-  return [operation.operationId, tsObject(["method", operation.method], ["path", operation.path])];
-}
+// void generateTsRestContractFromOpenAPI({
+//   input:
+//     "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/tenant-process/open-api/tenant-service-spec.yml",
+// }).then(console.log);
