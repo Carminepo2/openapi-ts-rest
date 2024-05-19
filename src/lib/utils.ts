@@ -6,13 +6,12 @@ export interface AstToStringOptions {
   formatOptions?: ts.PrinterOptions;
 }
 
-/** Convert TypeScript AST to string */
 export function astToString(
   ast: ts.Node | ts.Node[] | ts.TypeElement | ts.TypeElement[],
   options?: AstToStringOptions
 ): string {
   const sourceFile = ts.createSourceFile(
-    options?.fileName ?? "openapi-ts.ts",
+    options?.fileName ?? "contract.ts",
     options?.sourceText ?? "",
     ts.ScriptTarget.ESNext,
     false,

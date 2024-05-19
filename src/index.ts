@@ -33,6 +33,7 @@ export async function generateTsRestContractFromOpenAPI({ input }: GenerateTsRes
       // const c = initContract();
       .add(tsAssignment("const", "c", { eq: tsFunctionCall("initContract") }));
 
+    // Gets the API operations objects from the OpenAPI schema, which are used to generate each contract.
     const operationObjects = getAPIOperationsObjects(openApiSchema);
 
     // export const contract = c.router({ ... });

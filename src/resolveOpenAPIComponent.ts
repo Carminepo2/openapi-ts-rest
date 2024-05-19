@@ -36,11 +36,9 @@ export function resolveOpenAPIComponent<TComponent extends OpenAPIComponents>(
       __, // "components/"
       componentPath, // "(schemas|parameters|requestBodies|responses|headers)/"
       componentName,
-    ] = ref.split("/");
+    ] = ref.split("/") as [string, string, OpenAPIComponentPath, string];
 
-    const parameterObject = doc.components?.[componentPath as OpenAPIComponentPath]?.[componentName] as
-      | TComponent
-      | undefined;
+    const parameterObject = doc.components?.[componentPath]?.[componentName] as TComponent | undefined;
 
     if (isReferenceObject(parameterObject)) {
       return resolveOpenAPIComponent(doc, parameterObject, resolvedRefs);

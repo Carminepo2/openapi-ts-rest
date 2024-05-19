@@ -1,5 +1,4 @@
 import camelcase from "camelcase";
-import type { Method } from "./types.js";
 import type {
   ParameterObject,
   OpenAPIObject,
@@ -8,6 +7,9 @@ import type {
   ReferenceObject,
 } from "openapi3-ts/oas30";
 import { resolveOpenAPIComponent } from "./resolveOpenAPIComponent.js";
+
+const METHODS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"] as const;
+type Method = (typeof METHODS)[number];
 
 export interface APIOperationObject {
   description: string | undefined;
@@ -25,9 +27,7 @@ export function getAPIOperationsObjects(doc: OpenAPIObject): APIOperationObject[
   const operationObjects: APIOperationObject[] = [];
 
   for (const [path, pathItem] of paths) {
-    const methods: Method[] = ["get", "put", "post", "delete", "options", "head", "patch", "trace"];
-
-    for (const method of methods) {
+    for (const method of METHODS) {
       if (!(method in pathItem)) continue;
       const pathOperation = pathItem[method];
 
