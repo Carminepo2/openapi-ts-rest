@@ -9,34 +9,57 @@ import {
   isReferenceObject,
 } from "openapi3-ts/oas30";
 
-type OpenAPIComponents = {
-  schemas: SchemaObject;
-  parameters: ParameterObject;
-  requestBodies: RequestBodyObject;
-  headers: HeadersObject;
-  responses: ResponsesObject;
-};
+const OPEN_API_COMPONENTS_PATH = ["schemas", "parameters", "requestBodies", "responses", "headers"] as const;
 
-export function resolveOpenAPIComponent<TComponent extends keyof OpenAPIComponents>(
+type OpenAPIComponentPath = (typeof OPEN_API_COMPONENTS_PATH)[number];
+type OpenAPIComponents = SchemaObject | ParameterObject | RequestBodyObject | ResponsesObject | HeadersObject;
+
+export function resolveOpenAPIComponent<TComponent extends OpenAPIComponents>(
   doc: OpenAPIObject,
-  components: TComponent,
-  parameter: OpenAPIComponents[TComponent] | ReferenceObject
-): OpenAPIComponents[TComponent] {
+  parameter: TComponent | ReferenceObject,
+  resolvedRefs = new Set<string>()
+): TComponent {
   if (isReferenceObject(parameter)) {
     const ref = parameter.$ref;
 
-    const parameterName = ref.split("/").pop()!;
-    const parameterObject = doc.components?.[components]?.[parameterName];
+    assertRefIsValid(ref);
+
+    // If this reference has already been resolved, throw an error to avoid infinite recursion
+    if (resolvedRefs.has(ref)) {
+      throw new Error(`Circular reference detected: ${ref}`);
+    }
+
+    resolvedRefs.add(ref);
+
+    const [
+      _, // "#/"
+      __, // "components/"
+      componentPath, // "(schemas|parameters|requestBodies|responses|headers)/"
+      componentName,
+    ] = ref.split("/");
+
+    const parameterObject = doc.components?.[componentPath as OpenAPIComponentPath]?.[componentName] as
+      | TComponent
+      | undefined;
 
     if (isReferenceObject(parameterObject)) {
-      return resolveOpenAPIComponent(doc, components as never, parameterObject);
+      return resolveOpenAPIComponent(doc, parameterObject, resolvedRefs);
     }
 
     if (!parameterObject) {
-      throw new Error(`Could not resolve ${parameterName} at ${ref}`);
+      throw new Error(`Could not resolve ${componentName} at ${ref}`);
     }
 
-    return parameterObject as OpenAPIComponents[TComponent];
+    return parameterObject;
   }
   return parameter;
+}
+
+export function assertRefIsValid(ref: string): asserts ref is `#/components/${OpenAPIComponentPath}/${string}` {
+  const isValid = OPEN_API_COMPONENTS_PATH.some((componentPath) => {
+    return ref.startsWith(`#/components/${componentPath}/`);
+  });
+  if (!isValid) {
+    throw new Error(`Invalid reference ${ref}`);
+  }
 }

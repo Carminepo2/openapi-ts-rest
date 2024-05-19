@@ -1,6 +1,12 @@
 import camelcase from "camelcase";
 import type { Method } from "./types.js";
-import type { ParameterObject, OpenAPIObject, RequestBodyObject, ResponseObject } from "openapi3-ts/oas30";
+import type {
+  ParameterObject,
+  OpenAPIObject,
+  RequestBodyObject,
+  ResponseObject,
+  ReferenceObject,
+} from "openapi3-ts/oas30";
 import { resolveOpenAPIComponent } from "./resolveOpenAPIComponent.js";
 
 export interface APIOperationObject {
@@ -10,21 +16,16 @@ export interface APIOperationObject {
   method: Uppercase<Method>;
   parameters: ParameterObject[];
   requestBody: RequestBodyObject | undefined;
-  responses: {
-    default?: ResponseObject;
-    [statusCode: string]: ResponseObject | any;
-  };
+  responses: Record<string, ResponseObject>;
 }
 
 export function getAPIOperationsObjects(doc: OpenAPIObject): APIOperationObject[] {
   const pathsObject = doc.paths;
   const paths = Object.entries(pathsObject);
-  const operationObjects: Array<APIOperationObject> = [];
+  const operationObjects: APIOperationObject[] = [];
 
   for (const [path, pathItem] of paths) {
-    if (!pathItem) continue;
-
-    const methods: Array<Method> = ["get", "put", "post", "delete", "options", "head", "patch", "trace"];
+    const methods: Method[] = ["get", "put", "post", "delete", "options", "head", "patch", "trace"];
 
     for (const method of methods) {
       if (!(method in pathItem)) continue;
@@ -39,18 +40,16 @@ export function getAPIOperationsObjects(doc: OpenAPIObject): APIOperationObject[
 
       const parameters = (pathItem.parameters ?? [])
         .concat(pathOperation.parameters ?? [])
-        .map((param) => resolveOpenAPIComponent(doc, "parameters", param));
+        .map((param) => resolveOpenAPIComponent(doc, param));
 
       const requestBody = pathOperation.requestBody
-        ? resolveOpenAPIComponent(doc, "requestBodies", pathOperation.requestBody)
+        ? resolveOpenAPIComponent(doc, pathOperation.requestBody)
         : undefined;
 
-      const responses = Object.entries(pathOperation.responses).reduce(
-        (acc, [key, value]) => {
-          return { ...acc, [key]: resolveOpenAPIComponent(doc, "responses", value) };
-        },
-        {} as APIOperationObject["responses"]
-      );
+      const responsesEntries = Object.entries(pathOperation.responses) as [string, ResponseObject | ReferenceObject][];
+      const responses = responsesEntries.reduce<APIOperationObject["responses"]>((acc, [key, value]) => {
+        return { ...acc, [key]: resolveOpenAPIComponent(doc, value) };
+      }, {});
 
       const operationObject: APIOperationObject = {
         description: pathOperation.description,

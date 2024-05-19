@@ -98,7 +98,7 @@ async function parseSchema(
         });
       }
       // JSON
-      if (schema[0] === "{") {
+      if (schema.startsWith("{")) {
         return {
           source: new Source(absoluteRef, schema, "application/json"),
           parsed: parseJson(schema),
@@ -120,8 +120,9 @@ async function parseSchema(
 }
 
 function validateOpenAPIVersion(document: Document) {
-  const openapiVersion = Number.parseFloat(document.parsed.openapi);
-  const { swagger, openapi } = document.parsed;
+  const parsedDocument = document.parsed as { openapi: string; swagger: string };
+  const openapiVersion = Number.parseFloat(parsedDocument.openapi);
+  const { swagger, openapi } = parsedDocument;
 
   if (swagger) {
     throw new Error("Swagger version 2.x is not supported. Please use OpenAPI 3.x.");

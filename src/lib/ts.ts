@@ -12,7 +12,7 @@ import {
   SyntaxKind,
 } from "typescript";
 
-export function tsNamedImport({ import_, from }: { import_: Array<string>; from: string }) {
+export function tsNamedImport({ import_, from }: { import_: string[]; from: string }) {
   return factory.createImportDeclaration(
     undefined,
     factory.createImportClause(
@@ -27,7 +27,7 @@ export function tsNamedImport({ import_, from }: { import_: Array<string>; from:
   );
 }
 
-export function tsNamedExport({ export_: names }: { export_: Array<string> }) {
+export function tsNamedExport({ export_: names }: { export_: string[] }) {
   return factory.createExportDeclaration(
     undefined,
     false,
@@ -107,7 +107,7 @@ export function tsFunctionCall(identifier: string, ...args: TsLiteralOrExpressio
   return factory.createCallExpression(factory.createIdentifier(identifier), undefined, args.map(tsLiteralOrExpression));
 }
 
-export function tsObject(...properties: Array<[key: string, value: TsLiteralOrExpression]>) {
+export function tsObject(...properties: [key: string, value: TsLiteralOrExpression][]) {
   return factory.createObjectLiteralExpression(
     properties.map(([key, value]) =>
       factory.createPropertyAssignment(factory.createIdentifier(key), tsLiteralOrExpression(value))
