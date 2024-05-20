@@ -1,61 +1,52 @@
 import { type SchemaObject } from "openapi3-ts/oas30";
-import {
-  tsArray,
-  tsIdentifier,
-  tsObject,
-  tsPropertyCall,
-  tsRegex,
-  type TsFunctionCall,
-  type TsLiteralOrExpression,
-} from "./lib/ts";
+import { tsArray, tsIdentifier, tsObject, tsPropertyCall, tsRegex, type TsLiteralOrExpression } from "./lib/ts";
 import { match, P } from "ts-pattern";
 import type { Context } from "./context";
 import { noop } from "./lib/utils";
 import type { Expression } from "typescript";
 
-const Z = {
-  NUMBER: "number",
-  STRING: "string",
-  BOOLEAN: "boolean",
-  NULL: "null",
-  ARRAY: "array",
-  OBJECT: "object",
-  UNION: "union",
-  ANY: "any",
-  UNKNOWN: "unknown",
-  LITERAL: "literal",
-  REGEX: "regex",
-  ENUM: "enum",
-  NEVER: "never",
-  NULLISH: "nullish",
-  NULLABLE: "nullable",
-  OPTIONAL: "optional",
-  REQUIRED: "required",
-  DEFAULT: "default",
+type ZodType =
+  | "number"
+  | "string"
+  | "boolean"
+  | "null"
+  | "array"
+  | "object"
+  | "literal"
+  | "enum"
+  | "never"
+  | "any"
+  | "union"
+  | "instanceof"
+  | "unknown";
 
-  INT: "int",
-  GT: "gt",
-  GTE: "gte",
-  LT: "lt",
-  LTE: "lte",
-  MULTIPLE_OF: "multipleOf",
-  INSTANCE_OF: "instanceof",
-  UUID: "uuid",
-  URL: "url",
-  EMAIL: "email",
-  DATETIME: "datetime",
-  IP: "ip",
-  MIN: "min",
-  MAX: "max",
-} as const;
+type ZodValidationMethod =
+  | "int"
+  | "gt"
+  | "gte"
+  | "lt"
+  | "lte"
+  | "multipleOf"
+  | "instanceof"
+  | "uuid"
+  | "url"
+  | "email"
+  | "datetime"
+  | "ip"
+  | "min"
+  | "max"
+  | "regex"
+  | "nullish"
+  | "nullable"
+  | "optional"
+  | "default";
+
+type ZodTypeMethodCall = [zodType: ZodType] | [zodType: ZodType, ...args: TsLiteralOrExpression[]];
+type ZodValidationMethodCall = [zodValidationMethod: ZodValidationMethod, ...args: TsLiteralOrExpression[]];
 
 interface ObjectPropertyCtx {
   isObjectProperty?: boolean;
   isRequiredObjectProperty?: boolean;
-}
-
-function buildZodSchema(firstCall: TsFunctionCall, ...chain: TsFunctionCall[]): Expression {
-  return tsPropertyCall("z", firstCall, ...chain);
 }
 
 export function schemaObjectToAstZodSchema(
@@ -67,6 +58,10 @@ export function schemaObjectToAstZodSchema(
     throw new Error("oneOf, anyOf and allOf are currently not supported");
   }
 
+  function buildZodSchema(zodMethod: ZodTypeMethodCall): Expression {
+    return tsPropertyCall("z", zodMethod, ...buildZodValidationChain(schema, objectPropertyCtx));
+  }
+
   if (schema.enum) {
     function resolveEnumValue(value: unknown): string {
       if (value === null) return "null";
@@ -75,23 +70,23 @@ export function schemaObjectToAstZodSchema(
 
     if (schema.type === "string") {
       if (schema.enum.length === 1) {
-        return buildZodSchema([Z.LITERAL, resolveEnumValue(schema.enum[0])]);
+        return buildZodSchema(["literal", resolveEnumValue(schema.enum[0])]);
       }
 
-      return buildZodSchema([Z.ENUM, tsArray(...schema.enum.map(resolveEnumValue))]);
+      return buildZodSchema(["enum", tsArray(...schema.enum.map(resolveEnumValue))]);
     }
 
     if (schema.enum.some((e) => typeof e === "string")) {
-      return buildZodSchema([Z.NEVER]);
+      return buildZodSchema(["never"]);
     }
 
     if (schema.enum.length === 1) {
-      return buildZodSchema([Z.LITERAL, schema.enum[0]]);
+      return buildZodSchema(["literal", schema.enum[0]]);
     }
 
     return buildZodSchema([
-      Z.ENUM,
-      tsArray(...schema.enum.map((value) => buildZodSchema([Z.LITERAL, resolveEnumValue(value)]))),
+      "enum",
+      tsArray(...schema.enum.map((value) => buildZodSchema(["literal", resolveEnumValue(value)]))),
     ]);
   }
 
@@ -105,43 +100,40 @@ export function schemaObjectToAstZodSchema(
       P.array(P.any),
       (t) => t.length > 1,
       (t) =>
-        buildZodSchema([Z.UNION, tsArray(...t.map((type) => schemaObjectToAstZodSchema({ ...schema, type }, ctx)))])
+        buildZodSchema(["union", tsArray(...t.map((type) => schemaObjectToAstZodSchema({ ...schema, type }, ctx)))])
     )
     .with(
       "string",
       () => schema.format === "binary",
       () => {
-        return buildZodSchema([Z.INSTANCE_OF, tsIdentifier("File")]);
+        return buildZodSchema(["instanceof", tsIdentifier("File")]);
       }
     )
     .with("string", () => {
-      return buildZodSchema([Z.STRING], ...buildZodValidationChain(schema, objectPropertyCtx));
+      return buildZodSchema(["string"]);
     })
     .with("number", "integer", () => {
-      return buildZodSchema([Z.NUMBER], ...buildZodValidationChain(schema, objectPropertyCtx));
+      return buildZodSchema(["number"]);
     })
     .with("boolean", () => {
-      return buildZodSchema([Z.BOOLEAN]);
+      return buildZodSchema(["boolean"]);
     })
     .with("null", () => {
-      return buildZodSchema([Z.NULL]);
+      return buildZodSchema(["null"]);
     })
     .with("array", () => {
-      return buildZodSchema(
-        [
-          Z.ARRAY,
-          schema.items
-            ? schemaObjectToAstZodSchema(ctx.resolveOpenAPIComponent(schema.items), ctx)
-            : buildZodSchema([Z.ANY]),
-        ],
-        ...buildZodValidationChain(schema, objectPropertyCtx)
-      );
+      return buildZodSchema([
+        "array",
+        schema.items
+          ? schemaObjectToAstZodSchema(ctx.resolveOpenAPIComponent(schema.items), ctx)
+          : buildZodSchema(["any"]),
+      ]);
     })
     .when(
       (t) => Boolean(t === "object" || schema.properties),
       () => {
         //TODO: Add support for `schema.additionalProperties`
-        if (!schema.properties) return buildZodSchema([Z.OBJECT, tsObject()]);
+        if (!schema.properties) return buildZodSchema(["object", tsObject()]);
         const properties: [string, TsLiteralOrExpression][] = Object.entries(schema.properties).map(
           ([key, schemaOrRef]) => {
             const propSchema = ctx.resolveOpenAPIComponent(schemaOrRef);
@@ -153,18 +145,18 @@ export function schemaObjectToAstZodSchema(
             ];
           }
         );
-        return buildZodSchema([Z.OBJECT, tsObject(...properties)]);
+        return buildZodSchema(["object", tsObject(...properties)]);
       }
     )
     .with(P.nullish, () => {
-      return buildZodSchema([Z.UNKNOWN]);
+      return buildZodSchema(["unknown"]);
     })
     .otherwise((t) => {
       throw new Error(`Unsupported schema type ${t as unknown as string}`);
     });
 }
 
-export function buildZodValidationChain(schema: SchemaObject, options?: ObjectPropertyCtx): TsFunctionCall[] {
+export function buildZodValidationChain(schema: SchemaObject, options?: ObjectPropertyCtx): ZodValidationMethodCall[] {
   const validationChain = match(schema.type)
     .with("string", () => buildZodStringValidationChain(schema))
     .with("number", "integer", () => buildZodNumberValidationChain(schema))
@@ -174,9 +166,9 @@ export function buildZodValidationChain(schema: SchemaObject, options?: ObjectPr
   // Are we dealing with an object property that is required?
   const isRequiredObjectProperty = options?.isObjectProperty && !options.isRequiredObjectProperty;
 
-  if (schema.nullable && !options?.isObjectProperty) validationChain.push([Z.NULLISH]);
-  else if (schema.nullable && isRequiredObjectProperty) validationChain.push([Z.NULLABLE]);
-  else if (isRequiredObjectProperty) validationChain.push([Z.OPTIONAL]);
+  if (schema.nullable && !options?.isObjectProperty) validationChain.push(["nullish"]);
+  else if (schema.nullable && isRequiredObjectProperty) validationChain.push(["nullable"]);
+  else if (isRequiredObjectProperty) validationChain.push(["optional"]);
 
   if (schema.default !== undefined) {
     const value = match(schema.type)
@@ -186,34 +178,36 @@ export function buildZodValidationChain(schema: SchemaObject, options?: ObjectPr
         () => schema.default as string
       )
       .otherwise(() => JSON.stringify(schema.default));
-    validationChain.push([Z.DEFAULT, value]);
+    validationChain.push(["default", value]);
   }
 
   return validationChain;
 }
 
-function buildZodStringValidationChain(schema: SchemaObject): TsFunctionCall[] {
-  const zodValidationMethods: TsFunctionCall[] = [];
+function buildZodStringValidationChain(schema: SchemaObject): ZodValidationMethodCall[] {
+  const zodValidationMethods: ZodValidationMethodCall[] = [];
 
-  if (schema.minLength) {
-    zodValidationMethods.push([Z.MIN, schema.minLength]);
-  }
+  if (!schema.enum) {
+    if (schema.minLength) {
+      zodValidationMethods.push(["min", schema.minLength]);
+    }
 
-  if (schema.maxLength) {
-    zodValidationMethods.push([Z.MAX, schema.maxLength]);
+    if (schema.maxLength) {
+      zodValidationMethods.push(["max", schema.maxLength]);
+    }
   }
 
   if (schema.pattern) {
-    zodValidationMethods.push([Z.REGEX, tsRegex(sanitizeAndFormatRegex(schema.pattern))]);
+    zodValidationMethods.push(["regex", tsRegex(sanitizeAndFormatRegex(schema.pattern))]);
   }
 
-  const format = match<typeof schema.format, TsFunctionCall | undefined>(schema.format)
-    .with("uuid", () => [Z.UUID])
-    .with("hostname", "uri", () => [Z.URL])
-    .with("email", () => [Z.EMAIL])
-    .with("date-time", () => [Z.DATETIME, tsObject(["offset", true])])
-    .with("ipv4", () => [Z.IP, tsObject(["version", "v4"])])
-    .with("ipv6", () => [Z.IP, tsObject(["version", "v6"])])
+  const format = match<typeof schema.format, ZodValidationMethodCall | undefined>(schema.format)
+    .with("uuid", () => ["uuid"])
+    .with("hostname", "uri", () => ["url"])
+    .with("email", () => ["email"])
+    .with("date-time", () => ["datetime", tsObject(["offset", true])])
+    .with("ipv4", () => ["ip", tsObject(["version", "v4"])])
+    .with("ipv6", () => ["ip", tsObject(["version", "v6"])])
     .otherwise(noop);
 
   if (format) {
@@ -244,41 +238,43 @@ function sanitizeAndFormatRegex(pattern: string) {
   return `/${pattern}/`;
 }
 
-function buildZodNumberValidationChain(schema: SchemaObject): TsFunctionCall[] {
-  const zodValidationMethods: TsFunctionCall[] = [];
+function buildZodNumberValidationChain(schema: SchemaObject): ZodValidationMethodCall[] {
+  const zodValidationMethods: ZodValidationMethodCall[] = [];
+
+  if (schema.enum) return zodValidationMethods;
 
   if (schema.type === "integer") {
-    zodValidationMethods.push([Z.INT]);
+    zodValidationMethods.push(["int"]);
   }
 
   if (schema.minimum !== undefined) {
-    zodValidationMethods.push([schema.exclusiveMinimum ? Z.GT : Z.GTE, schema.minimum]);
+    zodValidationMethods.push([schema.exclusiveMinimum ? "gt" : "gte", schema.minimum]);
   } else if (typeof schema.exclusiveMinimum === "number") {
-    zodValidationMethods.push([Z.GT, schema.exclusiveMinimum]);
+    zodValidationMethods.push(["gt", schema.exclusiveMinimum]);
   }
 
   if (schema.maximum !== undefined) {
-    zodValidationMethods.push([schema.exclusiveMaximum ? Z.LT : Z.LTE, schema.maximum]);
+    zodValidationMethods.push([schema.exclusiveMaximum ? "lt" : "lte", schema.maximum]);
   } else if (typeof schema.exclusiveMaximum === "number") {
-    zodValidationMethods.push([Z.LT, schema.exclusiveMaximum]);
+    zodValidationMethods.push(["lt", schema.exclusiveMaximum]);
   }
 
   if (schema.multipleOf !== undefined) {
-    zodValidationMethods.push([Z.MULTIPLE_OF, schema.multipleOf]);
+    zodValidationMethods.push(["multipleOf", schema.multipleOf]);
   }
 
   return zodValidationMethods;
 }
 
-function buildZodArrayValidationChain(schema: SchemaObject): TsFunctionCall[] {
-  const zodValidationMethods: TsFunctionCall[] = [];
+function buildZodArrayValidationChain(schema: SchemaObject): ZodValidationMethodCall[] {
+  const zodValidationMethods: ZodValidationMethodCall[] = [];
 
   if (schema.minItems !== undefined) {
-    zodValidationMethods.push([Z.MIN, schema.minItems]);
+    zodValidationMethods.push(["min", schema.minItems]);
   }
 
   if (schema.maxItems !== undefined) {
-    zodValidationMethods.push([Z.MAX, schema.maxItems]);
+    zodValidationMethods.push(["max", schema.maxItems]);
   }
 
   return zodValidationMethods;
