@@ -4,6 +4,7 @@ import {
   tsIdentifier,
   tsObject,
   tsPropertyCall,
+  tsRegex,
   type TsFunctionCall,
   type TsLiteralOrExpression,
 } from "./lib/ts";
@@ -26,6 +27,11 @@ const Z = {
   REGEX: "regex",
   ENUM: "enum",
   NEVER: "never",
+  NULLISH: "nullish",
+  NULLABLE: "nullable",
+  OPTIONAL: "optional",
+  REQUIRED: "required",
+  DEFAULT: "default",
 
   INT: "int",
   GT: "gt",
@@ -33,7 +39,7 @@ const Z = {
   LT: "lt",
   LTE: "lte",
   MULTIPLE_OF: "multipleOf",
-  INSTANCE_OF: "instanceOf",
+  INSTANCE_OF: "instanceof",
   UUID: "uuid",
   URL: "url",
   EMAIL: "email",
@@ -43,7 +49,20 @@ const Z = {
   MAX: "max",
 } as const;
 
-export function openAPISchemaObjectToAstZodSchema(schema: SchemaObject, ctx: Context): Expression {
+interface ObjectPropertyCtx {
+  isObjectProperty?: boolean;
+  isRequiredObjectProperty?: boolean;
+}
+
+function buildZodSchema(firstCall: TsFunctionCall, ...chain: TsFunctionCall[]): Expression {
+  return tsPropertyCall("z", firstCall, ...chain);
+}
+
+export function schemaObjectToAstZodSchema(
+  schema: SchemaObject,
+  ctx: Context,
+  objectPropertyCtx?: ObjectPropertyCtx
+): Expression {
   if (schema.oneOf || schema.anyOf || schema.allOf) {
     throw new Error("oneOf, anyOf and allOf are currently not supported");
   }
@@ -56,23 +75,23 @@ export function openAPISchemaObjectToAstZodSchema(schema: SchemaObject, ctx: Con
 
     if (schema.type === "string") {
       if (schema.enum.length === 1) {
-        return tsPropertyCall("z", [Z.LITERAL, resolveEnumValue(schema.enum[0])]);
+        return buildZodSchema([Z.LITERAL, resolveEnumValue(schema.enum[0])]);
       }
 
-      return tsPropertyCall("z", [Z.ENUM, tsArray(...schema.enum.map(resolveEnumValue))]);
+      return buildZodSchema([Z.ENUM, tsArray(...schema.enum.map(resolveEnumValue))]);
     }
 
     if (schema.enum.some((e) => typeof e === "string")) {
-      return tsPropertyCall("z", [Z.NEVER]);
+      return buildZodSchema([Z.NEVER]);
     }
 
     if (schema.enum.length === 1) {
-      return tsPropertyCall("z", [Z.LITERAL, schema.enum[0]]);
+      return buildZodSchema([Z.LITERAL, schema.enum[0]]);
     }
 
-    return tsPropertyCall("z", [
+    return buildZodSchema([
       Z.ENUM,
-      tsArray(...schema.enum.map((value) => tsPropertyCall("z", [Z.LITERAL, resolveEnumValue(value)]))),
+      tsArray(...schema.enum.map((value) => buildZodSchema([Z.LITERAL, resolveEnumValue(value)]))),
     ]);
   }
 
@@ -80,68 +99,94 @@ export function openAPISchemaObjectToAstZodSchema(schema: SchemaObject, ctx: Con
     .with(
       P.array(P.any),
       (t) => t.length === 1,
-      (t) => openAPISchemaObjectToAstZodSchema({ ...schema, type: t[0] }, ctx)
+      (t) => schemaObjectToAstZodSchema({ ...schema, type: t[0] }, ctx)
     )
     .with(
       P.array(P.any),
       (t) => t.length > 1,
       (t) =>
-        tsPropertyCall("z", [
-          Z.UNION,
-          tsArray(...t.map((type) => openAPISchemaObjectToAstZodSchema({ ...schema, type }, ctx))),
-        ])
+        buildZodSchema([Z.UNION, tsArray(...t.map((type) => schemaObjectToAstZodSchema({ ...schema, type }, ctx)))])
     )
     .with(
       "string",
       () => schema.format === "binary",
       () => {
-        return tsPropertyCall("z", [Z.INSTANCE_OF, tsIdentifier("File")]);
+        return buildZodSchema([Z.INSTANCE_OF, tsIdentifier("File")]);
       }
     )
     .with("string", () => {
-      return tsPropertyCall("z", [Z.STRING], ...buildZodStringValidationChain(schema));
+      return buildZodSchema([Z.STRING], ...buildZodValidationChain(schema, objectPropertyCtx));
     })
     .with("number", "integer", () => {
-      return tsPropertyCall("z", [Z.NUMBER], ...buildZodNumberValidationChain(schema));
+      return buildZodSchema([Z.NUMBER], ...buildZodValidationChain(schema, objectPropertyCtx));
     })
     .with("boolean", () => {
-      return tsPropertyCall("z", [Z.BOOLEAN]);
+      return buildZodSchema([Z.BOOLEAN]);
     })
     .with("null", () => {
-      return tsPropertyCall("z", [Z.NULL]);
+      return buildZodSchema([Z.NULL]);
     })
     .with("array", () => {
-      return tsPropertyCall(
-        "z",
+      return buildZodSchema(
         [
           Z.ARRAY,
           schema.items
-            ? openAPISchemaObjectToAstZodSchema(ctx.resolveOpenAPIComponent(schema.items), ctx)
-            : tsPropertyCall("z", [Z.ANY]),
+            ? schemaObjectToAstZodSchema(ctx.resolveOpenAPIComponent(schema.items), ctx)
+            : buildZodSchema([Z.ANY]),
         ],
-        ...buildZodArrayValidationChain(schema)
+        ...buildZodValidationChain(schema, objectPropertyCtx)
       );
     })
     .when(
       (t) => Boolean(t === "object" || schema.properties),
       () => {
         //TODO: Add support for `schema.additionalProperties`
-        if (!schema.properties) return tsPropertyCall("z", [Z.OBJECT, tsObject()]);
+        if (!schema.properties) return buildZodSchema([Z.OBJECT, tsObject()]);
         const properties: [string, TsLiteralOrExpression][] = Object.entries(schema.properties).map(
           ([key, schemaOrRef]) => {
             const propSchema = ctx.resolveOpenAPIComponent(schemaOrRef);
-            return [key, openAPISchemaObjectToAstZodSchema(propSchema, ctx)];
+            const isRequiredObjectProperty = schema.required?.includes(key);
+            return [
+              key,
+              // Pass the information about we are dealing with an object property and if it is required
+              schemaObjectToAstZodSchema(propSchema, ctx, { isRequiredObjectProperty, isObjectProperty: true }),
+            ];
           }
         );
-        return tsPropertyCall("z", [Z.OBJECT, tsObject(...properties)]);
+        return buildZodSchema([Z.OBJECT, tsObject(...properties)]);
       }
     )
     .with(P.nullish, () => {
-      return tsPropertyCall("z", [Z.UNKNOWN]);
+      return buildZodSchema([Z.UNKNOWN]);
     })
     .otherwise((t) => {
       throw new Error(`Unsupported schema type ${t as unknown as string}`);
     });
+}
+
+export function buildZodValidationChain(schema: SchemaObject, options?: ObjectPropertyCtx): TsFunctionCall[] {
+  const validationChain = match(schema.type)
+    .with("string", () => buildZodStringValidationChain(schema))
+    .with("number", "integer", () => buildZodNumberValidationChain(schema))
+    .with("array", () => buildZodArrayValidationChain(schema))
+    .otherwise(() => []);
+
+  // Are we dealing with an object property that is required?
+  const isRequiredObjectProperty = options?.isObjectProperty && !options?.isRequiredObjectProperty;
+
+  if (schema.nullable && !options?.isObjectProperty) validationChain.push([Z.NULLISH]);
+  else if (schema.nullable && isRequiredObjectProperty) validationChain.push([Z.NULLABLE]);
+  else if (isRequiredObjectProperty) validationChain.push([Z.OPTIONAL]);
+
+  if (schema.default !== undefined) {
+    const value = match(schema.type)
+      .with("number", "integer", () => Number(schema.default))
+      .with(P.string, () => schema.default)
+      .otherwise(() => JSON.stringify(schema.default));
+    validationChain.push([Z.DEFAULT, value]);
+  }
+
+  return validationChain;
 }
 
 function buildZodStringValidationChain(schema: SchemaObject): TsFunctionCall[] {
@@ -156,7 +201,7 @@ function buildZodStringValidationChain(schema: SchemaObject): TsFunctionCall[] {
   }
 
   if (schema.pattern) {
-    zodValidationMethods.push([Z.REGEX, sanitizeAndFormatRegex(schema.pattern)]);
+    zodValidationMethods.push([Z.REGEX, tsRegex(sanitizeAndFormatRegex(schema.pattern))]);
   }
 
   const format = match<typeof schema.format, TsFunctionCall | undefined>(schema.format)

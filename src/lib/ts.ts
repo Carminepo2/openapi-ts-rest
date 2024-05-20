@@ -150,3 +150,7 @@ export function tsNewLine() {
 export function tsIdentifier(name: string) {
   return factory.createIdentifier(name);
 }
+
+export function tsRegex(pattern: string) {
+  return factory.createRegularExpressionLiteral(pattern);
+}
