@@ -38,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
       - name: Test
-        run: bun test
+        run: vitest run
 
   lint:
     name: Lint
