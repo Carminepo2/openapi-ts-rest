@@ -172,7 +172,7 @@ export function buildZodValidationChain(schema: SchemaObject, options?: ObjectPr
     .otherwise(() => []);
 
   // Are we dealing with an object property that is required?
-  const isRequiredObjectProperty = options?.isObjectProperty && !options?.isRequiredObjectProperty;
+  const isRequiredObjectProperty = options?.isObjectProperty && !options.isRequiredObjectProperty;
 
   if (schema.nullable && !options?.isObjectProperty) validationChain.push([Z.NULLISH]);
   else if (schema.nullable && isRequiredObjectProperty) validationChain.push([Z.NULLABLE]);
@@ -181,7 +181,10 @@ export function buildZodValidationChain(schema: SchemaObject, options?: ObjectPr
   if (schema.default !== undefined) {
     const value = match(schema.type)
       .with("number", "integer", () => Number(schema.default))
-      .with(P.string, () => schema.default)
+      .when(
+        () => typeof schema.default === "string",
+        () => schema.default as string
+      )
       .otherwise(() => JSON.stringify(schema.default));
     validationChain.push([Z.DEFAULT, value]);
   }
