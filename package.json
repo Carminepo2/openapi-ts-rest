@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest --coverage",
+    "test:ci": "vitest run"
   },
   "author": "",
   "license": "ISC",
