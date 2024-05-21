@@ -66,3 +66,18 @@ export class AstTsWriter {
     return astToString(this.nodes);
   }
 }
+
+/**
+ * Formats a string to a valid identifier by replacing invalid characters with underscores.
+ * If the string doesn't start with a valid identifier character, an underscore is added at the beginning.
+ *
+ * @param str - The string to format.
+ * @returns The formatted string.
+ */
+export function formatToIdentifierString(str: string): string {
+  str = str.replace(/[^a-zA-Z0-9_$]/g, "_");
+  if (!str.match(/^[a-zA-Z_$]/)) {
+    str = "_" + str;
+  }
+  return str;
+}
