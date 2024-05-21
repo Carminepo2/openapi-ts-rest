@@ -3,7 +3,7 @@ import { generateContext } from "./context.js";
 import { getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
 import { prettify } from "./lib/prettier.js";
 import { validateAndBundleOpenAPISchema } from "./lib/redocly.js";
-import { tsAssignment, tsFunctionCall, tsNamedImport, tsNewLine, tsObject, tsPropertyCall } from "./lib/ts.js";
+import { tsVariableDeclaration, tsFunctionCall, tsNamedImport, tsNewLine, tsObject, tsPropertyCall } from "./lib/ts.js";
 import { AstTsWriter } from "./lib/utils.js";
 import { schemaObjectToAstZodSchema } from "./schemaObjectToAstZodSchema.js";
 
@@ -29,7 +29,7 @@ export async function generateTsRestContractFromOpenAPI({ input }: GenerateTsRes
       .add(tsNamedImport({ import_: ["z"], from: "zod" }))
       .add(tsNewLine())
       // const c = initContract();
-      .add(tsAssignment("const", "c", { eq: tsFunctionCall("initContract") }))
+      .add(tsVariableDeclaration("const", "c", { eq: tsFunctionCall("initContract") }))
       .add(tsNewLine());
 
     // Gets the API operations objects from the OpenAPI schema, which are used to generate each contract.
@@ -42,14 +42,14 @@ export async function generateTsRestContractFromOpenAPI({ input }: GenerateTsRes
       const schemaObjectZodAst = schemaObjectToAstZodSchema(schemaObject, ctx);
 
       // const [identifier] = z.object({ ... }) | z.string() | z.number() | ...
-      ast.add(tsAssignment("const", identifier, { eq: schemaObjectZodAst }));
+      ast.add(tsVariableDeclaration("const", identifier, { eq: schemaObjectZodAst }));
     }
 
     ast.add(tsNewLine());
 
     // export const contract = c.router({ ... });
     ast.add(
-      tsAssignment("const", "contract", {
+      tsVariableDeclaration("const", "contract", {
         eq: tsPropertyCall("c", ["router", tsObject(...operationObjects.map(apiOperationToAstTsRestContract))]),
         export_: true,
       })
@@ -61,7 +61,7 @@ export async function generateTsRestContractFromOpenAPI({ input }: GenerateTsRes
   }
 }
 
-// void generateTsRestContractFromOpenAPI({
-//   input:
-//     "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/tenant-process/open-api/tenant-service-spec.yml",
-// }).then(console.log);
+void generateTsRestContractFromOpenAPI({
+  input:
+    "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/tenant-process/open-api/tenant-service-spec.yml",
+}).then(console.log);
