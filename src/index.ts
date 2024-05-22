@@ -1,5 +1,5 @@
 import { writeFileSync } from "node:fs";
-import { apiOperationToAstTsRestContract } from "./apiOperationToAstTsRestContract.js";
+import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstTsRestContract.js";
 import { generateContext } from "./context.js";
 import { getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
 import { prettify } from "./lib/prettier.js";
@@ -11,9 +11,10 @@ import {
   tsNewLine,
   tsObject,
   tsChainedMethodCall,
+  tsNamedExport,
 } from "./lib/ts.js";
 import { AstTsWriter } from "./lib/utils.js";
-import { schemaObjectToAstZodSchema } from "./schemaObjectToAstZodSchema.js";
+import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
 
 interface GenerateTsRestContractFromOpenAPIOptions {
   input: string;
@@ -53,10 +54,23 @@ export async function generateTsRestContractFromOpenAPI({
 
   ast.add(tsNewLine());
 
+  const schemaIdentifiersToExport = ctx.topologicallySortedSchemas
+    .filter(({ ref }) => ctx.schemasToExportMap.has(ref))
+    .map(({ normalizedIdentifier }) => normalizedIdentifier);
+
+  // export { schema1, schema2, ... };
+  ast.add(tsNamedExport({ export_: schemaIdentifiersToExport }));
+
+  ast.add(tsNewLine());
+
+  const operationObjectsAst = operationObjects.map((operationObject) => {
+    return apiOperationToAstTsRestContract(operationObject, ctx);
+  });
+
   // export const contract = c.router({ ... });
   ast.add(
     tsVariableDeclaration("const", "contract", {
-      eq: tsChainedMethodCall("c", ["router", tsObject(...operationObjects.map(apiOperationToAstTsRestContract))]),
+      eq: tsChainedMethodCall("c", ["router", tsObject(...operationObjectsAst)]),
       export_: true,
     })
   );

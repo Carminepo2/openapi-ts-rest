@@ -1,6 +1,6 @@
 import { test, describe, expect } from "vitest";
 import type { SchemaObject } from "openapi3-ts/oas30";
-import { schemaObjectToAstZodSchema } from "../src/schemaObjectToAstZodSchema";
+import { schemaObjectToAstZodSchema } from "../src/converters/schemaObjectToAstZodSchema";
 import type { Context } from "../src/context";
 import { astToString } from "../src/lib/utils";
 

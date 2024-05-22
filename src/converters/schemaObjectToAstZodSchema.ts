@@ -1,8 +1,8 @@
 import { isReferenceObject, type SchemaObject } from "openapi3-ts/oas30";
-import { tsArray, tsIdentifier, tsObject, tsChainedMethodCall, tsRegex, type TsLiteralOrExpression } from "./lib/ts";
+import { tsArray, tsIdentifier, tsObject, tsChainedMethodCall, tsRegex, type TsLiteralOrExpression } from "../lib/ts";
 import { match, P } from "ts-pattern";
-import type { Context } from "./context";
-import { noop } from "./lib/utils";
+import type { Context } from "../context";
+import { noop } from "../lib/utils";
 import type { Expression } from "typescript";
 
 type ZodType =
@@ -44,30 +44,26 @@ type ZodValidationMethod =
 type ZodTypeMethodCall = [zodType: ZodType] | [zodType: ZodType, ...args: TsLiteralOrExpression[]];
 type ZodValidationMethodCall = [zodValidationMethod: ZodValidationMethod, ...args: TsLiteralOrExpression[]];
 
-interface ObjectPropertyCtx {
+interface SchemaObjectToAstZosSchemaOptions {
+  isRequired?: boolean;
   isObjectProperty?: boolean;
-  isRequiredObjectProperty?: boolean;
 }
 
 export function schemaObjectToAstZodSchema(
   schema: SchemaObject,
   ctx: Context,
-  objectPropertyCtx?: ObjectPropertyCtx
+  options?: SchemaObjectToAstZosSchemaOptions
 ): Expression {
   if (schema.oneOf || schema.anyOf || schema.allOf) {
     // TODO: Add support for `oneOf`, `anyOf` and `allOf`
     throw new Error("oneOf, anyOf and allOf are currently not supported");
   }
 
-  function buildZodSchema(
-    identifier = "z",
-    zodMethod?: ZodTypeMethodCall,
-    objectPropertyCtx2 = objectPropertyCtx
-  ): Expression {
+  function buildZodSchema(identifier = "z", zodMethod?: ZodTypeMethodCall, customOptions = options): Expression {
     return tsChainedMethodCall(
       identifier,
       ...(zodMethod ? [zodMethod] : []),
-      ...buildZodValidationChain(schema, objectPropertyCtx2)
+      ...buildZodValidationChain(schema, customOptions)
     );
   }
 
@@ -75,19 +71,19 @@ export function schemaObjectToAstZodSchema(
     if (!properties) return [];
 
     return Object.entries(properties).map(([key, refOrSchema]) => {
-      const isRequiredObjectProperty = schema.required?.includes(key);
-      const propertyCtx: ObjectPropertyCtx = { isRequiredObjectProperty, isObjectProperty: true };
+      const isRequired = schema.required?.includes(key);
+      const options: SchemaObjectToAstZosSchemaOptions = { isRequired, isObjectProperty: true };
 
       if (isReferenceObject(refOrSchema)) {
         const schemaToExport = ctx.schemasToExportMap.get(refOrSchema.$ref);
         if (schemaToExport) {
-          return [key, buildZodSchema(schemaToExport.normalizedIdentifier, undefined, propertyCtx)];
+          return [key, buildZodSchema(schemaToExport.normalizedIdentifier, undefined, options)];
         }
       }
 
       const schemaObject = ctx.resolveSchemaObject(refOrSchema);
 
-      return [key, schemaObjectToAstZodSchema(schemaObject, ctx, propertyCtx)];
+      return [key, schemaObjectToAstZodSchema(schemaObject, ctx, options)];
     });
   }
 
@@ -182,7 +178,10 @@ export function schemaObjectToAstZodSchema(
     });
 }
 
-export function buildZodValidationChain(schema: SchemaObject, options?: ObjectPropertyCtx): ZodValidationMethodCall[] {
+export function buildZodValidationChain(
+  schema: SchemaObject,
+  options?: SchemaObjectToAstZosSchemaOptions
+): ZodValidationMethodCall[] {
   const validationChain = match(schema.type)
     .with("string", () => buildZodStringValidationChain(schema))
     .with("number", "integer", () => buildZodNumberValidationChain(schema))
@@ -190,11 +189,11 @@ export function buildZodValidationChain(schema: SchemaObject, options?: ObjectPr
     .otherwise(() => []);
 
   // Are we dealing with an object property that is required?
-  const isRequiredObjectProperty = options?.isObjectProperty && !options.isRequiredObjectProperty;
+  const isOptionalObjectProperty = options?.isObjectProperty && !options.isRequired;
 
   if (schema.nullable && !options?.isObjectProperty) validationChain.push(["nullish"]);
-  else if (schema.nullable && isRequiredObjectProperty) validationChain.push(["nullable"]);
-  else if (isRequiredObjectProperty) validationChain.push(["optional"]);
+  else if (schema.nullable && isOptionalObjectProperty) validationChain.push(["nullable"]);
+  else if (isOptionalObjectProperty) validationChain.push(["optional"]);
 
   if (schema.default !== undefined) {
     const value = match(schema.type)

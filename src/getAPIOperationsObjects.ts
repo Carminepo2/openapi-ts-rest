@@ -1,4 +1,3 @@
-import camelcase from "camelcase";
 import type { ParameterObject, RequestBodyObject, ResponseObject, ReferenceObject } from "openapi3-ts/oas30";
 import type { Context } from "./context";
 
@@ -7,9 +6,10 @@ type Method = (typeof METHODS)[number];
 
 export interface APIOperationObject {
   description: string | undefined;
+  summary: string | undefined;
   operationId: string;
   path: string;
-  method: Uppercase<Method>;
+  method: Method;
   parameters: ParameterObject[];
   requestBody: RequestBodyObject | undefined;
   responses: Record<string, ResponseObject>;
@@ -46,10 +46,11 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
       }, {});
 
       const operationObject: APIOperationObject = {
-        description: pathOperation.summary ?? pathOperation.description,
-        method: method.toUpperCase() as Uppercase<Method>,
+        description: pathOperation.description,
+        summary: pathOperation.summary,
+        method,
         path,
-        operationId: camelcase(operationId),
+        operationId,
         parameters,
         responses,
         requestBody,
