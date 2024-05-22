@@ -1,99 +1,103 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+
 import {
   type HeadersObject,
   type ParameterObject,
   type OpenAPIObject,
   type ReferenceObject,
   type RequestBodyObject,
-  type ResponsesObject,
+  type ResponseObject,
   type SchemaObject,
   isReferenceObject,
 } from "openapi3-ts/oas30";
-import { formatToIdentifierString } from "./lib/utils";
+import { createDependencyGraph } from "./createDependencyGraph";
+import { formatToIdentifierString, topologicalSort } from "./lib/utils";
 
 const OPEN_API_COMPONENTS_PATH = ["schemas", "parameters", "requestBodies", "responses", "headers"] as const;
 type OpenAPIComponentPath = (typeof OPEN_API_COMPONENTS_PATH)[number];
-type OpenAPIObjectComponent = SchemaObject | ParameterObject | RequestBodyObject | ResponsesObject | HeadersObject;
+type OpenAPIObjectComponent = SchemaObject | ParameterObject | RequestBodyObject | ResponseObject | HeadersObject;
 
-type SchemaObjectMeta =
-  | {
-      schemaObject: SchemaObject;
-      normalizedIdentifier: string;
-      shouldExport: true;
+export function generateContext(openAPIDoc: OpenAPIObject) {
+  const getObjectByRef = <TObjectComponent extends OpenAPIObjectComponent>(
+    ref: string,
+    depth = 0
+  ): TObjectComponent => {
+    const { componentPath, componentName } = validateAndParseRef(ref);
+    const schemaObject = openAPIDoc.components?.[componentPath]?.[componentName];
+
+    if (!componentName || !schemaObject || depth > 100) {
+      throw new Error(`Could not parse component name from ref: ${ref}`);
     }
-  | {
-      schemaObject: SchemaObject;
-      shouldExport: false;
-    };
 
-export interface Context {
-  openAPIDoc: OpenAPIObject;
-  resolveRefOrObject: <TObjectComponent extends OpenAPIObjectComponent>(
-    refOrObject: TObjectComponent | ReferenceObject,
-    resolvedRefs?: Set<string>
-  ) => TObjectComponent;
-  resolveSchemaObject: (refOrSchemaObject: SchemaObject | ReferenceObject) => SchemaObjectMeta;
-}
+    if (isReferenceObject(schemaObject)) {
+      return getObjectByRef<TObjectComponent>(schemaObject.$ref, depth + 1);
+    }
 
-export function generateContext(openAPIDoc: OpenAPIObject): Context {
-  const schemaMap = new Map<string, SchemaObjectMeta>();
+    return schemaObject as TObjectComponent;
+  };
 
-  const resolveRefOrObject = <TObjectComponent extends OpenAPIObjectComponent>(
+  const resolveObject = <TObjectComponent extends OpenAPIObjectComponent>(
     refOrObject: TObjectComponent | ReferenceObject,
     resolvedRefs = new Set<string>()
   ): TObjectComponent => {
     if (!isReferenceObject(refOrObject)) return refOrObject;
 
     const ref = refOrObject.$ref;
-
-    // If this reference has already been resolved, throw an error to avoid infinite recursion
-    if (resolvedRefs.has(ref)) {
-      throw new Error(`Circular reference detected: ${ref}`);
-    }
-    resolvedRefs.add(ref);
-
-    const { componentPath, componentName } = validateAndParseRef(ref);
-
-    const component = openAPIDoc.components?.[componentPath]?.[componentName];
-
-    if (!component) {
-      throw new Error(`Could not resolve ref: ${ref}`);
-    }
+    const component = getObjectByRef<TObjectComponent>(ref);
 
     if (isReferenceObject(component)) {
-      return resolveRefOrObject<TObjectComponent>(component, resolvedRefs);
+      return resolveObject<TObjectComponent>(component, resolvedRefs);
     }
 
-    return component as TObjectComponent;
+    return component;
   };
 
-  const resolveSchemaObject: Context["resolveSchemaObject"] = (refOrSchemaObject) => {
-    if (!isReferenceObject(refOrSchemaObject))
-      return {
-        schemaObject: refOrSchemaObject,
-        shouldExport: false,
-      };
+  const getSchemaByRef = getObjectByRef<SchemaObject>;
 
-    const ref = refOrSchemaObject.$ref;
+  const graph = createDependencyGraph(openAPIDoc, getSchemaByRef);
+  const topologicallySortedSchemaRefs = topologicalSort(graph);
 
-    const cachedSchema = schemaMap.get(ref);
-    if (cachedSchema) return cachedSchema;
+  const schemasToExportMap = new Map<
+    string,
+    {
+      ref: string;
+      schema: SchemaObject;
+      identifier: string;
+      normalizedIdentifier: string;
+    }
+  >();
 
-    const schemaObjectMeta = {
-      schemaObject: resolveRefOrObject<SchemaObject>(refOrSchemaObject),
-      normalizedIdentifier: formatToIdentifierString(validateAndParseRef(ref).componentName),
-      shouldExport: true,
-    };
+  const topologicallySortedSchemas = topologicallySortedSchemaRefs.map((ref) => {
+    const { componentName: identifier } = validateAndParseRef(ref);
+    const schema = getSchemaByRef(ref);
+    const normalizedIdentifier = formatToIdentifierString(identifier);
 
-    schemaMap.set(ref, schemaObjectMeta);
-    return schemaObjectMeta;
-  };
+    const componentMeta = { ref, schema, identifier, normalizedIdentifier };
+
+    schemasToExportMap.set(ref, componentMeta);
+    return componentMeta;
+  });
 
   return {
     openAPIDoc,
-    resolveRefOrObject,
-    resolveSchemaObject,
+    getSchemaByRef,
+    getParameterByRef: getObjectByRef<ParameterObject>,
+    getRequestBodyByRef: getObjectByRef<RequestBodyObject>,
+    getResponseByRef: getObjectByRef<ResponseObject>,
+    getHeaderByRef: getObjectByRef<HeadersObject>,
+
+    resolveSchemaObject: resolveObject<SchemaObject>,
+    resolveParameterObject: resolveObject<ParameterObject>,
+    resolveRequestBodyObject: resolveObject<RequestBodyObject>,
+    resolveResponseObject: resolveObject<ResponseObject>,
+    resolveHeaderObject: resolveObject<HeadersObject>,
+
+    topologicallySortedSchemas,
+    schemasToExportMap,
   };
 }
+
+export type Context = ReturnType<typeof generateContext>;
 
 function validateAndParseRef(ref: string): {
   componentPath: OpenAPIComponentPath;

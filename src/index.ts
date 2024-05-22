@@ -27,6 +27,7 @@ export async function generateTsRestContractFromOpenAPI({
   input,
 }: GenerateTsRestContractFromOpenAPIOptions): Promise<string> {
   const openApiSchema = await validateAndBundleOpenAPISchema(input);
+
   const ctx = generateContext(openApiSchema);
 
   const ast = new AstTsWriter();
@@ -45,13 +46,9 @@ export async function generateTsRestContractFromOpenAPI({
   const operationObjects = getAPIOperationsObjects(ctx);
 
   // Generates the Zod schemas for each component schema.
-  const componentSchemas = Object.entries(openApiSchema.components?.schemas ?? []);
-  for (const [identifier, schemaObjectOrRef] of componentSchemas) {
-    const schemaObject = ctx.resolveRefOrObject(schemaObjectOrRef);
-    const schemaObjectZodAst = schemaObjectToAstZodSchema(schemaObject, ctx);
-
+  for (const { normalizedIdentifier, schema } of ctx.topologicallySortedSchemas) {
     // const [identifier] = z.object({ ... }) | z.string() | z.number() | ...
-    ast.add(tsVariableDeclaration("const", identifier, { eq: schemaObjectZodAst }));
+    ast.add(tsVariableDeclaration("const", normalizedIdentifier, { eq: schemaObjectToAstZodSchema(schema, ctx) }));
   }
 
   ast.add(tsNewLine());
@@ -70,4 +67,6 @@ export async function generateTsRestContractFromOpenAPI({
 void generateTsRestContractFromOpenAPI({
   input:
     "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/tenant-process/open-api/tenant-service-spec.yml",
-}).then(console.log);
+}).then((s) => {
+  writeFileSync("contract.ts", s);
+});

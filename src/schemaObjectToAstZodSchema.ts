@@ -1,4 +1,4 @@
-import { type SchemaObject } from "openapi3-ts/oas30";
+import { isReferenceObject, type SchemaObject } from "openapi3-ts/oas30";
 import { tsArray, tsIdentifier, tsObject, tsChainedMethodCall, tsRegex, type TsLiteralOrExpression } from "./lib/ts";
 import { match, P } from "ts-pattern";
 import type { Context } from "./context";
@@ -75,21 +75,19 @@ export function schemaObjectToAstZodSchema(
     if (!properties) return [];
 
     return Object.entries(properties).map(([key, refOrSchema]) => {
-      const meta = ctx.resolveSchemaObject(refOrSchema);
-
       const isRequiredObjectProperty = schema.required?.includes(key);
-
       const propertyCtx: ObjectPropertyCtx = { isRequiredObjectProperty, isObjectProperty: true };
 
-      if (meta.shouldExport) {
-        return [key, buildZodSchema(meta.normalizedIdentifier, undefined, propertyCtx)];
+      if (isReferenceObject(refOrSchema)) {
+        const schemaToExport = ctx.schemasToExportMap.get(refOrSchema.$ref);
+        if (schemaToExport) {
+          return [key, buildZodSchema(schemaToExport.normalizedIdentifier, undefined, propertyCtx)];
+        }
       }
 
-      return [
-        key,
-        // Pass the information about we are dealing with an object property and if it is required
-        schemaObjectToAstZodSchema(meta.schemaObject, ctx, propertyCtx),
-      ];
+      const schemaObject = ctx.resolveSchemaObject(refOrSchema);
+
+      return [key, schemaObjectToAstZodSchema(schemaObject, ctx, propertyCtx)];
     });
   }
 
@@ -157,13 +155,17 @@ export function schemaObjectToAstZodSchema(
     })
     .with("array", () => {
       if (!schema.items) return buildZodSchema("z", ["array", buildZodSchema("z", ["any"])]);
-      const meta = ctx.resolveSchemaObject(schema.items);
-      return buildZodSchema("z", [
-        "array",
-        meta.shouldExport
-          ? tsIdentifier(meta.normalizedIdentifier)
-          : schemaObjectToAstZodSchema(meta.schemaObject, ctx),
-      ]);
+
+      if (isReferenceObject(schema.items)) {
+        const schemaToExport = ctx.schemasToExportMap.get(schema.items.$ref);
+        if (schemaToExport) {
+          return buildZodSchema("z", ["array", tsIdentifier(schemaToExport.normalizedIdentifier)]);
+        }
+      }
+
+      const schemaObject = ctx.resolveSchemaObject(schema.items);
+
+      return buildZodSchema("z", ["array", schemaObjectToAstZodSchema(schemaObject, ctx)]);
     })
     .when(
       (t) => Boolean(t === "object" || schema.properties),
