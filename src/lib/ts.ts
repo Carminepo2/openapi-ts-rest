@@ -23,7 +23,7 @@ export type TsLiteralOrExpression = TsLiteral | Expression;
 export type TsFunctionCall = [identifier: string, ...args: TsLiteralOrExpression[]];
 
 /**
- * Creates a TypeScript named import statement.
+ * Creates an AST TypeScript named import statement.
  *
  * @param import_ The names of the imports.
  * @param from The module specifier.
@@ -51,7 +51,7 @@ export function tsNamedImport({ import_, from }: { import_: string[]; from: stri
 }
 
 /**
- * Creates a TypeScript named export statement.
+ * Creates an AST TypeScript named export statement.
  *
  * @param export_ The identifiers to export
  * @returns The TypeScript AST named export statement.
@@ -129,7 +129,7 @@ export function tsLiteralOrExpression(
 /**
  * Returns the corresponding TypeScript AST node for the given keyword.
  *
- * @param keyword - The keywod.
+ * @param keyword - The keyword.
  * @returns The TypeScript AST node for the keyword.
  */
 export function tsKeyword(keyword: "var"): NodeFlags.None;
@@ -144,6 +144,28 @@ export function tsKeyword(keyword: TsKeyword): NodeFlags {
     .exhaustive();
 }
 
+/**
+ * Creates an AST TypeScript variable declaration statement.
+ *
+ * @param keyword - The variable declaration keyword.
+ * @param identifier - The variable identifier.
+ * @param eq - The primitive value or the ast expresion to assign to the variable.
+ * @param export_ - Whether to export the variable.
+ *
+ * @returns The TypeScript AST variable declaration statement.
+ *
+ * @example
+ * ```ts
+ * tsVariableDeclaration("const", "foo", { eq: "bar" });
+ * // const foo = "bar";
+ *
+ * tsVariableDeclaration("let", "foo", { eq: tsObject({}) });
+ * // let foo = {};
+ *
+ * tsVariableDeclaration("var", "foo", { eq: tsFunctionCall("fn", "arg"), _export: true });
+ * // export var foo = fn("arg");
+ * ```
+ */
 export function tsVariableDeclaration(
   keyword: TsKeyword,
   identifier: string,
@@ -165,8 +187,20 @@ export function tsVariableDeclaration(
   );
 }
 
-export function tsFunctionCall(...args: TsFunctionCall) {
-  const [identifier, ...fnCallArgs] = args;
+/**
+ * Creates an AST TypeScript function call expression.
+ *
+ * @param fn - The first argument is the identifier (name) of the function. The remaining arguments are the parameters to pass to the function.
+ * @returns  An AST TypeScript function call expression.
+ *
+ * @example
+ * ```ts
+ * tsFunctionCall("fn", "arg1", "arg2");
+ * // fn("arg1", "arg2");
+ * ```
+ */
+export function tsFunctionCall(...fn: TsFunctionCall) {
+  const [identifier, ...fnCallArgs] = fn;
   return factory.createCallExpression(
     factory.createIdentifier(identifier),
     undefined,
@@ -174,6 +208,17 @@ export function tsFunctionCall(...args: TsFunctionCall) {
   );
 }
 
+/**
+ * Creates an AST TypeScript object literal expression.
+ * @param properties An array of key-value pairs to create the object properties. The value can be primitive (which will be automatically converted to an AST expression) or an AST expression.
+ * @returns The TypeScript AST object literal expression.
+ *
+ * @example
+ * ```ts
+ * tsObject(["foo", "bar"], ["baz", 42]);
+ * // { foo: "bar", baz: 42 }
+ * ```
+ */
 export function tsObject(...properties: [key: string, value: TsLiteralOrExpression][]) {
   return factory.createObjectLiteralExpression(
     properties.map(([key, value]) =>
@@ -182,10 +227,28 @@ export function tsObject(...properties: [key: string, value: TsLiteralOrExpressi
   );
 }
 
+/**
+ * Creates an AST TypeScript array literal expression.
+ * @param elements An array of elements to create the array. The elements can be primitive (which will be automatically converted to an AST expression) or an AST expression.
+ * @returns The TypeScript AST array literal expression.
+ *
+ * @example
+ * ```ts
+ * tsArray("foo", 42);
+ * // ["foo", 42]
+ * ```
+ */
 export function tsArray(...elements: TsLiteralOrExpression[]) {
   return factory.createArrayLiteralExpression(elements.map(tsLiteralOrExpression));
 }
 
+/**
+ *
+ * @param identifier
+ * @param param1
+ * @param chain
+ * @returns
+ */
 export function tsPropertyCall(identifier: string, [method, ...args]: TsFunctionCall, ...chain: TsFunctionCall[]) {
   let expression: Expression = factory.createCallExpression(
     factory.createPropertyAccessExpression(factory.createIdentifier(identifier), factory.createIdentifier(method)),
@@ -208,6 +271,13 @@ export function tsNewLine() {
   return factory.createIdentifier("\n");
 }
 
+/**
+ * Create an AST Typescript identifier.
+ * 
+ * @param name the name of the identifier
+ * @returns the AST Typescript identifier
+
+ */
 export function tsIdentifier(name: string) {
   return factory.createIdentifier(name);
 }
