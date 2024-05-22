@@ -32,7 +32,7 @@ export async function validateAndBundleOpenAPISchema(
   );
 
   const resolver = new BaseResolver(redocConfig.resolve);
-  const document = await parseSchema(source, {
+  const document = await retrieveOpenAPIDocument(source, {
     absoluteRef,
     resolver,
   });
@@ -44,18 +44,21 @@ export async function validateAndBundleOpenAPISchema(
     config: redocConfig.styleguide,
     externalRefResolver: resolver,
   });
-  resolveProblems(problems);
+
+  logProblems(problems);
 
   const bundled = await bundle({
     config: redocConfig,
     dereference: false,
     doc: document,
   });
-  resolveProblems(bundled.problems);
+
+  logProblems(bundled.problems);
+
   return bundled.bundle.parsed as OpenAPIObject;
 }
 
-async function parseSchema(
+async function retrieveOpenAPIDocument(
   schema: unknown,
   {
     absoluteRef,
@@ -85,14 +88,14 @@ async function parseSchema(
           resolve(content.trim());
         });
       });
-      return parseSchema(contents, { absoluteRef, resolver });
+      return retrieveOpenAPIDocument(contents, { absoluteRef, resolver });
     })
-    .with(P.instanceOf(Buffer), (schema) => parseSchema(schema.toString("utf8"), { absoluteRef, resolver }))
+    .with(P.instanceOf(Buffer), (schema) => retrieveOpenAPIDocument(schema.toString("utf8"), { absoluteRef, resolver }))
     .with(P.string, (schema) => {
       // URL
       if (schema.startsWith("http://") || schema.startsWith("https://") || schema.startsWith("file://")) {
         const url = new URL(schema);
-        return parseSchema(url, {
+        return retrieveOpenAPIDocument(url, {
           absoluteRef: url.protocol === "file:" ? fileURLToPath(url) : url.href,
           resolver,
         });
@@ -119,7 +122,7 @@ async function parseSchema(
     });
 }
 
-function validateOpenAPIVersion(document: Document) {
+function validateOpenAPIVersion(document: Document): void {
   const parsedDocument = document.parsed as { openapi: string; swagger: string };
   const openapiVersion = Number.parseFloat(parsedDocument.openapi);
   const { swagger, openapi } = parsedDocument;
@@ -136,7 +139,7 @@ function validateOpenAPIVersion(document: Document) {
   }
 }
 
-function resolveProblems(problems: NormalizedProblem[]) {
+function logProblems(problems: NormalizedProblem[]): void {
   if (!problems.length) return;
 
   const errors = problems.filter((p) => p.severity === "error");

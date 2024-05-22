@@ -38,7 +38,7 @@ export function astToString(
  *
  * @returns {void}
  */
-export function noop(): void {
+export function noop(): undefined {
   return void 0;
 }
 
@@ -53,7 +53,7 @@ export class AstTsWriter {
    * @param nodes The nodes to add.
    * @returns The updated `AstTsWriter` instance.
    */
-  add(...nodes: ts.Node[]) {
+  add(...nodes: ts.Node[]): typeof this {
     this.nodes.push(...nodes);
     return this;
   }
@@ -62,7 +62,7 @@ export class AstTsWriter {
    * Converts the added nodes to a string representation.
    * @returns The string representation of the added nodes.
    */
-  toString() {
+  toString(): string {
     return astToString(this.nodes);
   }
 }

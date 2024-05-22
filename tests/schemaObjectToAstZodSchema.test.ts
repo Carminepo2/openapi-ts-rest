@@ -8,7 +8,7 @@ const mockCtx = {
   resolveOpenAPIComponent: <T>(arg: T) => arg,
 } as Context;
 
-const wrappedSchemaObjectToAstZodSchema = (schema: SchemaObject) =>
+const wrappedSchemaObjectToAstZodSchema = (schema: SchemaObject): string =>
   astToString(schemaObjectToAstZodSchema(schema, mockCtx)).trim();
 
 describe("schemaObjectToAstZodSchema", () => {

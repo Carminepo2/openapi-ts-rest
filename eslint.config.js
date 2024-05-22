@@ -18,6 +18,7 @@ export default tseslint.config(
     rules: {
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "@typescript-eslint/prefer-nullish-coalescing": "off",
+      "@typescript-eslint/explicit-function-return-type": "error",
     },
   }
 );

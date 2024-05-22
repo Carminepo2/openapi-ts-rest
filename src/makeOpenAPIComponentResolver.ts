@@ -14,11 +14,16 @@ const OPEN_API_COMPONENTS_PATH = ["schemas", "parameters", "requestBodies", "res
 type OpenAPIComponentPath = (typeof OPEN_API_COMPONENTS_PATH)[number];
 type OpenAPIComponents = SchemaObject | ParameterObject | RequestBodyObject | ResponsesObject | HeadersObject;
 
-export function makeOpenAPIComponentResolver(doc: OpenAPIObject) {
-  function resolveOpenAPIComponent<TComponent extends OpenAPIComponents>(
+export function makeOpenAPIComponentResolver(
+  doc: OpenAPIObject
+): <TComponent extends OpenAPIComponents>(
+  parameter: TComponent | ReferenceObject,
+  resolvedRefs?: Set<string>
+) => TComponent {
+  return function resolveOpenAPIComponent<TComponent extends OpenAPIComponents>(
     parameter: TComponent | ReferenceObject,
     resolvedRefs = new Set<string>()
-  ): TComponent {
+  ) {
     if (isReferenceObject(parameter)) {
       const ref = parameter.$ref;
 
@@ -51,9 +56,7 @@ export function makeOpenAPIComponentResolver(doc: OpenAPIObject) {
       return parameterObject;
     }
     return parameter;
-  }
-
-  return resolveOpenAPIComponent;
+  };
 }
 
 export function assertRefIsValid(ref: string): asserts ref is `#/components/${OpenAPIComponentPath}/${string}` {

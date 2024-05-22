@@ -15,6 +15,14 @@ import {
   type FalseLiteral,
   type NullLiteral,
   SyntaxKind,
+  type ImportDeclaration,
+  type ExportDeclaration,
+  type VariableStatement,
+  type CallExpression,
+  type ObjectLiteralExpression,
+  type ArrayLiteralExpression,
+  type Identifier,
+  type RegularExpressionLiteral,
 } from "typescript";
 
 export type TsKeyword = "var" | "let" | "const";
@@ -35,7 +43,7 @@ export type TsFunctionCall = [identifier: string, ...args: TsLiteralOrExpression
  * // import { foo, bar } from "./module";
  * ```
  */
-export function tsNamedImport({ import_, from }: { import_: string[]; from: string }) {
+export function tsNamedImport({ import_, from }: { import_: string[]; from: string }): ImportDeclaration {
   return factory.createImportDeclaration(
     undefined,
     factory.createImportClause(
@@ -62,7 +70,7 @@ export function tsNamedImport({ import_, from }: { import_: string[]; from: stri
  * // export { foo, bar };
  * ```
  */
-export function tsNamedExport({ export_: names }: { export_: string[] }) {
+export function tsNamedExport({ export_: names }: { export_: string[] }): ExportDeclaration {
   return factory.createExportDeclaration(
     undefined,
     false,
@@ -170,7 +178,7 @@ export function tsVariableDeclaration(
   keyword: TsKeyword,
   identifier: string,
   { eq: value, export_ }: { eq: TsLiteralOrExpression; export_?: boolean }
-) {
+): VariableStatement {
   return factory.createVariableStatement(
     export_ ? [factory.createToken(SyntaxKind.ExportKeyword)] : undefined,
     factory.createVariableDeclarationList(
@@ -199,7 +207,7 @@ export function tsVariableDeclaration(
  * // fn("arg1", "arg2");
  * ```
  */
-export function tsFunctionCall(...fn: TsFunctionCall) {
+export function tsFunctionCall(...fn: TsFunctionCall): CallExpression {
   const [identifier, ...fnCallArgs] = fn;
   return factory.createCallExpression(
     factory.createIdentifier(identifier),
@@ -219,7 +227,7 @@ export function tsFunctionCall(...fn: TsFunctionCall) {
  * // { foo: "bar", baz: 42 }
  * ```
  */
-export function tsObject(...properties: [key: string, value: TsLiteralOrExpression][]) {
+export function tsObject(...properties: [key: string, value: TsLiteralOrExpression][]): ObjectLiteralExpression {
   return factory.createObjectLiteralExpression(
     properties.map(([key, value]) =>
       factory.createPropertyAssignment(factory.createIdentifier(key), tsLiteralOrExpression(value))
@@ -238,18 +246,30 @@ export function tsObject(...properties: [key: string, value: TsLiteralOrExpressi
  * // ["foo", 42]
  * ```
  */
-export function tsArray(...elements: TsLiteralOrExpression[]) {
+export function tsArray(...elements: TsLiteralOrExpression[]): ArrayLiteralExpression {
   return factory.createArrayLiteralExpression(elements.map(tsLiteralOrExpression));
 }
 
 /**
+ * Creates an AST TypeScript method call expression.
+ * Method calls are chained together.
  *
- * @param identifier
- * @param param1
- * @param chain
- * @returns
+ * @param identifier the identifier of the object to call the method on
+ * @param param1 the method to call
+ * @param chain the rest of the method calls
+ * @returns the AST TypeScript property call expression
+ *
+ * @example
+ * ```ts
+ * tsPropertyCall("foo", ["bar", "baz"], ["qux", "quux"]);
+ * // foo.bar("baz").qux("quux")
+ * ```
  */
-export function tsPropertyCall(identifier: string, [method, ...args]: TsFunctionCall, ...chain: TsFunctionCall[]) {
+export function tsChainedMethodCall(
+  identifier: string,
+  [method, ...args]: TsFunctionCall,
+  ...chain: TsFunctionCall[]
+): Expression {
   let expression: Expression = factory.createCallExpression(
     factory.createPropertyAccessExpression(factory.createIdentifier(identifier), factory.createIdentifier(method)),
     undefined,
@@ -267,21 +287,32 @@ export function tsPropertyCall(identifier: string, [method, ...args]: TsFunction
   return expression;
 }
 
-export function tsNewLine() {
+/**
+ * Create an new line in the AST.
+ * This might be a bit hacky, but it works.
+ * @see https://stackoverflow.com/a/69240365
+ *
+ * @returns
+ */
+export function tsNewLine(): Identifier {
   return factory.createIdentifier("\n");
 }
 
 /**
  * Create an AST Typescript identifier.
- * 
+ *
  * @param name the name of the identifier
  * @returns the AST Typescript identifier
-
  */
-export function tsIdentifier(name: string) {
+export function tsIdentifier(name: string): Identifier {
   return factory.createIdentifier(name);
 }
 
-export function tsRegex(pattern: string) {
+/**
+ * Create an AST Typescript regular expression literal.
+ * @param pattern the pattern of the regular expression
+ * @returns the AST Typescript regular expression literal
+ */
+export function tsRegex(pattern: string): RegularExpressionLiteral {
   return factory.createRegularExpressionLiteral(pattern);
 }

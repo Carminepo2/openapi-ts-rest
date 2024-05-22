@@ -1,5 +1,5 @@
 import { type SchemaObject } from "openapi3-ts/oas30";
-import { tsArray, tsIdentifier, tsObject, tsPropertyCall, tsRegex, type TsLiteralOrExpression } from "./lib/ts";
+import { tsArray, tsIdentifier, tsObject, tsChainedMethodCall, tsRegex, type TsLiteralOrExpression } from "./lib/ts";
 import { match, P } from "ts-pattern";
 import type { Context } from "./context";
 import { noop } from "./lib/utils";
@@ -59,7 +59,7 @@ export function schemaObjectToAstZodSchema(
   }
 
   function buildZodSchema(zodMethod: ZodTypeMethodCall): Expression {
-    return tsPropertyCall("z", zodMethod, ...buildZodValidationChain(schema, objectPropertyCtx));
+    return tsChainedMethodCall("z", zodMethod, ...buildZodValidationChain(schema, objectPropertyCtx));
   }
 
   if (schema.enum) {
@@ -217,7 +217,7 @@ function buildZodStringValidationChain(schema: SchemaObject): ZodValidationMetho
   return zodValidationMethods;
 }
 
-function sanitizeAndFormatRegex(pattern: string) {
+function sanitizeAndFormatRegex(pattern: string): string {
   if (pattern.startsWith("/") && pattern.endsWith("/")) {
     pattern = pattern.slice(1, -1);
   }

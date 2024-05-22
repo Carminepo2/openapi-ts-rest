@@ -1,17 +1,21 @@
 import { NodeFlags, isExpression, type Node } from "typescript";
 import {
   tsArray,
+  tsChainedMethodCall,
   tsFunctionCall,
+  tsIdentifier,
   tsKeyword,
   tsLiteralOrExpression,
   tsNamedExport,
   tsNamedImport,
+  tsNewLine,
   tsObject,
+  tsRegex,
   tsVariableDeclaration,
 } from "../../src/lib/ts";
 import { astToString } from "../../src/lib/utils";
 
-const prepareForSnapshot = (ts: Node) => astToString(ts).trim();
+const prepareForSnapshot = (ts: Node): string => astToString(ts).trim();
 
 describe("ts", () => {
   describe("tsNamedImport", () => {
@@ -162,6 +166,37 @@ describe("ts", () => {
     it("should create an array literal expression with no elements", () => {
       const result = tsArray();
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"[]"`);
+    });
+  });
+
+  describe("tsChainedMethodCall", () => {
+    it("should create a chained method call expression", () => {
+      const result = tsChainedMethodCall("foo", ["bar", 1], ["baz", tsObject()], ["qux", tsArray("quux")]);
+      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"foo.bar(1).baz({}).qux(["quux"])"`);
+    });
+  });
+
+  describe("tsNewLine", () => {
+    it("should create a new line", () => {
+      const result = tsNewLine();
+      expect(astToString(result)).toMatchInlineSnapshot(`
+        "
+        "
+      `);
+    });
+  });
+
+  describe("tsIdentifier", () => {
+    it("should create an identifier", () => {
+      const result = tsIdentifier("foo");
+      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"foo"`);
+    });
+  });
+
+  describe("tsRegex", () => {
+    it("should create a regex literal expression", () => {
+      const result = tsRegex("/.*/");
+      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"/.*/"`);
     });
   });
 });
