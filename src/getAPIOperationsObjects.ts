@@ -34,15 +34,13 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
 
       const parameters = (pathItem.parameters ?? [])
         .concat(pathOperation.parameters ?? [])
-        .map((param) => ctx.resolveOpenAPIComponent(param));
+        .map((param) => ctx.resolveRefOrObject(param));
 
-      const requestBody = pathOperation.requestBody
-        ? ctx.resolveOpenAPIComponent(pathOperation.requestBody)
-        : undefined;
+      const requestBody = pathOperation.requestBody ? ctx.resolveRefOrObject(pathOperation.requestBody) : undefined;
 
       const responsesEntries = Object.entries(pathOperation.responses) as [string, ResponseObject | ReferenceObject][];
       const responses = responsesEntries.reduce<APIOperationObject["responses"]>((acc, [key, value]) => {
-        return { ...acc, [key]: ctx.resolveOpenAPIComponent(value) };
+        return { ...acc, [key]: ctx.resolveRefOrObject(value) };
       }, {});
 
       const operationObject: APIOperationObject = {

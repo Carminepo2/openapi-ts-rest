@@ -5,7 +5,7 @@ import type { Context } from "../src/context";
 import { astToString } from "../src/lib/utils";
 
 const mockCtx = {
-  resolveOpenAPIComponent: <T>(arg: T) => arg,
+  resolveSchemaObject: <T>(arg: T) => ({ schemaObject: arg }),
 } as Context;
 
 const wrappedSchemaObjectToAstZodSchema = (schema: SchemaObject): string =>

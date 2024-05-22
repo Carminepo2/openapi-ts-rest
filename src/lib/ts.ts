@@ -265,16 +265,10 @@ export function tsArray(...elements: TsLiteralOrExpression[]): ArrayLiteralExpre
  * // foo.bar("baz").qux("quux")
  * ```
  */
-export function tsChainedMethodCall(
-  identifier: string,
-  [method, ...args]: TsFunctionCall,
-  ...chain: TsFunctionCall[]
-): Expression {
-  let expression: Expression = factory.createCallExpression(
-    factory.createPropertyAccessExpression(factory.createIdentifier(identifier), factory.createIdentifier(method)),
-    undefined,
-    args.map(tsLiteralOrExpression)
-  );
+export function tsChainedMethodCall(identifier: string, ...chain: TsFunctionCall[]): Expression {
+  let expression: Expression = factory.createIdentifier(identifier);
+
+  if (identifier.length === 0) return expression;
 
   for (const [method, ...args] of chain) {
     expression = factory.createCallExpression(

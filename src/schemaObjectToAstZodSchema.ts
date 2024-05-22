@@ -55,11 +55,42 @@ export function schemaObjectToAstZodSchema(
   objectPropertyCtx?: ObjectPropertyCtx
 ): Expression {
   if (schema.oneOf || schema.anyOf || schema.allOf) {
+    // TODO: Add support for `oneOf`, `anyOf` and `allOf`
     throw new Error("oneOf, anyOf and allOf are currently not supported");
   }
 
-  function buildZodSchema(zodMethod: ZodTypeMethodCall): Expression {
-    return tsChainedMethodCall("z", zodMethod, ...buildZodValidationChain(schema, objectPropertyCtx));
+  function buildZodSchema(
+    identifier = "z",
+    zodMethod?: ZodTypeMethodCall,
+    objectPropertyCtx2 = objectPropertyCtx
+  ): Expression {
+    return tsChainedMethodCall(
+      identifier,
+      ...(zodMethod ? [zodMethod] : []),
+      ...buildZodValidationChain(schema, objectPropertyCtx2)
+    );
+  }
+
+  function buildSchemaObjectProperties(properties: SchemaObject["properties"]): [string, TsLiteralOrExpression][] {
+    if (!properties) return [];
+
+    return Object.entries(properties).map(([key, refOrSchema]) => {
+      const meta = ctx.resolveSchemaObject(refOrSchema);
+
+      const isRequiredObjectProperty = schema.required?.includes(key);
+
+      const propertyCtx: ObjectPropertyCtx = { isRequiredObjectProperty, isObjectProperty: true };
+
+      if (meta.shouldExport) {
+        return [key, buildZodSchema(meta.normalizedIdentifier, undefined, propertyCtx)];
+      }
+
+      return [
+        key,
+        // Pass the information about we are dealing with an object property and if it is required
+        schemaObjectToAstZodSchema(meta.schemaObject, ctx, propertyCtx),
+      ];
+    });
   }
 
   if (schema.enum) {
@@ -70,23 +101,23 @@ export function schemaObjectToAstZodSchema(
 
     if (schema.type === "string") {
       if (schema.enum.length === 1) {
-        return buildZodSchema(["literal", resolveEnumValue(schema.enum[0])]);
+        return buildZodSchema("z", ["literal", resolveEnumValue(schema.enum[0])]);
       }
 
-      return buildZodSchema(["enum", tsArray(...schema.enum.map(resolveEnumValue))]);
+      return buildZodSchema("z", ["enum", tsArray(...schema.enum.map(resolveEnumValue))]);
     }
 
     if (schema.enum.some((e) => typeof e === "string")) {
-      return buildZodSchema(["never"]);
+      return buildZodSchema("z", ["never"]);
     }
 
     if (schema.enum.length === 1) {
-      return buildZodSchema(["literal", schema.enum[0]]);
+      return buildZodSchema("z", ["literal", schema.enum[0]]);
     }
 
-    return buildZodSchema([
+    return buildZodSchema("z", [
       "enum",
-      tsArray(...schema.enum.map((value) => buildZodSchema(["literal", resolveEnumValue(value)]))),
+      tsArray(...schema.enum.map((value) => buildZodSchema("z", ["literal", resolveEnumValue(value)]))),
     ]);
   }
 
@@ -100,56 +131,49 @@ export function schemaObjectToAstZodSchema(
       P.array(P.any),
       (t) => t.length > 1,
       (t) =>
-        buildZodSchema(["union", tsArray(...t.map((type) => schemaObjectToAstZodSchema({ ...schema, type }, ctx)))])
+        buildZodSchema("z", [
+          "union",
+          tsArray(...t.map((type) => schemaObjectToAstZodSchema({ ...schema, type }, ctx))),
+        ])
     )
     .with(
       "string",
       () => schema.format === "binary",
       () => {
-        return buildZodSchema(["instanceof", tsIdentifier("File")]);
+        return buildZodSchema("z", ["instanceof", tsIdentifier("File")]);
       }
     )
     .with("string", () => {
-      return buildZodSchema(["string"]);
+      return buildZodSchema("z", ["string"]);
     })
     .with("number", "integer", () => {
-      return buildZodSchema(["number"]);
+      return buildZodSchema("z", ["number"]);
     })
     .with("boolean", () => {
-      return buildZodSchema(["boolean"]);
+      return buildZodSchema("z", ["boolean"]);
     })
     .with("null", () => {
-      return buildZodSchema(["null"]);
+      return buildZodSchema("z", ["null"]);
     })
     .with("array", () => {
-      return buildZodSchema([
+      if (!schema.items) return buildZodSchema("z", ["array", buildZodSchema("z", ["any"])]);
+      const meta = ctx.resolveSchemaObject(schema.items);
+      return buildZodSchema("z", [
         "array",
-        schema.items
-          ? schemaObjectToAstZodSchema(ctx.resolveOpenAPIComponent(schema.items), ctx)
-          : buildZodSchema(["any"]),
+        meta.shouldExport
+          ? tsIdentifier(meta.normalizedIdentifier)
+          : schemaObjectToAstZodSchema(meta.schemaObject, ctx),
       ]);
     })
     .when(
       (t) => Boolean(t === "object" || schema.properties),
       () => {
         //TODO: Add support for `schema.additionalProperties`
-        if (!schema.properties) return buildZodSchema(["object", tsObject()]);
-        const properties: [string, TsLiteralOrExpression][] = Object.entries(schema.properties).map(
-          ([key, schemaOrRef]) => {
-            const propSchema = ctx.resolveOpenAPIComponent(schemaOrRef);
-            const isRequiredObjectProperty = schema.required?.includes(key);
-            return [
-              key,
-              // Pass the information about we are dealing with an object property and if it is required
-              schemaObjectToAstZodSchema(propSchema, ctx, { isRequiredObjectProperty, isObjectProperty: true }),
-            ];
-          }
-        );
-        return buildZodSchema(["object", tsObject(...properties)]);
+        return buildZodSchema("z", ["object", tsObject(...buildSchemaObjectProperties(schema.properties))]);
       }
     )
     .with(P.nullish, () => {
-      return buildZodSchema(["unknown"]);
+      return buildZodSchema("z", ["unknown"]);
     })
     .otherwise((t) => {
       throw new Error(`Unsupported schema type ${t as unknown as string}`);

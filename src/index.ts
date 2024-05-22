@@ -1,3 +1,4 @@
+import { writeFileSync } from "node:fs";
 import { apiOperationToAstTsRestContract } from "./apiOperationToAstTsRestContract.js";
 import { generateContext } from "./context.js";
 import { getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
@@ -46,7 +47,7 @@ export async function generateTsRestContractFromOpenAPI({
   // Generates the Zod schemas for each component schema.
   const componentSchemas = Object.entries(openApiSchema.components?.schemas ?? []);
   for (const [identifier, schemaObjectOrRef] of componentSchemas) {
-    const schemaObject = ctx.resolveOpenAPIComponent(schemaObjectOrRef);
+    const schemaObject = ctx.resolveRefOrObject(schemaObjectOrRef);
     const schemaObjectZodAst = schemaObjectToAstZodSchema(schemaObject, ctx);
 
     // const [identifier] = z.object({ ... }) | z.string() | z.number() | ...
