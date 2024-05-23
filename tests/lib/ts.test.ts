@@ -138,7 +138,7 @@ describe("ts", () => {
   describe("tsObject", () => {
     it("should create an object literal expression", () => {
       const result = tsObject(["foo", "bar"], ["baz", 42]);
-      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"{ foo: "bar", baz: 42 }"`);
+      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"{ "foo": "bar", "baz": 42 }"`);
     });
 
     it("should create an object literal expression with no properties", () => {
@@ -152,7 +152,7 @@ describe("ts", () => {
         ["qux", tsArray(tsObject(["quux", "quuz"], ["corge", tsFunctionCall("fn", "arg", tsObject())]))]
       );
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(
-        `"{ foo: { bar: ["baz", fn("arg")] }, qux: [{ quux: "quuz", corge: fn("arg", {}) }] }"`
+        `"{ "foo": { "bar": ["baz", fn("arg")] }, "qux": [{ "quux": "quuz", "corge": fn("arg", {}) }] }"`
       );
     });
   });

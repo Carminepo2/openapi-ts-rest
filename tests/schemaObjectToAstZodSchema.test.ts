@@ -136,7 +136,7 @@ describe("schemaObjectToAstZodSchema", () => {
           b: { type: "number" },
         },
       })
-    ).toMatchInlineSnapshot(`"z.object({ a: z.string().optional(), b: z.number().optional() })"`);
+    ).toMatchInlineSnapshot(`"z.object({ "a": z.string().optional(), "b": z.number().optional() })"`);
     expect(
       wrappedSchemaObjectToAstZodSchema({
         type: "object",
@@ -146,7 +146,7 @@ describe("schemaObjectToAstZodSchema", () => {
         },
         required: ["a"],
       })
-    ).toMatchInlineSnapshot(`"z.object({ a: z.string(), b: z.number().optional() })"`);
+    ).toMatchInlineSnapshot(`"z.object({ "a": z.string(), "b": z.number().optional() })"`);
   });
 
   test("snapshot testing schema with array of types", () => {

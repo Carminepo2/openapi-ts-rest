@@ -227,11 +227,19 @@ export function tsFunctionCall(...fn: TsFunctionCall): CallExpression {
  * // { foo: "bar", baz: 42 }
  * ```
  */
-export function tsObject(...properties: [key: string, value: TsLiteralOrExpression][]): ObjectLiteralExpression {
+export function tsObject(
+  ...properties: ([key: string, value: TsLiteralOrExpression] | [key: Identifier | string])[]
+): ObjectLiteralExpression {
   return factory.createObjectLiteralExpression(
-    properties.map(([key, value]) =>
-      factory.createPropertyAssignment(factory.createIdentifier(key), tsLiteralOrExpression(value))
-    )
+    properties.map(([key, value]) => {
+      if (value && typeof key === "string") {
+        return factory.createPropertyAssignment(factory.createStringLiteral(key), tsLiteralOrExpression(value));
+      }
+      return factory.createShorthandPropertyAssignment(
+        typeof key === "string" ? factory.createIdentifier(key) : key,
+        undefined
+      );
+    })
   );
 }
 

@@ -11,7 +11,6 @@ import {
   tsNewLine,
   tsObject,
   tsChainedMethodCall,
-  tsNamedExport,
 } from "./lib/ts.js";
 import { AstTsWriter } from "./lib/utils.js";
 import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
@@ -43,9 +42,6 @@ export async function generateTsRestContractFromOpenAPI({
     .add(tsVariableDeclaration("const", "c", { eq: tsFunctionCall("initContract") }))
     .add(tsNewLine());
 
-  // Gets the API operations objects from the OpenAPI schema, which are used to generate each contract.
-  const operationObjects = getAPIOperationsObjects(ctx);
-
   // Generates the Zod schemas for each component schema.
   for (const { normalizedIdentifier, schema } of ctx.topologicallySortedSchemas) {
     // const [identifier] = z.object({ ... }) | z.string() | z.number() | ...
@@ -56,12 +52,15 @@ export async function generateTsRestContractFromOpenAPI({
 
   const schemaIdentifiersToExport = ctx.topologicallySortedSchemas
     .filter(({ ref }) => ctx.schemasToExportMap.has(ref))
-    .map(({ normalizedIdentifier }) => normalizedIdentifier);
+    .map(({ normalizedIdentifier }) => [normalizedIdentifier] satisfies [string]);
 
-  // export { schema1, schema2, ... };
-  ast.add(tsNamedExport({ export_: schemaIdentifiersToExport }));
+  // export const schemas = { schema1, schema2, ... };
+  ast.add(tsVariableDeclaration("const", "schemas", { eq: tsObject(...schemaIdentifiersToExport), export_: true }));
 
   ast.add(tsNewLine());
+
+  // Gets the API operations objects from the OpenAPI schema, which are used to generate each contract.
+  const operationObjects = getAPIOperationsObjects(ctx);
 
   const tsRestAstContracts = operationObjects.map((operationObject) => {
     return apiOperationToAstTsRestContract(operationObject, ctx);

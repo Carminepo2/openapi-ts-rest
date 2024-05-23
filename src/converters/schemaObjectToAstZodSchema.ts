@@ -24,7 +24,6 @@ export type ZodTypeMethodCall = [zodType: ZodType] | [zodType: ZodType, ...args:
 
 export interface SchemaObjectToAstZosSchemaOptions {
   isRequired?: boolean;
-  isObjectProperty?: boolean;
 }
 
 export function schemaObjectToAstZodSchema(
@@ -49,19 +48,18 @@ export function schemaObjectToAstZodSchema(
     if (!properties) return [];
 
     return Object.entries(properties).map(([key, refOrSchema]) => {
-      const isRequired = schema.required?.includes(key);
-      const options: SchemaObjectToAstZosSchemaOptions = { isRequired, isObjectProperty: true };
+      const isRequired = Boolean(schema.required?.includes(key));
 
       if (isReferenceObject(refOrSchema)) {
         const schemaToExport = ctx.schemasToExportMap.get(refOrSchema.$ref);
         if (schemaToExport) {
-          return [key, buildZodSchema(schemaToExport.normalizedIdentifier, undefined, options)];
+          return [key, buildZodSchema(schemaToExport.normalizedIdentifier, undefined, { isRequired })];
         }
       }
 
       const schemaObject = ctx.resolveSchemaObject(refOrSchema);
 
-      return [key, schemaObjectToAstZodSchema(schemaObject, ctx, options)];
+      return [key, schemaObjectToAstZodSchema(schemaObject, ctx, { isRequired })];
     });
   }
 

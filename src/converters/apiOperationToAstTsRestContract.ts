@@ -1,54 +1,102 @@
 import camelcase from "camelcase";
 import type { Context } from "../context";
 import type { APIOperationObject } from "../getAPIOperationsObjects";
-import { tsObject, type TsLiteralOrExpression } from "../lib/ts";
+import { tsChainedMethodCall, tsIdentifier, tsObject, type TsLiteralOrExpression } from "../lib/ts";
+import { isReferenceObject, type ParameterObject, type RequestBodyObject } from "openapi3-ts/oas30";
+import type { Expression } from "typescript";
+import { schemaObjectToAstZodSchema } from "./schemaObjectToAstZodSchema";
+
+type ContractPropertyKey = "method" | "path" | "summary" | "headers" | "query" | "pathParams" | "body" | "contentType";
 
 export function apiOperationToAstTsRestContract(
   operation: APIOperationObject,
-  _ctx: Context
+  ctx: Context
 ): [string, TsLiteralOrExpression] {
-  const contractProperties: [key: string, value: TsLiteralOrExpression][] = [];
+  const contractProperties: [key: ContractPropertyKey, value: TsLiteralOrExpression][] = [];
 
   contractProperties.push(["method", operation.method.toUpperCase()]);
   contractProperties.push(["path", toContractPath(operation.path)]);
 
   const summary = operation.summary ?? operation.description;
+
   if (summary) {
     contractProperties.push(["summary", summary]);
   }
 
   const headerParams = operation.parameters.filter((param) => param.in === "header");
-  const pathParams = operation.parameters.filter((param) => param.in === "path");
-  const cookieParams = operation.parameters.filter((param) => param.in === "cookie");
-  const queryParams = operation.parameters.filter((param) => param.in === "query");
+  if (headerParams.length > 0) {
+    contractProperties.push(["headers", toContractParameters(headerParams, ctx)]);
+  }
 
-  console.log({ pathParams, headerParams, cookieParams, queryParams });
+  const queryParams = operation.parameters.filter((param) => param.in === "query");
+  if (queryParams.length > 0) {
+    contractProperties.push(["query", toContractParameters(queryParams, ctx)]);
+  }
+
+  const pathParams = operation.parameters.filter((param) => param.in === "path");
+  if (pathParams.length > 0) {
+    contractProperties.push(["pathParams", toContractParameters(pathParams, ctx)]);
+  }
+
+  if (operation.requestBody) {
+    contractProperties.push(...toContractBodyAndContentType(operation.requestBody, ctx));
+  }
 
   return [camelcase(operation.operationId), tsObject(...contractProperties)];
+}
+
+function toContractBodyAndContentType(
+  body: RequestBodyObject,
+  ctx: Context
+): [["body", TsLiteralOrExpression]] | [["body", TsLiteralOrExpression], ["contentType", string]] {
+  body.content;
+
+  const contentType = getCompatibleMediaType(Object.keys(body.content));
+
+  if (!contentType) {
+    throw new Error(`Unsupported media types: ${Object.keys(body.content).join(", ")}`);
+  }
+
+  const schema = body.content[contentType].schema;
+
+  if (!schema) {
+    throw new Error("Schema is required");
+  }
+
+  if (isReferenceObject(schema)) {
+    const exported = ctx.schemasToExportMap.get(schema.$ref);
+    if (exported) {
+      return [
+        ["body", tsIdentifier(exported.normalizedIdentifier)],
+        ["contentType", contentType],
+      ];
+    }
+  }
+
+  const schemaObject = ctx.resolveSchemaObject(schema);
+  const zodSchema = schemaObjectToAstZodSchema(schemaObject, ctx, { isRequired: true });
+
+  return [
+    ["body", zodSchema],
+    ["contentType", contentType],
+  ];
+}
+
+function toContractParameters(params: ParameterObject[], ctx: Context): Expression {
+  const pathParams = params.map((param): [string, TsLiteralOrExpression] => {
+    if (!param.schema) throw new Error("Parameter schema is required");
+    const objectSchema = ctx.resolveSchemaObject(param.schema);
+    return [param.name, schemaObjectToAstZodSchema(objectSchema, ctx, { isRequired: true })];
+  });
+
+  return tsChainedMethodCall("z", ["object", tsObject(...pathParams)]);
 }
 
 function toContractPath(path: string): string {
   return path.replace(/{/g, ":").replace(/}/g, "");
 }
 
-// export const contract = c.router({
-//   createPost: {
-//     method: "POST",
-//     path: "/posts",
-//     responses: {
-//       201: PostSchema,
-//     },
-//     body: z.object({
-//       title: z.string(),
-//       body: z.string(),
-//     }),
-//   },
-//   getPost: {
-//     method: "GET",
-//     path: `/posts/:id`,
-//     responses: {
-//       200: PostSchema.nullable(),
-//     },
-//     summary: "Get a post by id",
-//   },
-// });
+function getCompatibleMediaType(mediaTypes: string[]): string | undefined {
+  const compatibleMediaTypes = ["application/json", "multipart/form-data", "application/x-www-form-urlencoded"];
+  return mediaTypes.find((c) => compatibleMediaTypes.includes(c));
+}

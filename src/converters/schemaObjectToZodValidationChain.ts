@@ -37,12 +37,9 @@ export function schemaObjectToZodValidationChain(
     .with("array", () => buildZodArrayValidationChain(schema))
     .otherwise(() => []);
 
-  // Are we dealing with an object property that is required?
-  const isOptionalObjectProperty = options?.isObjectProperty && !options.isRequired;
-
-  if (schema.nullable && !options?.isObjectProperty) validationChain.push(["nullish"]);
-  else if (schema.nullable && isOptionalObjectProperty) validationChain.push(["nullable"]);
-  else if (isOptionalObjectProperty) validationChain.push(["optional"]);
+  if (schema.nullable && !options?.isRequired) validationChain.push(["nullish"]);
+  else if (schema.nullable) validationChain.push(["nullable"]);
+  else if (typeof options?.isRequired !== "undefined" && !options.isRequired) validationChain.push(["optional"]);
 
   if (schema.default !== undefined) {
     const value = match(schema.type)
