@@ -74,6 +74,8 @@ export function generateContext(openAPIDoc: OpenAPIObject) {
 
     const componentMeta = { ref, schema, identifier, normalizedIdentifier };
 
+    // TODO: The schemas should be exported? Or only the ones that are referenced by operations?
+    // The current implementation exports all schemas.
     schemasToExportMap.set(ref, componentMeta);
     return componentMeta;
   });

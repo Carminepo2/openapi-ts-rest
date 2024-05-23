@@ -63,14 +63,14 @@ export async function generateTsRestContractFromOpenAPI({
 
   ast.add(tsNewLine());
 
-  const operationObjectsAst = operationObjects.map((operationObject) => {
+  const tsRestAstContracts = operationObjects.map((operationObject) => {
     return apiOperationToAstTsRestContract(operationObject, ctx);
   });
 
   // export const contract = c.router({ ... });
   ast.add(
     tsVariableDeclaration("const", "contract", {
-      eq: tsChainedMethodCall("c", ["router", tsObject(...operationObjectsAst)]),
+      eq: tsChainedMethodCall("c", ["router", tsObject(...tsRestAstContracts)]),
       export_: true,
     })
   );

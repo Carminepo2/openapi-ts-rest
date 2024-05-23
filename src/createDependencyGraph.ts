@@ -22,7 +22,7 @@ export function createDependencyGraph(
       return;
     }
 
-    (["allOf", "oneOf", "anyOf"] as const).forEach((key) => {
+    (["allOf", "oneOf", "anyOf"] as const satisfies (keyof SchemaObject)[]).forEach((key) => {
       component[key]?.forEach((subComponent) => {
         visit(subComponent, fromRef);
       });
