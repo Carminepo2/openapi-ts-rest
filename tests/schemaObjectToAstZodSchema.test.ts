@@ -122,6 +122,18 @@ describe("schemaObjectToAstZodSchema", () => {
         items: { type: "array", items: { type: "number" }, minItems: 5, maxItems: 10 },
       })
     ).toMatchInlineSnapshot(`"z.array(z.array(z.number()).min(5).max(10))"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        type: "array",
+        items: { type: "array", items: { type: "number" }, minItems: 5, maxItems: 10, default: [] },
+      })
+    ).toMatchInlineSnapshot(`"z.array(z.array(z.number()).min(5).max(10).default([]))"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        type: "array",
+        items: { type: "array", items: { type: "number" }, minItems: 5, maxItems: 10, default: [1, 2, 3] },
+      })
+    ).toMatchInlineSnapshot(`"z.array(z.array(z.number()).min(5).max(10).default([1, 2, 3]))"`);
   });
 
   test("snapshot testing schema type object", () => {

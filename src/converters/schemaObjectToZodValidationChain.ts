@@ -1,5 +1,5 @@
 import type { SchemaObject } from "openapi3-ts/oas30";
-import { tsObject, tsRegex, type TsLiteralOrExpression } from "../lib/ts";
+import { tsArray, tsObject, tsRegex, type TsLiteralOrExpression } from "../lib/ts";
 import type { SchemaObjectToAstZosSchemaOptions } from "./schemaObjectToAstZodSchema";
 import { match } from "ts-pattern";
 import { noop } from "../lib/utils";
@@ -48,6 +48,7 @@ export function schemaObjectToZodValidationChain(
         () => typeof schema.default === "string",
         () => schema.default as string
       )
+      .with("array", () => tsArray(...(schema.default as TsLiteralOrExpression[])))
       .otherwise(() => JSON.stringify(schema.default));
     validationChain.push(["default", value]);
   }
