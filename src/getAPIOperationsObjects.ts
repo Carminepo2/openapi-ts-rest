@@ -1,5 +1,6 @@
 import type { ParameterObject, RequestBodyObject, ResponseObject, ReferenceObject } from "openapi3-ts/oas30";
 import type { Context } from "./context";
+import { isEqual } from "lodash";
 
 const METHODS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"] as const;
 type Method = (typeof METHODS)[number];
@@ -34,6 +35,10 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
 
       const parameters = (pathItem.parameters ?? [])
         .concat(pathOperation.parameters ?? [])
+        .reduce<(ParameterObject | ReferenceObject)[]>((acc, param) => {
+          if (acc.some((p) => isEqual(p, param))) return acc;
+          return [...acc, param];
+        }, [])
         .map((param) => ctx.resolveParameterObject(param));
 
       const requestBody = pathOperation.requestBody

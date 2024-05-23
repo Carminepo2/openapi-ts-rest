@@ -66,7 +66,7 @@ export function schemaObjectToAstZodSchema(
   if (schema.enum) {
     function resolveEnumValue(value: unknown): string {
       if (value === null) return "null";
-      return `"${value as string}"`;
+      return value as string;
     }
 
     if (schema.type === "string") {

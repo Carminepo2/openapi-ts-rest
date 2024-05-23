@@ -44,6 +44,7 @@ export function schemaObjectToZodValidationChain(
   if (schema.default !== undefined) {
     const value = match(schema.type)
       .with("number", "integer", () => Number(schema.default))
+      .with("boolean", () => Boolean(schema.default))
       .when(
         () => typeof schema.default === "string",
         () => schema.default as string

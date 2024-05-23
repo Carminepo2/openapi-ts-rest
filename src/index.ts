@@ -77,9 +77,27 @@ export async function generateTsRestContractFromOpenAPI({
   return await prettify(ast.toString());
 }
 
-void generateTsRestContractFromOpenAPI({
-  input:
-    "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/tenant-process/open-api/tenant-service-spec.yml",
-}).then((s) => {
-  writeFileSync("contract.ts", s);
-});
+const tenant =
+  "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/tenant-process/open-api/tenant-service-spec.yml";
+const catalog =
+  "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/catalog-process/open-api/catalog-service-spec.yml";
+const purpose =
+  "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/purpose-process/open-api/purpose-service-spec.yml";
+const attributeRegistry =
+  "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/attribute-registry-process/open-api/attribute-registry-service-spec.yml";
+const agreement =
+  "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/agreement-process/open-api/agreement-service-spec.yml";
+
+for (const [name, url] of [
+  ["tenant", tenant],
+  ["catalog", catalog],
+  ["purpose", purpose],
+  ["attributeRegistry", attributeRegistry],
+  ["agreement", agreement],
+]) {
+  void generateTsRestContractFromOpenAPI({
+    input: url,
+  }).then((s) => {
+    writeFileSync(`${name}.ts`, s);
+  });
+}

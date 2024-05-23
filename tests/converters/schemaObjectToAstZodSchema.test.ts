@@ -1,8 +1,8 @@
 import { test, describe, expect } from "vitest";
 import type { SchemaObject } from "openapi3-ts/oas30";
-import { schemaObjectToAstZodSchema } from "../src/converters/schemaObjectToAstZodSchema";
-import type { Context } from "../src/context";
-import { astToString } from "../src/lib/utils";
+import { schemaObjectToAstZodSchema } from "../../src/converters/schemaObjectToAstZodSchema";
+import type { Context } from "../../src/context";
+import { astToString } from "../../src/lib/utils";
 
 const mockCtx = {
   resolveSchemaObject: <T>(arg: T) => arg,
@@ -33,19 +33,19 @@ describe("schemaObjectToAstZodSchema", () => {
       `"z.instanceof(File)"`
     );
     expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: ["a", "b", "c"] })).toMatchInlineSnapshot(
-      `"z.enum(["\\"a\\"", "\\"b\\"", "\\"c\\""])"`
+      `"z.enum(["a", "b", "c"])"`
     );
     expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: ["a"] })).toMatchInlineSnapshot(
-      `"z.literal("\\"a\\"")"`
+      `"z.literal("a")"`
     );
     expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: [1, 2, 3] })).toMatchInlineSnapshot(
-      `"z.enum(["\\"1\\"", "\\"2\\"", "\\"3\\""])"`
+      `"z.enum([1, 2, 3])"`
     );
     expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: [1] })).toMatchInlineSnapshot(
-      `"z.literal("\\"1\\"")"`
+      `"z.literal(1)"`
     );
     expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: ["a", 1, true] })).toMatchInlineSnapshot(
-      `"z.enum(["\\"a\\"", "\\"1\\"", "\\"true\\""])"`
+      `"z.enum(["a", 1, true])"`
     );
   });
 
@@ -85,6 +85,12 @@ describe("schemaObjectToAstZodSchema", () => {
 
   test("snapshot testing schema type boolean and null", () => {
     expect(wrappedSchemaObjectToAstZodSchema({ type: "boolean" })).toMatchInlineSnapshot(`"z.boolean()"`);
+    expect(wrappedSchemaObjectToAstZodSchema({ type: "boolean", default: false })).toMatchInlineSnapshot(
+      `"z.boolean().default(false)"`
+    );
+    expect(wrappedSchemaObjectToAstZodSchema({ type: "boolean", default: true })).toMatchInlineSnapshot(
+      `"z.boolean().default(true)"`
+    );
     expect(wrappedSchemaObjectToAstZodSchema({ type: "null" })).toMatchInlineSnapshot(`"z.null()"`);
   });
 
