@@ -3,7 +3,7 @@ import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstT
 import { generateContext } from "./context.js";
 import { getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
 import { prettify } from "./lib/prettier.js";
-import { validateAndBundleOpenAPISchema } from "./lib/redocly.js";
+import { validateAndBundleOpenAPISchema } from "./lib/redoc.js";
 import {
   tsVariableDeclaration,
   tsFunctionCall,
