@@ -54,10 +54,12 @@ export async function generateTsRestContractFromOpenAPI({
     .filter(({ ref }) => ctx.schemasToExportMap.has(ref))
     .map(({ normalizedIdentifier }) => [normalizedIdentifier] satisfies [string]);
 
-  // export const schemas = { schema1, schema2, ... };
-  ast.add(tsVariableDeclaration("const", "schemas", { eq: tsObject(...schemaIdentifiersToExport), export_: true }));
-
-  ast.add(tsNewLine());
+  if (schemaIdentifiersToExport.length > 0) {
+    // export const schemas = { schema1, schema2, ... };
+    ast
+      .add(tsVariableDeclaration("const", "schemas", { eq: tsObject(...schemaIdentifiersToExport), export_: true }))
+      .add(tsNewLine());
+  }
 
   // Gets the API operations objects from the OpenAPI schema, which are used to generate each contract.
   const operationObjects = getAPIOperationsObjects(ctx);
