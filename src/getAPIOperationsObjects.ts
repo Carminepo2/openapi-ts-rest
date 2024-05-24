@@ -1,6 +1,7 @@
 import type { ParameterObject, RequestBodyObject, ResponseObject, ReferenceObject } from "openapi3-ts/oas30";
 import type { Context } from "./context";
 import { isEqual } from "lodash";
+import camelcase from "camelcase";
 
 const METHODS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"] as const;
 type Method = (typeof METHODS)[number];
@@ -23,15 +24,10 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
 
   for (const [path, pathItem] of paths) {
     for (const method of METHODS) {
-      if (!(method in pathItem)) continue;
       const pathOperation = pathItem[method];
+      if (!pathOperation) continue;
 
-      const operationId = pathOperation?.operationId;
-
-      if (!operationId) {
-        console.warn(`Operation ID not found for ${method.toUpperCase()} ${path}, skipping...`);
-        continue;
-      }
+      const operationId = pathOperation.operationId ?? convertPathToVariableName(path);
 
       const parameters = (pathItem.parameters ?? [])
         .concat(pathOperation.parameters ?? [])
@@ -67,3 +63,20 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
 
   return operationObjects;
 }
+
+/**
+ * Converts a path to a variable name.
+ * It replaces all slashes, dots, and curly braces with dashes and camelcases the result.
+ *
+ * @param path - The path to convert.
+ * @returns The variable name.
+ *
+ * @example
+ * ```typescript
+ * pathToVariableName("/path/to/{id}") // "pathToId"
+ * pathToVariableName("/path/to/resource") // "pathToResource"
+ * pathToVariableName("/robots.txt") // "robotsTxt"
+ * ```
+ */
+const convertPathToVariableName = (path: string): string =>
+  camelcase(path.replaceAll(/(\/|\.|{)/g, "-").replaceAll("}", ""));

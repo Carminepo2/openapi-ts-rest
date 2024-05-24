@@ -20,5 +20,6 @@
     "noUnusedParameters": true,
     "noPropertyAccessFromIndexSignature": true,
     "types": ["vitest/globals"]
-  }
+  },
+  "include": ["src"]
 }

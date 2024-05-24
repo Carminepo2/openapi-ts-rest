@@ -41,9 +41,7 @@ describe("schemaObjectToAstZodSchema", () => {
     expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: [1, 2, 3] })).toMatchInlineSnapshot(
       `"z.enum([1, 2, 3])"`
     );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: [1] })).toMatchInlineSnapshot(
-      `"z.literal(1)"`
-    );
+    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: [1] })).toMatchInlineSnapshot(`"z.literal(1)"`);
     expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: ["a", 1, true] })).toMatchInlineSnapshot(
       `"z.enum(["a", 1, true])"`
     );
