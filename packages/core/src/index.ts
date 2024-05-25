@@ -1,9 +1,7 @@
-import { writeFileSync } from "node:fs";
 import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstTsRestContract.js";
 import { generateContext } from "./context.js";
 import { getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
 import { prettify } from "./lib/prettier.js";
-import { validateAndBundleOpenAPISchema } from "./lib/redoc.js";
 import {
   tsVariableDeclaration,
   tsFunctionCall,
@@ -14,6 +12,8 @@ import {
 } from "./lib/ts.js";
 import { AstTsWriter } from "./lib/utils.js";
 import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
+import SwaggerParser from "@apidevtools/swagger-parser";
+import type { OpenAPIObject } from "openapi3-ts/oas30";
 
 interface GenerateTsRestContractFromOpenAPIOptions {
   input: string;
@@ -26,7 +26,7 @@ interface GenerateTsRestContractFromOpenAPIOptions {
 export async function generateTsRestContractFromOpenAPI({
   input,
 }: GenerateTsRestContractFromOpenAPIOptions): Promise<string> {
-  const openApiSchema = await validateAndBundleOpenAPISchema(input);
+  const openApiSchema = (await SwaggerParser.bundle(input)) as OpenAPIObject;
 
   const ctx = generateContext(openApiSchema);
 
@@ -77,29 +77,4 @@ export async function generateTsRestContractFromOpenAPI({
   );
 
   return await prettify(ast.toString());
-}
-
-const tenant =
-  "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/tenant-process/open-api/tenant-service-spec.yml";
-const catalog =
-  "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/catalog-process/open-api/catalog-service-spec.yml";
-const purpose =
-  "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/purpose-process/open-api/purpose-service-spec.yml";
-const attributeRegistry =
-  "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/attribute-registry-process/open-api/attribute-registry-service-spec.yml";
-const agreement =
-  "https://raw.githubusercontent.com/pagopa/interop-be-monorepo/main/packages/agreement-process/open-api/agreement-service-spec.yml";
-
-for (const [name, url] of [
-  ["tenant", tenant],
-  ["catalog", catalog],
-  ["purpose", purpose],
-  ["attributeRegistry", attributeRegistry],
-  ["agreement", agreement],
-]) {
-  void generateTsRestContractFromOpenAPI({
-    input: url,
-  }).then((s) => {
-    writeFileSync(`${name}.ts`, s);
-  });
 }

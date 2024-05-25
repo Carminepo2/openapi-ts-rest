@@ -1,40 +1,28 @@
 {
-  "name": "openapi-to-ts-rest",
-  "version": "1.0.0",
-  "description": "",
-  "type": "module",
-  "main": "index.js",
+  "name": "openapi-ts-rest-contract",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "bun --watch src/index.ts",
-    "test": "vitest",
-    "coverage": "vitest --coverage",
-    "test:ci": "vitest run"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@redocly/openapi-core": "^1.12.2",
-    "bun": "^1.1.8",
-    "camelcase": "^8.0.0",
-    "lodash": "^4.17.21",
-    "openapi3-ts": "^4.3.1",
-    "parse-json": "^8.1.0",
-    "prettier": "^3.2.5",
-    "ts-pattern": "^5.1.1",
-    "typescript": "^5.4.5",
-    "zod": "^3.23.8"
+    "build": "turbo build",
+    "dev": "turbo dev --parallel",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "deploy": "turbo deploy",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "clean": "turbo clean && rm -rf node_modules"
   },
   "devDependencies": {
     "@eslint/js": "^9.3.0",
-    "@ts-rest/core": "^3.45.2",
-    "@types/bun": "^1.1.2",
-    "@types/eslint__js": "^8.42.3",
-    "@types/lodash": "^4.17.4",
-    "@types/node": "^20.12.12",
+    "@rollup/plugin-node-resolve": "^15.2.3",
     "@vitest/coverage-istanbul": "^1.6.0",
     "eslint": "^9.3.0",
     "typescript-eslint": "^7.9.0",
     "vitest": "^1.6.0"
   },
-  "packageManager": "pnpm@8.15.8+sha512.d1a029e1a447ad90bc96cd58b0fad486d2993d531856396f7babf2d83eb1823bb83c5a3d0fc18f675b2d10321d49eb161fece36fe8134aa5823ecd215feed392"
+  "engines": {
+    "node": ">=16.0.0"
+  }
 }

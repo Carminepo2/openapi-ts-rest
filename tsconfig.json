@@ -19,7 +19,13 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noPropertyAccessFromIndexSignature": true,
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals"],
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
   },
-  "include": ["src"]
 }

@@ -20,5 +20,7 @@ export default tseslint.config(
       "@typescript-eslint/prefer-nullish-coalescing": "off",
       "@typescript-eslint/explicit-function-return-type": "error",
     },
+    files: ["**/*.ts"],
+    ignores: ["dist"],
   }
 );
