@@ -94,5 +94,5 @@ module.exports = {
     "sonarjs/no-inverted-boolean-check": "error",
     "max-lines-per-function": ["error", 200],
   },
-  ignorePatterns: [".eslintrc.cjs", "vitest.config.ts", "**/dist"],
+  ignorePatterns: [".eslintrc.cjs", "vitest.config.ts", "**/dist", "vitest.workspace.js"],
 };
