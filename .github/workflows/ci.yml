@@ -38,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
       - name: Test
-        run: bun run test:ci
+        run: bun run test
 
   lint:
     name: Lint
@@ -53,4 +53,4 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
       - name: Lint
-        run: bun eslint .
+        run: bun run lint

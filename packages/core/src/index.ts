@@ -1,3 +1,5 @@
+import SwaggerParser from "@apidevtools/swagger-parser";
+import type { OpenAPIObject } from "openapi3-ts/oas30";
 import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstTsRestContract.js";
 import { generateContext } from "./context.js";
 import { getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
@@ -12,8 +14,6 @@ import {
 } from "./lib/ts.js";
 import { AstTsWriter } from "./lib/utils.js";
 import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
-import SwaggerParser from "@apidevtools/swagger-parser";
-import type { OpenAPIObject } from "openapi3-ts/oas30";
 
 interface GenerateTsRestContractFromOpenAPIOptions {
   input: string;
@@ -45,7 +45,11 @@ export async function generateTsRestContractFromOpenAPI({
   // Generates the Zod schemas for each component schema.
   for (const { normalizedIdentifier, schema } of ctx.topologicallySortedSchemas) {
     // const [identifier] = z.object({ ... }) | z.string() | z.number() | ...
-    ast.add(tsVariableDeclaration("const", normalizedIdentifier, { eq: schemaObjectToAstZodSchema(schema, ctx) }));
+    ast.add(
+      tsVariableDeclaration("const", normalizedIdentifier, {
+        eq: schemaObjectToAstZodSchema(schema, ctx),
+      })
+    );
   }
 
   ast.add(tsNewLine());
@@ -57,16 +61,21 @@ export async function generateTsRestContractFromOpenAPI({
   if (schemaIdentifiersToExport.length > 0) {
     // export const schemas = { schema1, schema2, ... };
     ast
-      .add(tsVariableDeclaration("const", "schemas", { eq: tsObject(...schemaIdentifiersToExport), export_: true }))
+      .add(
+        tsVariableDeclaration("const", "schemas", {
+          eq: tsObject(...schemaIdentifiersToExport),
+          export_: true,
+        })
+      )
       .add(tsNewLine());
   }
 
   // Gets the API operations objects from the OpenAPI schema, which are used to generate each contract.
   const operationObjects = getAPIOperationsObjects(ctx);
 
-  const tsRestAstContracts = operationObjects.map((operationObject) => {
-    return apiOperationToAstTsRestContract(operationObject, ctx);
-  });
+  const tsRestAstContracts = operationObjects.map((operationObject) =>
+    apiOperationToAstTsRestContract(operationObject, ctx)
+  );
 
   // export const contract = c.router({ ... });
   ast.add(

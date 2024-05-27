@@ -19,7 +19,13 @@ export function astToString(
 ): string {
   const { fileName = "contract.ts", sourceText = "", formatOptions } = options;
 
-  const sourceFile = ts.createSourceFile(fileName, sourceText, ts.ScriptTarget.ESNext, false, ts.ScriptKind.TS);
+  const sourceFile = ts.createSourceFile(
+    fileName,
+    sourceText,
+    ts.ScriptTarget.ESNext,
+    false,
+    ts.ScriptKind.TS
+  );
 
   // @ts-expect-error it’s OK to overwrite statements once
   sourceFile.statements = ts.factory.createNodeArray(Array.isArray(ast) ? ast : [ast]);
@@ -74,13 +80,10 @@ export class AstTsWriter {
  * @param str - The string to format.
  * @returns The formatted string.
  */
-export function formatToIdentifierString(str: string): string {
-  str = str.replace(/[^a-zA-Z0-9_$]/g, "_");
-  if (!str.match(/^[a-zA-Z_$]/)) {
-    str = "_" + str;
-  }
-  return str;
-}
+export const formatToIdentifierString = (str: string): string => {
+  const replacedStr = str.replace(/[^a-zA-Z0-9_$]/g, "_");
+  return /^[a-zA-Z_$]/.test(replacedStr) ? replacedStr : "_" + replacedStr;
+};
 
 /**
  * Performs a topological sort on a directed graph.

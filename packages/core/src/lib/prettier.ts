@@ -11,8 +11,6 @@ export async function prettify(input: string, config?: Options | null): Promise<
       ...config,
     });
   } catch (error) {
-    console.log(error);
-
     return input;
   }
 }

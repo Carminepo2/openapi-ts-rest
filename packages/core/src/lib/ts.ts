@@ -43,14 +43,22 @@ export type TsFunctionCall = [identifier: string, ...args: TsLiteralOrExpression
  * // import { foo, bar } from "./module";
  * ```
  */
-export function tsNamedImport({ import_, from }: { import_: string[]; from: string }): ImportDeclaration {
+export function tsNamedImport({
+  import_,
+  from,
+}: {
+  import_: string[];
+  from: string;
+}): ImportDeclaration {
   return factory.createImportDeclaration(
     undefined,
     factory.createImportClause(
       false,
       undefined,
       factory.createNamedImports(
-        import_.map((name) => factory.createImportSpecifier(false, undefined, factory.createIdentifier(name)))
+        import_.map((name) =>
+          factory.createImportSpecifier(false, undefined, factory.createIdentifier(name))
+        )
       )
     ),
     factory.createStringLiteral(from),
@@ -124,7 +132,11 @@ export function tsLiteralOrExpression(
     .with(
       P.number,
       (v) => v < 0,
-      (v) => factory.createPrefixUnaryExpression(SyntaxKind.MinusToken, factory.createNumericLiteral(Math.abs(v)))
+      (v) =>
+        factory.createPrefixUnaryExpression(
+          SyntaxKind.MinusToken,
+          factory.createNumericLiteral(Math.abs(v))
+        )
     )
     .with(P.number, (value) => factory.createNumericLiteral(value))
     .with(true, () => factory.createTrue())
@@ -228,12 +240,15 @@ export function tsFunctionCall(...fn: TsFunctionCall): CallExpression {
  * ```
  */
 export function tsObject(
-  ...properties: ([key: string, value: TsLiteralOrExpression] | [key: Identifier | string])[]
+  ...properties: Array<[key: string, value: TsLiteralOrExpression] | [key: Identifier | string]>
 ): ObjectLiteralExpression {
   return factory.createObjectLiteralExpression(
     properties.map(([key, value]) => {
       if (value && typeof key === "string") {
-        return factory.createPropertyAssignment(factory.createStringLiteral(key), tsLiteralOrExpression(value));
+        return factory.createPropertyAssignment(
+          factory.createStringLiteral(key),
+          tsLiteralOrExpression(value)
+        );
       }
       return factory.createShorthandPropertyAssignment(
         typeof key === "string" ? factory.createIdentifier(key) : key,
@@ -274,19 +289,17 @@ export function tsArray(...elements: TsLiteralOrExpression[]): ArrayLiteralExpre
  * ```
  */
 export function tsChainedMethodCall(identifier: string, ...chain: TsFunctionCall[]): Expression {
-  let expression: Expression = factory.createIdentifier(identifier);
+  if (identifier.length === 0) return factory.createIdentifier(identifier);
 
-  if (identifier.length === 0) return expression;
-
-  for (const [method, ...args] of chain) {
-    expression = factory.createCallExpression(
-      factory.createPropertyAccessExpression(expression, factory.createIdentifier(method)),
-      undefined,
-      args.map(tsLiteralOrExpression)
-    );
-  }
-
-  return expression;
+  return chain.reduce(
+    (expression, [method, ...args]) =>
+      factory.createCallExpression(
+        factory.createPropertyAccessExpression(expression, factory.createIdentifier(method)),
+        undefined,
+        args.map(tsLiteralOrExpression)
+      ),
+    factory.createIdentifier(identifier) as Expression
+  );
 }
 
 /**

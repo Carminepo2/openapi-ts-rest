@@ -1,8 +1,14 @@
 import { isReferenceObject, type SchemaObject } from "openapi3-ts/oas30";
-import { tsArray, tsIdentifier, tsObject, tsChainedMethodCall, type TsLiteralOrExpression } from "../lib/ts";
 import { match, P } from "ts-pattern";
-import type { Context } from "../context";
 import type { Expression } from "typescript";
+import {
+  tsArray,
+  tsIdentifier,
+  tsObject,
+  tsChainedMethodCall,
+  type TsLiteralOrExpression,
+} from "../lib/ts";
+import type { Context } from "../context";
 import { schemaObjectToZodValidationChain } from "./schemaObjectToZodValidationChain";
 
 export type ZodType =
@@ -20,7 +26,9 @@ export type ZodType =
   | "instanceof"
   | "unknown";
 
-export type ZodTypeMethodCall = [zodType: ZodType] | [zodType: ZodType, ...args: TsLiteralOrExpression[]];
+export type ZodTypeMethodCall =
+  | [zodType: ZodType]
+  | [zodType: ZodType, ...args: TsLiteralOrExpression[]];
 
 export interface SchemaObjectToAstZosSchemaOptions {
   isRequired?: boolean;
@@ -36,7 +44,11 @@ export function schemaObjectToAstZodSchema(
     throw new Error("oneOf, anyOf and allOf are currently not supported");
   }
 
-  function buildZodSchema(identifier = "z", zodMethod?: ZodTypeMethodCall, customOptions = options): Expression {
+  function buildZodSchema(
+    identifier = "z",
+    zodMethod?: ZodTypeMethodCall,
+    customOptions = options
+  ): Expression {
     return tsChainedMethodCall(
       identifier,
       ...(zodMethod ? [zodMethod] : []),
@@ -44,7 +56,9 @@ export function schemaObjectToAstZodSchema(
     );
   }
 
-  function buildSchemaObjectProperties(properties: SchemaObject["properties"]): [string, TsLiteralOrExpression][] {
+  function buildSchemaObjectProperties(
+    properties: SchemaObject["properties"]
+  ): Array<[string, TsLiteralOrExpression]> {
     if (!properties) return [];
 
     return Object.entries(properties).map(([key, refOrSchema]) => {
@@ -53,7 +67,10 @@ export function schemaObjectToAstZodSchema(
       if (isReferenceObject(refOrSchema)) {
         const schemaToExport = ctx.schemasToExportMap.get(refOrSchema.$ref);
         if (schemaToExport) {
-          return [key, buildZodSchema(schemaToExport.normalizedIdentifier, undefined, { isRequired })];
+          return [
+            key,
+            buildZodSchema(schemaToExport.normalizedIdentifier, undefined, { isRequired }),
+          ];
         }
       }
 
@@ -87,7 +104,9 @@ export function schemaObjectToAstZodSchema(
 
     return buildZodSchema("z", [
       "enum",
-      tsArray(...schema.enum.map((value) => buildZodSchema("z", ["literal", resolveEnumValue(value)]))),
+      tsArray(
+        ...schema.enum.map((value) => buildZodSchema("z", ["literal", resolveEnumValue(value)]))
+      ),
     ]);
   }
 
@@ -109,22 +128,12 @@ export function schemaObjectToAstZodSchema(
     .with(
       "string",
       () => schema.format === "binary",
-      () => {
-        return buildZodSchema("z", ["instanceof", tsIdentifier("File")]);
-      }
+      () => buildZodSchema("z", ["instanceof", tsIdentifier("File")])
     )
-    .with("string", () => {
-      return buildZodSchema("z", ["string"]);
-    })
-    .with("number", "integer", () => {
-      return buildZodSchema("z", ["number"]);
-    })
-    .with("boolean", () => {
-      return buildZodSchema("z", ["boolean"]);
-    })
-    .with("null", () => {
-      return buildZodSchema("z", ["null"]);
-    })
+    .with("string", () => buildZodSchema("z", ["string"]))
+    .with("number", "integer", () => buildZodSchema("z", ["number"]))
+    .with("boolean", () => buildZodSchema("z", ["boolean"]))
+    .with("null", () => buildZodSchema("z", ["null"]))
     .with("array", () => {
       if (!schema.items) return buildZodSchema("z", ["array", buildZodSchema("z", ["any"])]);
 
@@ -141,14 +150,11 @@ export function schemaObjectToAstZodSchema(
     })
     .when(
       (t) => Boolean(t === "object" || schema.properties),
-      () => {
-        //TODO: Add support for `schema.additionalProperties`
-        return buildZodSchema("z", ["object", tsObject(...buildSchemaObjectProperties(schema.properties))]);
-      }
+      () =>
+        // TODO: Add support for `schema.additionalProperties`
+        buildZodSchema("z", ["object", tsObject(...buildSchemaObjectProperties(schema.properties))])
     )
-    .with(P.nullish, () => {
-      return buildZodSchema("z", ["unknown"]);
-    })
+    .with(P.nullish, () => buildZodSchema("z", ["unknown"]))
     .otherwise((t) => {
       throw new Error(`Unsupported schema type ${t as unknown as string}`);
     });

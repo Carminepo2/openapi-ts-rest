@@ -9,9 +9,7 @@
       "dependsOn": ["^build"],
       "outputs": ["dist"]
     },
-    "test": {
-      "dependsOn": ["build"]
-    },
+    "test": {},
     "lint": {
       "cache": false,
       "persistent": true

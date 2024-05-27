@@ -1,8 +1,8 @@
 import type { SchemaObject } from "openapi3-ts/oas30";
-import { tsArray, tsObject, tsRegex, type TsLiteralOrExpression } from "../lib/ts";
-import type { SchemaObjectToAstZosSchemaOptions } from "./schemaObjectToAstZodSchema";
 import { match } from "ts-pattern";
+import { tsArray, tsObject, tsRegex, type TsLiteralOrExpression } from "../lib/ts";
 import { noop } from "../lib/utils";
+import type { SchemaObjectToAstZosSchemaOptions } from "./schemaObjectToAstZodSchema";
 
 type ZodValidationMethod =
   | "int"
@@ -25,7 +25,10 @@ type ZodValidationMethod =
   | "optional"
   | "default";
 
-type ZodValidationMethodCall = [zodValidationMethod: ZodValidationMethod, ...args: TsLiteralOrExpression[]];
+type ZodValidationMethodCall = [
+  zodValidationMethod: ZodValidationMethod,
+  ...args: TsLiteralOrExpression[],
+];
 
 export function schemaObjectToZodValidationChain(
   schema: SchemaObject,
@@ -39,7 +42,8 @@ export function schemaObjectToZodValidationChain(
 
   if (schema.nullable && !options?.isRequired) validationChain.push(["nullish"]);
   else if (schema.nullable) validationChain.push(["nullable"]);
-  else if (typeof options?.isRequired !== "undefined" && !options.isRequired) validationChain.push(["optional"]);
+  else if (typeof options?.isRequired !== "undefined" && !options.isRequired)
+    validationChain.push(["optional"]);
 
   if (schema.default !== undefined) {
     const value = match(schema.type)
@@ -91,16 +95,16 @@ function buildZodStringValidationChain(schema: SchemaObject): ZodValidationMetho
 }
 
 function sanitizeAndFormatRegex(pattern: string): string {
-  if (pattern.startsWith("/") && pattern.endsWith("/")) {
-    pattern = pattern.slice(1, -1);
-  }
-
-  // Escapes control characters
-  // eslint-disable-next-line no-control-regex
-  const CONTROL_CHARS_REGEX = /[\t\n\r\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\uFFFE\uFFFF]/g;
+  const CONTROL_CHARS_REGEX =
+    // eslint-disable-next-line no-control-regex
+    /[\t\n\r\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\uFFFE\uFFFF]/g;
   const HEX_PADDING_FOR_BYTE = "00";
   const HEX_PADDING_FOR_UNICODE = "0000";
-  pattern = pattern.replace(CONTROL_CHARS_REGEX, (match) => {
+
+  const sanitizedPattern =
+    pattern.startsWith("/") && pattern.endsWith("/") ? pattern.slice(1, -1) : pattern;
+
+  const formattedPattern = sanitizedPattern.replace(CONTROL_CHARS_REGEX, (match) => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const dec = match.codePointAt(0)!;
     const hex = dec.toString(16);
@@ -108,7 +112,7 @@ function sanitizeAndFormatRegex(pattern: string): string {
     return `\\x${padding}${hex}`.slice(-2);
   });
 
-  return `/${pattern}/`;
+  return `/${formattedPattern}/`;
 }
 
 function buildZodNumberValidationChain(schema: SchemaObject): ZodValidationMethodCall[] {

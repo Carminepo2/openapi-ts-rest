@@ -3,7 +3,7 @@ import { generateTsRestContractFromOpenAPI } from "@openapi-to-ts-rest/core";
 import { useEffect, useState } from "react";
 import jsYaml from "js-yaml";
 
-function App() {
+function App(): JSX.Element {
   const [value, setValue] = useState(editorDefaultValue);
 
   return (
@@ -27,10 +27,10 @@ function App() {
 
 export default App;
 
-function Output({ value }: { value: string }) {
+function Output({ value }: { value: string }): JSX.Element {
   const [output, setOutput] = useState("");
   useEffect(() => {
-    async function test() {
+    async function test(): Promise<void> {
       try {
         const specObj = jsYaml.load(value);
 
@@ -47,11 +47,17 @@ function Output({ value }: { value: string }) {
         setOutput("An error occurred");
       }
     }
-    test();
+    void test();
   }, [value]);
 
   return (
-    <Editor height="100vh" value={output} defaultLanguage="typescript" theme="vs-dark" options={{ readOnly: true }} />
+    <Editor
+      height="100vh"
+      value={output}
+      defaultLanguage="typescript"
+      theme="vs-dark"
+      options={{ readOnly: true }}
+    />
   );
 }
 

@@ -1,7 +1,4 @@
 import camelcase from "camelcase";
-import type { Context } from "../context";
-import type { APIOperationObject } from "../getAPIOperationsObjects";
-import { tsChainedMethodCall, tsIdentifier, tsObject, type TsLiteralOrExpression } from "../lib/ts";
 import {
   isReferenceObject,
   type ContentObject,
@@ -10,6 +7,9 @@ import {
   type ResponseObject,
 } from "openapi3-ts/oas30";
 import type { Expression } from "typescript";
+import type { Context } from "../context";
+import type { APIOperationObject } from "../getAPIOperationsObjects";
+import { tsChainedMethodCall, tsIdentifier, tsObject, type TsLiteralOrExpression } from "../lib/ts";
 import { schemaObjectToAstZodSchema } from "./schemaObjectToAstZodSchema";
 
 type ContractPropertyKey =
@@ -27,7 +27,7 @@ export function apiOperationToAstTsRestContract(
   operation: APIOperationObject,
   ctx: Context
 ): [string, TsLiteralOrExpression] {
-  const contractProperties: [key: ContractPropertyKey, value: TsLiteralOrExpression][] = [];
+  const contractProperties: Array<[key: ContractPropertyKey, value: TsLiteralOrExpression]> = [];
 
   contractProperties.push(["method", operation.method.toUpperCase()]);
   contractProperties.push(["path", toContractPath(operation.path)]);
@@ -56,7 +56,10 @@ export function apiOperationToAstTsRestContract(
     contractProperties.push(...toContractBodyAndContentType(operation.requestBody, ctx));
   }
 
-  contractProperties.push(["responses", tsObject(...toContractResponses(operation.responses, ctx))]);
+  contractProperties.push([
+    "responses",
+    tsObject(...toContractResponses(operation.responses, ctx)),
+  ]);
 
   return [camelcase(operation.operationId), tsObject(...contractProperties)];
 }
@@ -64,8 +67,8 @@ export function apiOperationToAstTsRestContract(
 function toContractResponses(
   responses: Record<string, ResponseObject>,
   ctx: Context
-): [string, TsLiteralOrExpression][] {
-  const responsesResult: [string, TsLiteralOrExpression][] = [];
+): Array<[string, TsLiteralOrExpression]> {
+  const responsesResult: Array<[string, TsLiteralOrExpression]> = [];
 
   for (const [statusCode, response] of Object.entries(responses)) {
     const zodSchema = response.content
@@ -128,7 +131,10 @@ function getZodSchemaAndContentTypeFromContentObject(
   }
 
   const schemaObject = ctx.resolveSchemaObject(maybeSchemaObject);
-  return { contentType, zodSchema: schemaObjectToAstZodSchema(schemaObject, ctx, { isRequired: true }) };
+  return {
+    contentType,
+    zodSchema: schemaObjectToAstZodSchema(schemaObject, ctx, { isRequired: true }),
+  };
 }
 
 function toContractPath(path: string): string {
@@ -136,6 +142,10 @@ function toContractPath(path: string): string {
 }
 
 function getCompatibleMediaType(mediaTypes: string[]): string | undefined {
-  const compatibleMediaTypes = ["application/json", "multipart/form-data", "application/x-www-form-urlencoded"];
+  const compatibleMediaTypes = [
+    "application/json",
+    "multipart/form-data",
+    "application/x-www-form-urlencoded",
+  ];
   return mediaTypes.find((c) => compatibleMediaTypes.includes(c));
 }

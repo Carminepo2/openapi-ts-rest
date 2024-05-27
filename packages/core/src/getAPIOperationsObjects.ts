@@ -1,7 +1,12 @@
-import type { ParameterObject, RequestBodyObject, ResponseObject, ReferenceObject } from "openapi3-ts/oas30";
-import type { Context } from "./context";
+import type {
+  ParameterObject,
+  RequestBodyObject,
+  ResponseObject,
+  ReferenceObject,
+} from "openapi3-ts/oas30";
 import { isEqual } from "lodash";
 import camelcase from "camelcase";
+import type { Context } from "./context";
 import { validateOpenAPIHttpMethod, validateOpenAPIStatusCode } from "./domain/validators";
 
 export interface APIOperationObject {
@@ -28,7 +33,7 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
 
       const parameters = (pathItem.parameters ?? [])
         .concat(pathOperation.parameters ?? [])
-        .reduce<(ParameterObject | ReferenceObject)[]>((acc, param) => {
+        .reduce<Array<ParameterObject | ReferenceObject>>((acc, param) => {
           if (acc.some((p) => isEqual(p, param))) return acc;
           return [...acc, param];
         }, [])
@@ -38,11 +43,16 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
         ? ctx.resolveRequestBodyObject(pathOperation.requestBody)
         : undefined;
 
-      const responsesEntries = Object.entries(pathOperation.responses) as [string, ResponseObject | ReferenceObject][];
-      const responses = responsesEntries.reduce<APIOperationObject["responses"]>((acc, [statusCode, response]) => {
-        validateOpenAPIStatusCode({ statusCode, path, method });
-        return { ...acc, [statusCode]: ctx.resolveResponseObject(response) };
-      }, {});
+      const responsesEntries = Object.entries(pathOperation.responses) as Array<
+        [string, ResponseObject | ReferenceObject]
+      >;
+      const responses = responsesEntries.reduce<APIOperationObject["responses"]>(
+        (acc, [statusCode, response]) => {
+          validateOpenAPIStatusCode({ statusCode, path, method });
+          return { ...acc, [statusCode]: ctx.resolveResponseObject(response) };
+        },
+        {}
+      );
 
       operationObjects.push({
         description: pathOperation.description,

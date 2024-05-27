@@ -13,9 +13,20 @@ import {
 } from "openapi3-ts/oas30";
 import { formatToIdentifierString, topologicalSort } from "./lib/utils";
 
-const OPEN_API_COMPONENTS_PATH = ["schemas", "parameters", "requestBodies", "responses", "headers"] as const;
+const OPEN_API_COMPONENTS_PATH = [
+  "schemas",
+  "parameters",
+  "requestBodies",
+  "responses",
+  "headers",
+] as const;
 type OpenAPIComponentPath = (typeof OPEN_API_COMPONENTS_PATH)[number];
-type OpenAPIObjectComponent = SchemaObject | ParameterObject | RequestBodyObject | ResponseObject | HeadersObject;
+type OpenAPIObjectComponent =
+  | SchemaObject
+  | ParameterObject
+  | RequestBodyObject
+  | ResponseObject
+  | HeadersObject;
 
 export function generateContext(openAPIDoc: OpenAPIObject) {
   const getObjectByRef = <TObjectComponent extends OpenAPIObjectComponent>(
@@ -54,7 +65,10 @@ export function generateContext(openAPIDoc: OpenAPIObject) {
 
   const getSchemaByRef = getObjectByRef<SchemaObject>;
 
-  const graph = createSchemaComponentsDependencyGraph(openAPIDoc.components?.schemas, getSchemaByRef);
+  const graph = createSchemaComponentsDependencyGraph(
+    openAPIDoc.components?.schemas,
+    getSchemaByRef
+  );
   const topologicallySortedSchemaRefs = topologicalSort(graph);
 
   const schemasToExportMap = new Map<
@@ -105,9 +119,9 @@ function validateAndParseRef(ref: string): {
   componentPath: OpenAPIComponentPath;
   componentName: string;
 } {
-  const isValid = OPEN_API_COMPONENTS_PATH.some((componentPath) => {
-    return ref.startsWith(`#/components/${componentPath}/`);
-  });
+  const isValid = OPEN_API_COMPONENTS_PATH.some((componentPath) =>
+    ref.startsWith(`#/components/${componentPath}/`)
+  );
 
   if (!isValid) {
     throw new Error(`Invalid reference found: ${ref}`);
@@ -148,7 +162,7 @@ function createSchemaComponentsDependencyGraph(
       return;
     }
 
-    (["allOf", "oneOf", "anyOf"] as const satisfies (keyof SchemaObject)[]).forEach((key) => {
+    (["allOf", "oneOf", "anyOf"] as const satisfies Array<keyof SchemaObject>).forEach((key) => {
       component[key]?.forEach((subComponent) => {
         visit(subComponent, fromRef);
       });

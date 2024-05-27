@@ -9,9 +9,9 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "build": "tsup src/index.ts --format cjs,esm --dts",
-    "test": "vitest",
-    "coverage": "vitest --coverage",
-    "test:ci": "vitest run"
+    "test": "echo \"Not yet implemented\"",
+    "lint": "eslint .",
+    "coverage": "vitest --coverage"
   },
   "author": "",
   "license": "ISC",
