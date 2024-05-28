@@ -4,7 +4,7 @@ import type {
   ResponseObject,
   ReferenceObject,
 } from "openapi3-ts/oas30";
-import { isEqual } from "lodash";
+import isEqual from "lodash/isEqual";
 import camelcase from "camelcase";
 import type { Context } from "./context";
 import { validateOpenAPIHttpMethod, validateOpenAPIStatusCode } from "./domain/validators";
