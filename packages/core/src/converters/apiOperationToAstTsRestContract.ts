@@ -38,20 +38,14 @@ export function apiOperationToAstTsRestContract(
     contractProperties.push(["summary", summary]);
   }
 
-  const headerParams = operation.parameters.filter((param) => param.in === "header");
-  if (headerParams.length > 0) {
-    contractProperties.push(["headers", toContractParameters(headerParams, ctx)]);
-  }
+  const paramTypes = ["headers", "query", "pathParams"] as const;
+  paramTypes.forEach((type) => {
+    const params = operation.parameters.filter((param) => param.in === type);
+    if (params.length > 0) {
+      contractProperties.push([type, toContractParameters(params, type, ctx)]);
+    }
+  });
 
-  const queryParams = operation.parameters.filter((param) => param.in === "query");
-  if (queryParams.length > 0) {
-    contractProperties.push(["query", toContractParameters(queryParams, ctx)]);
-  }
-
-  const pathParams = operation.parameters.filter((param) => param.in === "path");
-  if (pathParams.length > 0) {
-    contractProperties.push(["pathParams", toContractParameters(pathParams, ctx)]);
-  }
   if (operation.requestBody || operation.method !== "get") {
     contractProperties.push(...toContractBodyAndContentType(operation.requestBody, ctx));
   }
@@ -93,12 +87,19 @@ function toContractBodyAndContentType(
   ];
 }
 
-function toContractParameters(params: ParameterObject[], ctx: Context): Expression {
+function toContractParameters(
+  params: ParameterObject[],
+  paramType: "headers" | "query" | "pathParams",
+  ctx: Context
+): Expression {
   const pathParams = params.map((param): [string, TsLiteralOrExpression] => {
     if (!param.schema) throw new Error("Parameter schema is required");
 
+    // pathParams are always required
+    const isRequired = paramType === "pathParams" || param.required === true;
+
     const objectSchema = ctx.resolveSchemaObject(param.schema);
-    return [param.name, schemaObjectToAstZodSchema(objectSchema, ctx, { isRequired: true })];
+    return [param.name, schemaObjectToAstZodSchema(objectSchema, ctx, { isRequired })];
   });
 
   return tsChainedMethodCall("z", ["object", tsObject(...pathParams)]);

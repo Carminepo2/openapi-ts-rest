@@ -22,12 +22,15 @@ export interface APIOperationObject {
 
 export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
   const pathsObject = ctx.openAPIDoc.paths;
-  const paths = Object.entries(pathsObject);
   const operationObjects: APIOperationObject[] = [];
 
-  for (const [path, pathItem] of paths) {
-    Object.entries(pathItem).forEach(([method, pathOperation]) => {
+  for (const [path, pathItem] of Object.entries(pathsObject)) {
+    if (!pathItem) continue; // Maybe we should throw an error here?
+
+    for (const [method, pathOperation] of Object.entries(pathItem)) {
       validateOpenAPIHttpMethod({ path, method });
+
+      if (!pathOperation) continue; // Maybe we should throw an error here?
 
       const operationId = pathOperation.operationId ?? convertPathToVariableName(path);
 
@@ -46,6 +49,7 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
       const responsesEntries = Object.entries(pathOperation.responses) as Array<
         [string, ResponseObject | ReferenceObject]
       >;
+
       const responses = responsesEntries.reduce<APIOperationObject["responses"]>(
         (acc, [statusCode, response]) => {
           validateOpenAPIStatusCode({ statusCode, path, method });
@@ -64,7 +68,7 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
         responses,
         requestBody,
       });
-    });
+    }
   }
 
   return operationObjects;
