@@ -7,6 +7,7 @@ import {
   type ResponseObject,
 } from "openapi3-ts/oas30";
 import type { Expression } from "typescript";
+import { match } from "ts-pattern";
 import type { Context } from "../context";
 import type { APIOperationObject } from "../getAPIOperationsObjects";
 import { tsChainedMethodCall, tsIdentifier, tsObject, type TsLiteralOrExpression } from "../lib/ts";
@@ -62,17 +63,63 @@ function toContractResponses(
   responses: Record<string, ResponseObject>,
   ctx: Context
 ): Array<[string, TsLiteralOrExpression]> {
-  const responsesResult: Array<[string, TsLiteralOrExpression]> = [];
+  const responsesResult: Array<[string, TsLiteralOrExpression | undefined]> = [];
+
+  // Common HTTP status codes, we will use them to handle the default status code
+  // and the range of status codes (1XX, 2XX, 3XX etc...)
+  const commonStatusCodes = [
+    "200",
+    "201",
+    "204",
+    "400",
+    "401",
+    "403",
+    "404",
+    "405",
+    "409",
+    "415",
+    "500",
+  ];
 
   for (const [statusCode, response] of Object.entries(responses)) {
-    const zodSchema = response.content
-      ? getZodSchemaAndContentTypeFromContentObject(response.content, ctx).zodSchema
-      : tsChainedMethodCall("z", ["void"]);
+    const contentObject = response.content;
 
-    responsesResult.push([statusCode, zodSchema]);
+    if (!contentObject) {
+      // We will filter out the status code later,
+      // For now we just want to track the handled status codes in order to avoid duplicates
+      // when we add the default status codes
+      responsesResult.push([statusCode, undefined]);
+      continue;
+    }
+
+    match(statusCode)
+      // If the status code is a valid HTTP status code...
+      .when(/^[1-5][0-9][0-9]$/.test, () => {
+        const { zodSchema } = getZodSchemaAndContentTypeFromContentObject(contentObject, ctx);
+        responsesResult.push([statusCode, zodSchema]);
+      })
+      // ...or a range of status codes (1XX, 2XX, 3XX etc...)
+      .when(/^[1-5]XX$/.test, () => {
+        const statusCodes = commonStatusCodes.filter(
+          (c) => c.startsWith(statusCode[0]) && !Object.keys(responses).includes(c)
+        );
+        const { zodSchema } = getZodSchemaAndContentTypeFromContentObject(contentObject, ctx);
+        statusCodes.forEach((c) => responsesResult.push([c, zodSchema]));
+      })
+      // ...or the default status code
+      .with("default", () => {
+        const statusCodes = commonStatusCodes.filter(
+          (c) => !responsesResult.find(([r]) => r === c)
+        );
+        const { zodSchema } = getZodSchemaAndContentTypeFromContentObject(contentObject, ctx);
+        statusCodes.forEach((c) => responsesResult.push([c, zodSchema]));
+      })
+      .run();
   }
 
-  return responsesResult;
+  return responsesResult.filter(([, value]) => value !== undefined) as Array<
+    [string, TsLiteralOrExpression]
+  >;
 }
 
 function toContractBodyAndContentType(
