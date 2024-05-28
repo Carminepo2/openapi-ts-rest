@@ -1,10 +1,10 @@
 import Editor from "@monaco-editor/react";
-import { useState } from "react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./ui/resizable";
 import { useTheme } from "./theme-provider";
 import { editorDefaultValue } from "@/lib/constants";
 import { getThemeFromSystem } from "@/lib/utils";
 import { useOpenAPITsRest } from "@/hooks/useOpenAPITsRest";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 type VsCodeTheme = "vs-dark" | "light";
 
@@ -14,10 +14,8 @@ function getVsCodeTheme(theme: string): VsCodeTheme {
 }
 
 export function OpenAPITsRestEditor(): JSX.Element {
-  const [value, setValue] = useState(editorDefaultValue);
-  const { theme } = useTheme();
-
-  const vsTheme = getVsCodeTheme(theme);
+  const [value, setValue] = useLocalStorage("open-api-doc", editorDefaultValue);
+  const vsTheme = getVsCodeTheme(useTheme().theme);
 
   return (
     <ResizablePanelGroup direction="horizontal">
@@ -48,7 +46,6 @@ function OpenAPIDocumentInput({
       onChange={(v) => onChange(v ?? "")}
       defaultLanguage="yaml"
       theme={theme}
-      defaultValue={editorDefaultValue}
     />
   );
 }
