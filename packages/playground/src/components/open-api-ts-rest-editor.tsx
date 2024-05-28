@@ -62,8 +62,8 @@ function TsRestContractOutput({
 }): JSX.Element {
   const { data, error } = useOpenAPITsRest(openAPIDoc);
 
-  const value = error ? error?.message : data;
-  const language = error ? "text" : "typescript";
+  const value = error ? JSON.stringify({ error: error?.message }, null, 2) : data;
+  const language = error ? "json" : "typescript";
 
   return (
     <Editor
