@@ -1,10 +1,22 @@
 {
   "name": "openapi-ts-rest-contract",
   "version": "0.0.0",
+  "devDependencies": {
+    "@vitest/coverage-istanbul": "^1.6.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-functional": "^6.5.1",
+    "eslint-plugin-perfectionist": "^2.10.0",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-sonarjs": "^1.0.3",
+    "rollup-plugin-node-polyfills": "^0.2.1",
+    "turbo": "^1.13.3",
+    "typescript-eslint": "^7.10.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev --parallel",
@@ -14,19 +26,7 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "clean": "turbo clean && rm -rf node_modules"
   },
-  "devDependencies": {
-    "@vitest/coverage-istanbul": "^1.6.0",
-    "eslint": "^8.57.0",
-    "eslint-plugin-functional": "^6.5.1",
-    "eslint-plugin-perfectionist": "^2.10.0",
-    "eslint-plugin-react": "^7.34.1",
-    "eslint-plugin-react-hooks": "^4.6.2",
-    "eslint-plugin-sonarjs": "^1.0.3",
-    "turbo": "^1.13.3",
-    "typescript-eslint": "^7.10.0"
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "dependencies": {}
+  "workspaces": [
+    "packages/*"
+  ]
 }

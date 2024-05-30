@@ -1,6 +1,3 @@
-import type { OpenAPIObject } from "openapi3-ts/oas30";
-
-import SwaggerParser from "@apidevtools/swagger-parser";
 import { Command } from "@commander-js/extra-typings";
 import { generateTsRestContractFromOpenAPI } from "@openapi-to-ts-rest/core";
 import { writeFileSync } from "fs";
@@ -14,10 +11,9 @@ program
   .requiredOption("-o, --output <output>", "The output file.")
   .action(async ({ input, output }) => {
     const prettierConfig = await prettier.resolveConfig("./");
-    const openApiSchema = (await SwaggerParser.bundle(input)) as OpenAPIObject;
 
     const result = await generateTsRestContractFromOpenAPI({
-      input: openApiSchema,
+      input,
       prettierConfig,
     });
 

@@ -1,6 +1,8 @@
 import type { OpenAPIObject } from "openapi3-ts/oas30";
 import type { Options as PrettierOptions } from "prettier";
 
+import SwaggerParser from "@apidevtools/swagger-parser";
+
 import { generateContext } from "./context.js";
 import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstTsRestContract.js";
 import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
@@ -17,7 +19,7 @@ import {
 import { AstTsWriter } from "./lib/utils.js";
 
 interface GenerateTsRestContractFromOpenAPIOptions {
-  input: OpenAPIObject;
+  input: string;
   prettierConfig?: PrettierOptions | null;
 }
 
@@ -29,7 +31,9 @@ export async function generateTsRestContractFromOpenAPI({
   input,
   prettierConfig,
 }: GenerateTsRestContractFromOpenAPIOptions): Promise<string> {
-  const ctx = generateContext(input);
+  const openApiSchema = (await SwaggerParser.bundle(input)) as OpenAPIObject;
+
+  const ctx = generateContext(openApiSchema);
 
   const ast = new AstTsWriter();
 
