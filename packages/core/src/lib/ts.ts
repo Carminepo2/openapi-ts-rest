@@ -3,31 +3,31 @@
  * It helps to avoid using the TypeScript compiler API directly, which can be verbose and error-prone.
  */
 
-import { match, P } from "ts-pattern";
+import { P, match } from "ts-pattern";
 import {
-  factory,
-  NodeFlags,
-  type Expression,
-  isExpression,
-  type StringLiteral,
-  type NumericLiteral,
-  type TrueLiteral,
-  type FalseLiteral,
-  type NullLiteral,
-  SyntaxKind,
-  type ImportDeclaration,
-  type ExportDeclaration,
-  type VariableStatement,
-  type CallExpression,
-  type ObjectLiteralExpression,
   type ArrayLiteralExpression,
+  type CallExpression,
+  type ExportDeclaration,
+  type Expression,
+  type FalseLiteral,
   type Identifier,
+  type ImportDeclaration,
+  NodeFlags,
+  type NullLiteral,
+  type NumericLiteral,
+  type ObjectLiteralExpression,
   type RegularExpressionLiteral,
+  type StringLiteral,
+  SyntaxKind,
+  type TrueLiteral,
+  type VariableStatement,
+  factory,
+  isExpression,
 } from "typescript";
 
-export type TsKeyword = "var" | "let" | "const";
-export type TsLiteral = string | number | boolean | null;
-export type TsLiteralOrExpression = TsLiteral | Expression;
+export type TsKeyword = "const" | "let" | "var";
+export type TsLiteral = boolean | null | number | string;
+export type TsLiteralOrExpression = Expression | TsLiteral;
 export type TsFunctionCall = [identifier: string, ...args: TsLiteralOrExpression[]];
 
 /**
@@ -44,11 +44,11 @@ export type TsFunctionCall = [identifier: string, ...args: TsLiteralOrExpression
  * ```
  */
 export function tsNamedImport({
-  import_,
   from,
+  import_,
 }: {
-  import_: string[];
   from: string;
+  import_: string[];
 }): ImportDeclaration {
   return factory.createImportDeclaration(
     undefined,
@@ -123,10 +123,10 @@ export function tsLiteralOrExpression(value: null): NullLiteral;
 export function tsLiteralOrExpression(value: Expression): Expression;
 export function tsLiteralOrExpression(
   value: TsLiteralOrExpression
-): StringLiteral | NumericLiteral | TrueLiteral | FalseLiteral | NullLiteral | Expression;
+): Expression | FalseLiteral | NullLiteral | NumericLiteral | StringLiteral | TrueLiteral;
 export function tsLiteralOrExpression(
   value: TsLiteralOrExpression
-): StringLiteral | NumericLiteral | TrueLiteral | FalseLiteral | NullLiteral | Expression {
+): Expression | FalseLiteral | NullLiteral | NumericLiteral | StringLiteral | TrueLiteral {
   return match(value)
     .with(P.string, (value) => factory.createStringLiteral(value))
     .with(
@@ -240,7 +240,7 @@ export function tsFunctionCall(...fn: TsFunctionCall): CallExpression {
  * ```
  */
 export function tsObject(
-  ...properties: Array<[key: string, value: TsLiteralOrExpression] | [key: Identifier | string]>
+  ...properties: Array<[key: Identifier | string] | [key: string, value: TsLiteralOrExpression]>
 ): ObjectLiteralExpression {
   return factory.createObjectLiteralExpression(
     properties.map(([key, value]) => {

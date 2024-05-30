@@ -1,4 +1,5 @@
-import { NodeFlags, isExpression, type Node } from "typescript";
+import { type Node, NodeFlags, isExpression } from "typescript";
+
 import {
   tsArray,
   tsChainedMethodCall,
@@ -20,19 +21,19 @@ const prepareForSnapshot = (ts: Node): string => astToString(ts).trim();
 describe("ts", () => {
   describe("tsNamedImport", () => {
     it("should create a named import statement", () => {
-      const result = tsNamedImport({ import_: ["foo", "bar"], from: "./module" });
+      const result = tsNamedImport({ from: "./module", import_: ["foo", "bar"] });
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(
         `"import { foo, bar } from "./module";"`
       );
     });
 
     it("should create a named import statement with a single import", () => {
-      const result = tsNamedImport({ import_: ["foo"], from: "./module" });
+      const result = tsNamedImport({ from: "./module", import_: ["foo"] });
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"import { foo } from "./module";"`);
     });
 
     it("should create a named import statement with no imports", () => {
-      const result = tsNamedImport({ import_: [], from: "./module" });
+      const result = tsNamedImport({ from: "./module", import_: [] });
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"import {} from "./module";"`);
     });
   });
