@@ -1,13 +1,13 @@
 import { throwError } from "./errors";
 
 export function validateOpenAPIStatusCode({
-  statusCode,
-  path,
   method,
+  path,
+  statusCode,
 }: {
-  statusCode: string;
-  path: string;
   method: string;
+  path: string;
+  statusCode: string;
 }): void {
   if (statusCode === "default") return;
   // Range of status codes (1XX, 2XX, 3XX etc...) are allowed
@@ -16,34 +16,34 @@ export function validateOpenAPIStatusCode({
   const statusCodeNumber = Number(statusCode);
   if (!Number.isInteger(statusCodeNumber) || statusCodeNumber < 100 || statusCodeNumber >= 600) {
     throwError({
-      type: "InvalidStatusCode",
       payload: {
-        statusCode,
-        path,
         method,
+        path,
+        statusCode,
       },
+      type: "InvalidStatusCode",
     });
   }
 }
 
 export function validateOpenAPIHttpMethod({
-  path,
   method,
+  path,
 }: {
-  path: string;
   method: string;
+  path: string;
 }): void {
   if (
-    !["get", "post", "put", "patch", "delete", "head", "options", "trace"].includes(
+    !["delete", "get", "head", "options", "patch", "post", "put", "trace"].includes(
       method.toLowerCase()
     )
   ) {
     throwError({
-      type: "InvalidHttpMethod",
       payload: {
-        path,
         method,
+        path,
       },
+      type: "InvalidHttpMethod",
     });
   }
 }

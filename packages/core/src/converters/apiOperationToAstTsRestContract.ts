@@ -1,28 +1,31 @@
+import type { Expression } from "typescript";
+
 import camelcase from "camelcase";
 import {
-  isReferenceObject,
   type ContentObject,
   type ParameterObject,
   type RequestBodyObject,
   type ResponseObject,
+  isReferenceObject,
 } from "openapi3-ts/oas30";
-import type { Expression } from "typescript";
 import { match } from "ts-pattern";
+
 import type { Context } from "../context";
 import type { APIOperationObject } from "../getAPIOperationsObjects";
-import { tsChainedMethodCall, tsIdentifier, tsObject, type TsLiteralOrExpression } from "../lib/ts";
+
+import { type TsLiteralOrExpression, tsChainedMethodCall, tsIdentifier, tsObject } from "../lib/ts";
 import { schemaObjectToAstZodSchema } from "./schemaObjectToAstZodSchema";
 
 type ContractPropertyKey =
-  | "method"
-  | "path"
-  | "summary"
-  | "headers"
-  | "query"
-  | "pathParams"
   | "body"
   | "contentType"
-  | "responses";
+  | "headers"
+  | "method"
+  | "path"
+  | "pathParams"
+  | "query"
+  | "responses"
+  | "summary";
 
 export function apiOperationToAstTsRestContract(
   operation: APIOperationObject,
@@ -94,18 +97,24 @@ function toContractResponses(
 
     match(statusCode)
       // If the status code is a valid HTTP status code...
-      .when(/^[1-5][0-9][0-9]$/.test, () => {
-        const { zodSchema } = getZodSchemaAndContentTypeFromContentObject(contentObject, ctx);
-        responsesResult.push([statusCode, zodSchema]);
-      })
+      .when(
+        (statusCode) => /^[1-5][0-9][0-9]$/.test(statusCode),
+        () => {
+          const { zodSchema } = getZodSchemaAndContentTypeFromContentObject(contentObject, ctx);
+          responsesResult.push([statusCode, zodSchema]);
+        }
+      )
       // ...or a range of status codes (1XX, 2XX, 3XX etc...)
-      .when(/^[1-5]XX$/.test, () => {
-        const statusCodes = commonStatusCodes.filter(
-          (c) => c.startsWith(statusCode[0]) && !Object.keys(responses).includes(c)
-        );
-        const { zodSchema } = getZodSchemaAndContentTypeFromContentObject(contentObject, ctx);
-        statusCodes.forEach((c) => responsesResult.push([c, zodSchema]));
-      })
+      .when(
+        (statusCode) => /^[1-5]XX$/.test(statusCode),
+        () => {
+          const statusCodes = commonStatusCodes.filter(
+            (c) => c.startsWith(statusCode[0]) && !Object.keys(responses).includes(c)
+          );
+          const { zodSchema } = getZodSchemaAndContentTypeFromContentObject(contentObject, ctx);
+          statusCodes.forEach((c) => responsesResult.push([c, zodSchema]));
+        }
+      )
       // ...or the default status code
       .with("default", () => {
         const statusCodes = commonStatusCodes.filter(
@@ -125,7 +134,7 @@ function toContractResponses(
 function toContractBodyAndContentType(
   body: RequestBodyObject | undefined,
   ctx: Context
-): [["body", TsLiteralOrExpression]] | [["body", TsLiteralOrExpression], ["contentType", string]] {
+): [["body", TsLiteralOrExpression], ["contentType", string]] | [["body", TsLiteralOrExpression]] {
   if (!body) return [["body", tsChainedMethodCall("z", ["void"])]];
   const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(body.content, ctx);
   return [
@@ -136,7 +145,7 @@ function toContractBodyAndContentType(
 
 function toContractParameters(
   params: ParameterObject[],
-  paramType: "headers" | "query" | "pathParams",
+  paramType: "headers" | "pathParams" | "query",
   ctx: Context
 ): Expression {
   const pathParams = params.map((param): [string, TsLiteralOrExpression] => {

@@ -1,29 +1,32 @@
 import type { SchemaObject } from "openapi3-ts/oas30";
+
 import { match } from "ts-pattern";
-import { tsArray, tsObject, tsRegex, type TsLiteralOrExpression } from "../lib/ts";
-import { noop } from "../lib/utils";
+
 import type { SchemaObjectToAstZosSchemaOptions } from "./schemaObjectToAstZodSchema";
 
+import { type TsLiteralOrExpression, tsArray, tsObject, tsRegex } from "../lib/ts";
+import { noop } from "../lib/utils";
+
 type ZodValidationMethod =
-  | "int"
+  | "datetime"
+  | "default"
+  | "email"
   | "gt"
   | "gte"
+  | "instanceof"
+  | "int"
+  | "ip"
   | "lt"
   | "lte"
-  | "multipleOf"
-  | "instanceof"
-  | "uuid"
-  | "url"
-  | "email"
-  | "datetime"
-  | "ip"
-  | "min"
   | "max"
-  | "regex"
-  | "nullish"
+  | "min"
+  | "multipleOf"
   | "nullable"
+  | "nullish"
   | "optional"
-  | "default";
+  | "regex"
+  | "url"
+  | "uuid";
 
 type ZodValidationMethodCall = [
   zodValidationMethod: ZodValidationMethod,

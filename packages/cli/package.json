@@ -7,17 +7,22 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "dev": "bun --watch src/index.ts",
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "test": "echo \"Not yet implemented\"",
     "lint": "eslint .",
     "coverage": "vitest --coverage"
   },
+  "bin": {
+    "openapi-to-ts-rest": "./dist/index.js"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@redocly/openapi-core": "^1.13.0",
+    "@apidevtools/swagger-parser": "^10.1.0",
+    "@commander-js/extra-typings": "^12.1.0",
+    "@openapi-to-ts-rest/core": "workspace:*",
     "camelcase": "^8.0.0",
+    "commander": "^12.1.0",
     "lodash": "^4.17.21",
     "openapi3-ts": "^4.3.2",
     "parse-json": "^8.1.0",

@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 
 import {
+  type ComponentsObject,
   type HeadersObject,
-  type ParameterObject,
   type OpenAPIObject,
+  type ParameterObject,
   type ReferenceObject,
   type RequestBodyObject,
   type ResponseObject,
   type SchemaObject,
   isReferenceObject,
-  type ComponentsObject,
 } from "openapi3-ts/oas30";
+
 import { formatToIdentifierString, topologicalSort } from "./lib/utils";
 
 const OPEN_API_COMPONENTS_PATH = [
@@ -22,18 +23,18 @@ const OPEN_API_COMPONENTS_PATH = [
 ] as const;
 type OpenAPIComponentPath = (typeof OPEN_API_COMPONENTS_PATH)[number];
 type OpenAPIObjectComponent =
-  | SchemaObject
+  | HeadersObject
   | ParameterObject
   | RequestBodyObject
   | ResponseObject
-  | HeadersObject;
+  | SchemaObject;
 
 export function generateContext(openAPIDoc: OpenAPIObject) {
   const getObjectByRef = <TObjectComponent extends OpenAPIObjectComponent>(
     ref: string,
     depth = 0
   ): TObjectComponent => {
-    const { componentPath, componentName } = validateAndParseRef(ref);
+    const { componentName, componentPath } = validateAndParseRef(ref);
     const schemaObject = openAPIDoc.components?.[componentPath]?.[componentName];
 
     if (!componentName || !schemaObject || depth > 100) {
@@ -48,7 +49,7 @@ export function generateContext(openAPIDoc: OpenAPIObject) {
   };
 
   const resolveObject = <TObjectComponent extends OpenAPIObjectComponent>(
-    refOrObject: TObjectComponent | ReferenceObject,
+    refOrObject: ReferenceObject | TObjectComponent,
     resolvedRefs = new Set<string>()
   ): TObjectComponent => {
     if (!isReferenceObject(refOrObject)) return refOrObject;
@@ -74,10 +75,10 @@ export function generateContext(openAPIDoc: OpenAPIObject) {
   const schemasToExportMap = new Map<
     string,
     {
-      ref: string;
-      schema: SchemaObject;
       identifier: string;
       normalizedIdentifier: string;
+      ref: string;
+      schema: SchemaObject;
     }
   >();
 
@@ -86,7 +87,7 @@ export function generateContext(openAPIDoc: OpenAPIObject) {
     const schema = getSchemaByRef(ref);
     const normalizedIdentifier = formatToIdentifierString(identifier);
 
-    const componentMeta = { ref, schema, identifier, normalizedIdentifier };
+    const componentMeta = { identifier, normalizedIdentifier, ref, schema };
 
     // TODO: The schemas should be exported? Or only the ones that are referenced by operations?
     // The current implementation exports all schemas.
@@ -95,29 +96,29 @@ export function generateContext(openAPIDoc: OpenAPIObject) {
   });
 
   return {
-    openAPIDoc,
-    getSchemaByRef,
+    getHeaderByRef: getObjectByRef<HeadersObject>,
     getParameterByRef: getObjectByRef<ParameterObject>,
     getRequestBodyByRef: getObjectByRef<RequestBodyObject>,
     getResponseByRef: getObjectByRef<ResponseObject>,
-    getHeaderByRef: getObjectByRef<HeadersObject>,
+    getSchemaByRef,
+    openAPIDoc,
 
-    resolveSchemaObject: resolveObject<SchemaObject>,
+    resolveHeaderObject: resolveObject<HeadersObject>,
     resolveParameterObject: resolveObject<ParameterObject>,
     resolveRequestBodyObject: resolveObject<RequestBodyObject>,
     resolveResponseObject: resolveObject<ResponseObject>,
-    resolveHeaderObject: resolveObject<HeadersObject>,
+    resolveSchemaObject: resolveObject<SchemaObject>,
 
-    topologicallySortedSchemas,
     schemasToExportMap,
+    topologicallySortedSchemas,
   };
 }
 
 export type Context = ReturnType<typeof generateContext>;
 
 function validateAndParseRef(ref: string): {
-  componentPath: OpenAPIComponentPath;
   componentName: string;
+  componentPath: OpenAPIComponentPath;
 } {
   const isValid = OPEN_API_COMPONENTS_PATH.some((componentPath) =>
     ref.startsWith(`#/components/${componentPath}/`)
@@ -135,8 +136,8 @@ function validateAndParseRef(ref: string): {
   ] = ref.split("/") as [string, string, OpenAPIComponentPath, string];
 
   return {
-    componentPath,
     componentName,
+    componentPath,
   };
 }
 
@@ -147,7 +148,7 @@ function createSchemaComponentsDependencyGraph(
   const graph: Record<string, Set<string>> = {};
   const visitedRefs: Record<string, boolean> = {};
 
-  function visit(component: SchemaObject | ReferenceObject, fromRef: string): void {
+  function visit(component: ReferenceObject | SchemaObject, fromRef: string): void {
     if (isReferenceObject(component)) {
       if (!(fromRef in graph)) {
         graph[fromRef] = new Set();

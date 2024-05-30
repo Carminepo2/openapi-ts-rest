@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState } from "react";
 import { getThemeFromSystem } from "@/lib/utils";
+import { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
 
@@ -10,13 +10,13 @@ type ThemeProviderProps = {
 };
 
 type ThemeProviderState = {
-  theme: Theme;
   setTheme: (theme: Theme) => void;
+  theme: Theme;
 };
 
 const initialState: ThemeProviderState = {
-  theme: "system",
   setTheme: () => null,
+  theme: "system",
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
@@ -45,11 +45,11 @@ export function ThemeProvider({
   }, [theme]);
 
   const value = {
-    theme,
     setTheme: (theme: Theme): void => {
       localStorage.setItem(storageKey, theme);
       setTheme(theme);
     },
+    theme,
   };
 
   return (

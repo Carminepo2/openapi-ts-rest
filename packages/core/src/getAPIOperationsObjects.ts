@@ -1,23 +1,26 @@
 import type {
   ParameterObject,
+  ReferenceObject,
   RequestBodyObject,
   ResponseObject,
-  ReferenceObject,
 } from "openapi3-ts/oas30";
-import isEqual from "lodash/isEqual";
+
 import camelcase from "camelcase";
+import isEqual from "lodash/isEqual";
+
 import type { Context } from "./context";
+
 import { validateOpenAPIHttpMethod, validateOpenAPIStatusCode } from "./domain/validators";
 
 export interface APIOperationObject {
   description: string | undefined;
-  summary: string | undefined;
-  operationId: string;
-  path: string;
   method: string;
+  operationId: string;
   parameters: ParameterObject[];
+  path: string;
   requestBody: RequestBodyObject | undefined;
   responses: Record<string, ResponseObject>;
+  summary: string | undefined;
 }
 
 export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
@@ -28,7 +31,7 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
     if (!pathItem) continue; // Maybe we should throw an error here?
 
     for (const [method, pathOperation] of Object.entries(pathItem)) {
-      validateOpenAPIHttpMethod({ path, method });
+      validateOpenAPIHttpMethod({ method, path });
 
       if (!pathOperation) continue; // Maybe we should throw an error here?
 
@@ -47,12 +50,12 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
         : undefined;
 
       const responsesEntries = Object.entries(pathOperation.responses) as Array<
-        [string, ResponseObject | ReferenceObject]
+        [string, ReferenceObject | ResponseObject]
       >;
 
       const responses = responsesEntries.reduce<APIOperationObject["responses"]>(
         (acc, [statusCode, response]) => {
-          validateOpenAPIStatusCode({ statusCode, path, method });
+          validateOpenAPIStatusCode({ method, path, statusCode });
           return { ...acc, [statusCode]: ctx.resolveResponseObject(response) };
         },
         {}
@@ -60,13 +63,13 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
 
       operationObjects.push({
         description: pathOperation.description,
-        summary: pathOperation.summary,
         method,
-        path,
         operationId,
         parameters,
-        responses,
+        path,
         requestBody,
+        responses,
+        summary: pathOperation.summary,
       });
     }
   }

@@ -1,5 +1,6 @@
-import { ModeToggle } from "./components/mode-toggle";
 import { OpenAPITsRestEditor } from "@/components/open-api-ts-rest-editor";
+
+import { ModeToggle } from "./components/mode-toggle";
 
 function App(): JSX.Element {
   return (

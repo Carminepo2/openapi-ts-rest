@@ -18,12 +18,12 @@
     "@vitest/coverage-istanbul": "^1.6.0",
     "eslint": "^8.57.0",
     "eslint-plugin-functional": "^6.5.1",
-    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-perfectionist": "^2.10.0",
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-sonarjs": "^1.0.3",
     "turbo": "^1.13.3",
-    "typescript-eslint": "^7.10.0",
-    "eslint-plugin-sonarjs": "^1.0.3"
+    "typescript-eslint": "^7.10.0"
   },
   "engines": {
     "node": ">=16.0.0"

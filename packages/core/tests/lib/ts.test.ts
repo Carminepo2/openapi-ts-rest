@@ -21,7 +21,9 @@ describe("ts", () => {
   describe("tsNamedImport", () => {
     it("should create a named import statement", () => {
       const result = tsNamedImport({ import_: ["foo", "bar"], from: "./module" });
-      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"import { foo, bar } from "./module";"`);
+      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(
+        `"import { foo, bar } from "./module";"`
+      );
     });
 
     it("should create a named import statement with a single import", () => {
@@ -118,7 +120,10 @@ describe("ts", () => {
     });
 
     it("should create a variable declaration statement with a function call and an export", () => {
-      const result = tsVariableDeclaration("var", "foo", { eq: tsFunctionCall("fn", "arg"), export_: true });
+      const result = tsVariableDeclaration("var", "foo", {
+        eq: tsFunctionCall("fn", "arg"),
+        export_: true,
+      });
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"export var foo = fn("arg");"`);
     });
   });
@@ -149,7 +154,10 @@ describe("ts", () => {
     it("should create a complex object with nested objects and arrays", () => {
       const result = tsObject(
         ["foo", tsObject(["bar", tsArray("baz", tsFunctionCall("fn", "arg"))])],
-        ["qux", tsArray(tsObject(["quux", "quuz"], ["corge", tsFunctionCall("fn", "arg", tsObject())]))]
+        [
+          "qux",
+          tsArray(tsObject(["quux", "quuz"], ["corge", tsFunctionCall("fn", "arg", tsObject())])),
+        ]
       );
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(
         `"{ "foo": { "bar": ["baz", fn("arg")] }, "qux": [{ "quux": "quuz", "corge": fn("arg", {}) }] }"`
@@ -171,8 +179,15 @@ describe("ts", () => {
 
   describe("tsChainedMethodCall", () => {
     it("should create a chained method call expression", () => {
-      const result = tsChainedMethodCall("foo", ["bar", 1], ["baz", tsObject()], ["qux", tsArray("quux")]);
-      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"foo.bar(1).baz({}).qux(["quux"])"`);
+      const result = tsChainedMethodCall(
+        "foo",
+        ["bar", 1],
+        ["baz", tsObject()],
+        ["qux", tsArray("quux")]
+      );
+      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(
+        `"foo.bar(1).baz({}).qux(["quux"])"`
+      );
     });
   });
 

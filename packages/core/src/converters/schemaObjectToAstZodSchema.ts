@@ -1,34 +1,37 @@
-import { isReferenceObject, type SchemaObject } from "openapi3-ts/oas30";
-import { match, P } from "ts-pattern";
 import type { Expression } from "typescript";
+
+import { type SchemaObject, isReferenceObject } from "openapi3-ts/oas30";
+import { P, match } from "ts-pattern";
+
+import type { Context } from "../context";
+
 import {
+  type TsLiteralOrExpression,
   tsArray,
+  tsChainedMethodCall,
   tsIdentifier,
   tsObject,
-  tsChainedMethodCall,
-  type TsLiteralOrExpression,
 } from "../lib/ts";
-import type { Context } from "../context";
 import { schemaObjectToZodValidationChain } from "./schemaObjectToZodValidationChain";
 
 export type ZodType =
-  | "number"
-  | "string"
-  | "boolean"
-  | "null"
-  | "array"
-  | "object"
-  | "literal"
-  | "enum"
-  | "never"
   | "any"
-  | "union"
+  | "array"
+  | "boolean"
+  | "enum"
   | "instanceof"
+  | "literal"
+  | "never"
+  | "null"
+  | "number"
+  | "object"
+  | "string"
+  | "union"
   | "unknown";
 
 export type ZodTypeMethodCall =
-  | [zodType: ZodType]
-  | [zodType: ZodType, ...args: TsLiteralOrExpression[]];
+  | [zodType: ZodType, ...args: TsLiteralOrExpression[]]
+  | [zodType: ZodType];
 
 export interface SchemaObjectToAstZosSchemaOptions {
   isRequired?: boolean;

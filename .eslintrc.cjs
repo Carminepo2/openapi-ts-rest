@@ -12,8 +12,9 @@ module.exports = {
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
+    "plugin:perfectionist/recommended-natural",
   ],
-  plugins: ["@typescript-eslint", "import", "functional", "sonarjs"],
+  plugins: ["@typescript-eslint", "functional", "sonarjs"],
   rules: {
     "no-case-declarations": "off",
     "no-inner-declarations": "off",
@@ -37,8 +38,6 @@ module.exports = {
     "guard-for-in": "error",
     complexity: "error",
     "arrow-body-style": "error",
-    "import/no-internal-modules": "off",
-    "import/order": "error",
     "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
     // Enable if we want to enforce the return type for all the functions
     "@typescript-eslint/explicit-module-boundary-types": "off",

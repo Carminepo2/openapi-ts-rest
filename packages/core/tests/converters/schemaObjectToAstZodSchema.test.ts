@@ -13,57 +13,63 @@ const wrappedSchemaObjectToAstZodSchema = (schema: SchemaObject): string =>
 
 describe("schemaObjectToAstZodSchema", () => {
   test("snapshot testing schema type string", () => {
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "string" })).toMatchInlineSnapshot(`"z.string()"`);
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", nullable: true })).toMatchInlineSnapshot(
-      `"z.string().nullish()"`
+    expect(wrappedSchemaObjectToAstZodSchema({ type: "string" })).toMatchInlineSnapshot(
+      `"z.string()"`
     );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", minLength: 5 })).toMatchInlineSnapshot(
-      `"z.string().min(5)"`
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "string", nullable: true })
+    ).toMatchInlineSnapshot(`"z.string().nullish()"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "string", minLength: 5 })
+    ).toMatchInlineSnapshot(`"z.string().min(5)"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "string", maxLength: 5 })
+    ).toMatchInlineSnapshot(`"z.string().max(5)"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "string", minLength: 5, maxLength: 10 })
+    ).toMatchInlineSnapshot(`"z.string().min(5).max(10)"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "string", pattern: ".*" })
+    ).toMatchInlineSnapshot(`"z.string().regex(/.*/)"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "string", format: "binary" })
+    ).toMatchInlineSnapshot(`"z.instanceof(File)"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "string", enum: ["a", "b", "c"] })
+    ).toMatchInlineSnapshot(`"z.enum(["a", "b", "c"])"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "string", enum: ["a"] })
+    ).toMatchInlineSnapshot(`"z.literal("a")"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "string", enum: [1, 2, 3] })
+    ).toMatchInlineSnapshot(`"z.enum([1, 2, 3])"`);
+    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: [1] })).toMatchInlineSnapshot(
+      `"z.literal(1)"`
     );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", maxLength: 5 })).toMatchInlineSnapshot(
-      `"z.string().max(5)"`
-    );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", minLength: 5, maxLength: 10 })).toMatchInlineSnapshot(
-      `"z.string().min(5).max(10)"`
-    );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", pattern: ".*" })).toMatchInlineSnapshot(
-      `"z.string().regex(/.*/)"`
-    );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", format: "binary" })).toMatchInlineSnapshot(
-      `"z.instanceof(File)"`
-    );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: ["a", "b", "c"] })).toMatchInlineSnapshot(
-      `"z.enum(["a", "b", "c"])"`
-    );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: ["a"] })).toMatchInlineSnapshot(
-      `"z.literal("a")"`
-    );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: [1, 2, 3] })).toMatchInlineSnapshot(
-      `"z.enum([1, 2, 3])"`
-    );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: [1] })).toMatchInlineSnapshot(`"z.literal(1)"`);
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "string", enum: ["a", 1, true] })).toMatchInlineSnapshot(
-      `"z.enum(["a", 1, true])"`
-    );
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "string", enum: ["a", 1, true] })
+    ).toMatchInlineSnapshot(`"z.enum(["a", 1, true])"`);
   });
 
   test("snapshot testing schema type number", () => {
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "number" })).toMatchInlineSnapshot(`"z.number()"`);
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "number", nullable: true })).toMatchInlineSnapshot(
-      `"z.number().nullish()"`
+    expect(wrappedSchemaObjectToAstZodSchema({ type: "number" })).toMatchInlineSnapshot(
+      `"z.number()"`
     );
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "number", nullable: true })
+    ).toMatchInlineSnapshot(`"z.number().nullish()"`);
     expect(wrappedSchemaObjectToAstZodSchema({ type: "number", minimum: 5 })).toMatchInlineSnapshot(
       `"z.number().gte(5)"`
     );
     expect(wrappedSchemaObjectToAstZodSchema({ type: "number", maximum: 5 })).toMatchInlineSnapshot(
       `"z.number().lte(5)"`
     );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "number", minimum: 5, maximum: 10 })).toMatchInlineSnapshot(
-      `"z.number().gte(5).lte(10)"`
-    );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "number", multipleOf: 5 })).toMatchInlineSnapshot(
-      `"z.number().multipleOf(5)"`
-    );
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "number", minimum: 5, maximum: 10 })
+    ).toMatchInlineSnapshot(`"z.number().gte(5).lte(10)"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "number", multipleOf: 5 })
+    ).toMatchInlineSnapshot(`"z.number().multipleOf(5)"`);
     expect(
       wrappedSchemaObjectToAstZodSchema({ type: "number", minimum: 5, exclusiveMinimum: true })
     ).toMatchInlineSnapshot(`"z.number().gt(5)"`);
@@ -82,31 +88,36 @@ describe("schemaObjectToAstZodSchema", () => {
   });
 
   test("snapshot testing schema type boolean and null", () => {
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "boolean" })).toMatchInlineSnapshot(`"z.boolean()"`);
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "boolean", default: false })).toMatchInlineSnapshot(
-      `"z.boolean().default(false)"`
+    expect(wrappedSchemaObjectToAstZodSchema({ type: "boolean" })).toMatchInlineSnapshot(
+      `"z.boolean()"`
     );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "boolean", default: true })).toMatchInlineSnapshot(
-      `"z.boolean().default(true)"`
-    );
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "boolean", default: false })
+    ).toMatchInlineSnapshot(`"z.boolean().default(false)"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "boolean", default: true })
+    ).toMatchInlineSnapshot(`"z.boolean().default(true)"`);
     expect(wrappedSchemaObjectToAstZodSchema({ type: "null" })).toMatchInlineSnapshot(`"z.null()"`);
   });
 
   test("snapshot testing schema type array", () => {
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "array", items: { type: "string" } })).toMatchInlineSnapshot(
-      `"z.array(z.string())"`
-    );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "array", items: { type: "number" } })).toMatchInlineSnapshot(
-      `"z.array(z.number())"`
-    );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "array", items: { type: "boolean" } })).toMatchInlineSnapshot(
-      `"z.array(z.boolean())"`
-    );
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "array", items: { type: "null" } })).toMatchInlineSnapshot(
-      `"z.array(z.null())"`
-    );
     expect(
-      wrappedSchemaObjectToAstZodSchema({ type: "array", items: { type: "array", items: { type: "string" } } })
+      wrappedSchemaObjectToAstZodSchema({ type: "array", items: { type: "string" } })
+    ).toMatchInlineSnapshot(`"z.array(z.string())"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "array", items: { type: "number" } })
+    ).toMatchInlineSnapshot(`"z.array(z.number())"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "array", items: { type: "boolean" } })
+    ).toMatchInlineSnapshot(`"z.array(z.boolean())"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "array", items: { type: "null" } })
+    ).toMatchInlineSnapshot(`"z.array(z.null())"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        type: "array",
+        items: { type: "array", items: { type: "string" } },
+      })
     ).toMatchInlineSnapshot(`"z.array(z.array(z.string()))"`);
     expect(
       wrappedSchemaObjectToAstZodSchema({
@@ -135,15 +146,21 @@ describe("schemaObjectToAstZodSchema", () => {
     expect(
       wrappedSchemaObjectToAstZodSchema({
         type: "array",
-        items: { type: "array", items: { type: "number" }, minItems: 5, maxItems: 10, default: [1, 2, 3] },
+        items: {
+          type: "array",
+          items: { type: "number" },
+          minItems: 5,
+          maxItems: 10,
+          default: [1, 2, 3],
+        },
       })
     ).toMatchInlineSnapshot(`"z.array(z.array(z.number()).min(5).max(10).default([1, 2, 3]))"`);
   });
 
   test("snapshot testing schema type object", () => {
-    expect(wrappedSchemaObjectToAstZodSchema({ type: "object", properties: {} })).toMatchInlineSnapshot(
-      `"z.object({})"`
-    );
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ type: "object", properties: {} })
+    ).toMatchInlineSnapshot(`"z.object({})"`);
     expect(
       wrappedSchemaObjectToAstZodSchema({
         type: "object",
@@ -152,7 +169,9 @@ describe("schemaObjectToAstZodSchema", () => {
           b: { type: "number" },
         },
       })
-    ).toMatchInlineSnapshot(`"z.object({ "a": z.string().optional(), "b": z.number().optional() })"`);
+    ).toMatchInlineSnapshot(
+      `"z.object({ "a": z.string().optional(), "b": z.number().optional() })"`
+    );
     expect(
       wrappedSchemaObjectToAstZodSchema({
         type: "object",
@@ -186,6 +205,8 @@ describe("schemaObjectToAstZodSchema", () => {
         type: ["string", "number", "boolean"],
         nullable: true,
       })
-    ).toMatchInlineSnapshot(`"z.union([z.string().nullish(), z.number().nullish(), z.boolean().nullish()]).nullish()"`);
+    ).toMatchInlineSnapshot(
+      `"z.union([z.string().nullish(), z.number().nullish(), z.boolean().nullish()]).nullish()"`
+    );
   });
 });

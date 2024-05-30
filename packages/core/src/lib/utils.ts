@@ -13,11 +13,11 @@ export function astToString(
   ast: ts.Node | ts.Node[] | ts.TypeElement | ts.TypeElement[],
   options: {
     fileName?: string;
-    sourceText?: string;
     formatOptions?: ts.PrinterOptions;
+    sourceText?: string;
   } = {}
 ): string {
-  const { fileName = "contract.ts", sourceText = "", formatOptions } = options;
+  const { fileName = "contract.ts", formatOptions, sourceText = "" } = options;
 
   const sourceFile = ts.createSourceFile(
     fileName,

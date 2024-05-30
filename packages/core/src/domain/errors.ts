@@ -2,19 +2,19 @@ import { match } from "ts-pattern";
 
 type OpenApiTsRestContractError =
   | {
-      type: "InvalidStatusCode";
       payload: {
-        statusCode: string;
-        path: string;
         method: string;
+        path: string;
+        statusCode: string;
       };
+      type: "InvalidStatusCode";
     }
   | {
-      type: "InvalidHttpMethod";
       payload: {
-        path: string;
         method: string;
+        path: string;
       };
+      type: "InvalidHttpMethod";
     };
 
 export function throwError(error: OpenApiTsRestContractError): void {
@@ -25,7 +25,8 @@ function errorMessageMapper(error: OpenApiTsRestContractError): string {
   return match(error)
     .with(
       { type: "InvalidStatusCode" },
-      ({ payload }) => `Invalid status code at path ${payload.method} ${payload.path}: ${payload.statusCode}`
+      ({ payload }) =>
+        `Invalid status code at path ${payload.method} ${payload.path}: ${payload.statusCode}`
     )
     .with(
       { type: "InvalidHttpMethod" },

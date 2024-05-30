@@ -1,22 +1,24 @@
-import SwaggerParser from "@apidevtools/swagger-parser";
 import type { OpenAPIObject } from "openapi3-ts/oas30";
-import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstTsRestContract.js";
+import type { Options as PrettierOptions } from "prettier";
+
 import { generateContext } from "./context.js";
+import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstTsRestContract.js";
+import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
 import { getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
 import { prettify } from "./lib/prettier.js";
 import {
-  tsVariableDeclaration,
+  tsChainedMethodCall,
   tsFunctionCall,
   tsNamedImport,
   tsNewLine,
   tsObject,
-  tsChainedMethodCall,
+  tsVariableDeclaration,
 } from "./lib/ts.js";
 import { AstTsWriter } from "./lib/utils.js";
-import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
 
 interface GenerateTsRestContractFromOpenAPIOptions {
-  input: string;
+  input: OpenAPIObject;
+  prettierConfig?: PrettierOptions | null;
 }
 
 /**
@@ -25,18 +27,17 @@ interface GenerateTsRestContractFromOpenAPIOptions {
  */
 export async function generateTsRestContractFromOpenAPI({
   input,
+  prettierConfig,
 }: GenerateTsRestContractFromOpenAPIOptions): Promise<string> {
-  const openApiSchema = (await SwaggerParser.bundle(input)) as OpenAPIObject;
-
-  const ctx = generateContext(openApiSchema);
+  const ctx = generateContext(input);
 
   const ast = new AstTsWriter();
 
   ast
     // import { initContract } from "@ts-rest/core";
-    .add(tsNamedImport({ import_: ["initContract"], from: "@ts-rest/core" }))
+    .add(tsNamedImport({ from: "@ts-rest/core", import_: ["initContract"] }))
     // import { z } from "zod";
-    .add(tsNamedImport({ import_: ["z"], from: "zod" }))
+    .add(tsNamedImport({ from: "zod", import_: ["z"] }))
     .add(tsNewLine())
     // const c = initContract();
     .add(tsVariableDeclaration("const", "c", { eq: tsFunctionCall("initContract") }))
@@ -85,5 +86,5 @@ export async function generateTsRestContractFromOpenAPI({
     })
   );
 
-  return await prettify(ast.toString());
+  return await prettify(ast.toString(), prettierConfig);
 }

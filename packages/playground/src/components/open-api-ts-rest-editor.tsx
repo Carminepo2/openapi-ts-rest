@@ -1,12 +1,13 @@
-import Editor from "@monaco-editor/react";
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./ui/resizable";
-import { useTheme } from "./theme-provider";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useOpenAPITsRest } from "@/hooks/useOpenAPITsRest";
 import { editorDefaultValue } from "@/lib/constants";
 import { getThemeFromSystem } from "@/lib/utils";
-import { useOpenAPITsRest } from "@/hooks/useOpenAPITsRest";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import Editor from "@monaco-editor/react";
 
-type VsCodeTheme = "vs-dark" | "light";
+import { useTheme } from "./theme-provider";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
+
+type VsCodeTheme = "light" | "vs-dark";
 
 function getVsCodeTheme(theme: string): VsCodeTheme {
   const actualTheme = theme === "system" ? getThemeFromSystem() : theme;
@@ -20,32 +21,32 @@ export function OpenAPITsRestEditor(): JSX.Element {
   return (
     <ResizablePanelGroup direction="horizontal">
       <ResizablePanel>
-        <OpenAPIDocumentInput theme={vsTheme} value={value} onChange={setValue} />
+        <OpenAPIDocumentInput onChange={setValue} theme={vsTheme} value={value} />
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel>
-        <TsRestContractOutput theme={vsTheme} openAPIDoc={value} />
+        <TsRestContractOutput openAPIDoc={value} theme={vsTheme} />
       </ResizablePanel>
     </ResizablePanelGroup>
   );
 }
 
 function OpenAPIDocumentInput({
-  value,
   onChange,
   theme,
+  value,
 }: {
-  value: string;
   onChange: (v: string) => void;
   theme: VsCodeTheme;
+  value: string;
 }): JSX.Element {
   return (
     <Editor
-      height="100vh"
-      value={value}
-      onChange={(v) => onChange(v ?? "")}
       defaultLanguage="yaml"
+      height="100vh"
+      onChange={(v) => onChange(v ?? "")}
       theme={theme}
+      value={value}
     />
   );
 }
@@ -65,10 +66,10 @@ function TsRestContractOutput({
   return (
     <Editor
       height="100vh"
-      value={value}
       language={language}
-      theme={theme}
       options={{ readOnly: true }}
+      theme={theme}
+      value={value}
     />
   );
 }
