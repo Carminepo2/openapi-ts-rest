@@ -1,4 +1,4 @@
-import { formatToIdentifierString } from "../../src/lib/utils";
+import { convertPathToVariableName, formatToIdentifierString } from "../../src/lib/utils";
 
 describe("utils", () => {
   describe("formatToIdentifierString", () => {
@@ -22,6 +22,18 @@ describe("utils", () => {
       expect(formatToIdentifierString("1_")).toBe("_1_");
       expect(formatToIdentifierString("$1")).toBe("$1");
       expect(formatToIdentifierString("_1")).toBe("_1");
+    });
+  });
+
+  describe("convertPathToVariableName", () => {
+    it("should convert a path to a valid javascript identifier string", () => {
+      expect(convertPathToVariableName("/hello")).toBe("hello");
+      expect(convertPathToVariableName("/hello/world")).toBe("helloWorld");
+      expect(convertPathToVariableName("/hello/world/{id}")).toBe("helloWorldId");
+      expect(convertPathToVariableName("/hello/world/{id}/text.it")).toBe("helloWorldIdTextIt");
+      expect(convertPathToVariableName("/hello/world/{id}/{id2}/{id3}/.txt")).toBe(
+        "helloWorldIdId2Id3Txt"
+      );
     });
   });
 });

@@ -8,7 +8,7 @@ import { schemaObjectToAstZodSchema } from "../../src/converters/schemaObjectToA
 import { astToString } from "../../src/lib/utils";
 
 const mockCtx = {
-  resolveSchemaObject: <T>(arg: T) => arg,
+  resolveObject: <T>(arg: T) => arg,
 } as Context;
 
 const wrappedSchemaObjectToAstZodSchema = (schema: SchemaObject): string =>

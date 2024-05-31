@@ -11,7 +11,7 @@ import {
 import { match } from "ts-pattern";
 
 import type { Context } from "../context";
-import type { APIOperationObject } from "../getAPIOperationsObjects";
+import type { APIOperationObject } from "../domain/types";
 
 import { type TsLiteralOrExpression, tsChainedMethodCall, tsIdentifier, tsObject } from "../lib/ts";
 import { schemaObjectToAstZodSchema } from "./schemaObjectToAstZodSchema";
@@ -154,7 +154,7 @@ function toContractParameters(
     // pathParams are always required
     const isRequired = paramType === "pathParams" || param.required === true;
 
-    const objectSchema = ctx.resolveSchemaObject(param.schema);
+    const objectSchema = ctx.resolveObject(param.schema);
     return [param.name, schemaObjectToAstZodSchema(objectSchema, ctx, { isRequired })];
   });
 
@@ -187,7 +187,7 @@ function getZodSchemaAndContentTypeFromContentObject(
     }
   }
 
-  const schemaObject = ctx.resolveSchemaObject(maybeSchemaObject);
+  const schemaObject = ctx.resolveObject(maybeSchemaObject);
   return {
     contentType,
     zodSchema: schemaObjectToAstZodSchema(schemaObject, ctx, { isRequired: true }),

@@ -3,10 +3,9 @@ import type { Options as PrettierOptions } from "prettier";
 
 import SwaggerParser from "@apidevtools/swagger-parser";
 
-import { generateContext } from "./context.js";
+import { generateContext } from "./context/index.js";
 import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstTsRestContract.js";
 import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
-import { getAPIOperationsObjects } from "./getAPIOperationsObjects.js";
 import { prettify } from "./lib/prettier.js";
 import {
   tsChainedMethodCall,
@@ -75,10 +74,7 @@ export async function generateTsRestContractFromOpenAPI({
       .add(tsNewLine());
   }
 
-  // Gets the API operations objects from the OpenAPI schema, which are used to generate each contract.
-  const operationObjects = getAPIOperationsObjects(ctx);
-
-  const tsRestAstContracts = operationObjects.map((operationObject) =>
+  const tsRestAstContracts = ctx.operationObjects.map((operationObject) =>
     apiOperationToAstTsRestContract(operationObject, ctx)
   );
 

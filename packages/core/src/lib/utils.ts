@@ -1,3 +1,4 @@
+import camelcase from "camelcase";
 import ts from "typescript";
 
 /**
@@ -138,3 +139,20 @@ export function topologicalSort(graph: Record<string, Set<string>>): string[] {
 
   return Array.from(sorted);
 }
+
+/**
+ * Converts a path to a variable name.
+ * It replaces all slashes, dots, and curly braces with dashes and camelcases the result.
+ *
+ * @param path - The path to convert.
+ * @returns The variable name.
+ *
+ * @example
+ * ```typescript
+ * pathToVariableName("/path/to/{id}") // "pathToId"
+ * pathToVariableName("/path/to/resource") // "pathToResource"
+ * pathToVariableName("/robots.txt") // "robotsTxt"
+ * ```
+ */
+export const convertPathToVariableName = (path: string): string =>
+  camelcase(path.replaceAll(/(\/|\.|{)/g, "-").replaceAll("}", ""));

@@ -14,7 +14,7 @@ import {
 } from "../lib/ts";
 import { schemaObjectToZodValidationChain } from "./schemaObjectToZodValidationChain";
 
-export type ZodType =
+type ZodType =
   | "any"
   | "array"
   | "boolean"
@@ -29,9 +29,7 @@ export type ZodType =
   | "union"
   | "unknown";
 
-export type ZodTypeMethodCall =
-  | [zodType: ZodType, ...args: TsLiteralOrExpression[]]
-  | [zodType: ZodType];
+type ZodTypeMethodCall = [zodType: ZodType, ...args: TsLiteralOrExpression[]] | [zodType: ZodType];
 
 export interface SchemaObjectToAstZosSchemaOptions {
   isRequired?: boolean;
@@ -77,7 +75,7 @@ export function schemaObjectToAstZodSchema(
         }
       }
 
-      const schemaObject = ctx.resolveSchemaObject(refOrSchema);
+      const schemaObject = ctx.resolveObject(refOrSchema);
 
       return [key, schemaObjectToAstZodSchema(schemaObject, ctx, { isRequired })];
     });
@@ -147,7 +145,7 @@ export function schemaObjectToAstZodSchema(
         }
       }
 
-      const schemaObject = ctx.resolveSchemaObject(schema.items);
+      const schemaObject = ctx.resolveObject(schema.items);
 
       return buildZodSchema("z", ["array", schemaObjectToAstZodSchema(schemaObject, ctx)]);
     })

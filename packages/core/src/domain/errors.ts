@@ -1,36 +1,58 @@
-import { match } from "ts-pattern";
+type OpenApiTsRestContractErrorCode =
+  | "InvalidHttpMethodError"
+  | "InvalidRefError"
+  | "InvalidStatusCodeError"
+  | "ResolveRefError";
 
-type OpenApiTsRestContractError =
-  | {
-      payload: {
-        method: string;
-        path: string;
-        statusCode: string;
-      };
-      type: "InvalidStatusCode";
-    }
-  | {
-      payload: {
-        method: string;
-        path: string;
-      };
-      type: "InvalidHttpMethod";
-    };
+class RiskAnalysisTemplateIssue extends Error {
+  public readonly code: OpenApiTsRestContractErrorCode;
+  public readonly detail: string;
 
-export function throwError(error: OpenApiTsRestContractError): void {
-  throw new Error(errorMessageMapper(error));
+  constructor({ code, detail }: { code: OpenApiTsRestContractErrorCode; detail: string }) {
+    super(detail);
+    this.code = code;
+    this.detail = detail;
+  }
 }
 
-function errorMessageMapper(error: OpenApiTsRestContractError): string {
-  return match(error)
-    .with(
-      { type: "InvalidStatusCode" },
-      ({ payload }) =>
-        `Invalid status code at path ${payload.method} ${payload.path}: ${payload.statusCode}`
-    )
-    .with(
-      { type: "InvalidHttpMethod" },
-      ({ payload }) => `Invalid HTTP method at path ${payload.path}: ${payload.method}`
-    )
-    .exhaustive();
+export function invalidStatusCodeError({
+  method,
+  path,
+  statusCode,
+}: {
+  method: string;
+  path: string;
+  statusCode: string;
+}): RiskAnalysisTemplateIssue {
+  return new RiskAnalysisTemplateIssue({
+    code: "InvalidStatusCodeError",
+    detail: `Invalid status code at path ${method} ${path}: ${statusCode}`,
+  });
+}
+
+export function invalidHttpMethodError({
+  method,
+  path,
+}: {
+  method: string;
+  path: string;
+}): RiskAnalysisTemplateIssue {
+  return new RiskAnalysisTemplateIssue({
+    code: "InvalidHttpMethodError",
+    detail: `Invalid HTTP method at path ${path}: ${method}`,
+  });
+}
+
+export function invalidRefError({ ref }: { ref: string }): RiskAnalysisTemplateIssue {
+  return new RiskAnalysisTemplateIssue({
+    code: "InvalidRefError",
+    detail: `Invalid reference found: ${ref}`,
+  });
+}
+
+export function resolveRefError({ ref }: { ref: string }): RiskAnalysisTemplateIssue {
+  return new RiskAnalysisTemplateIssue({
+    code: "ResolveRefError",
+    detail: `Could not resolve reference: ${ref}`,
+  });
 }

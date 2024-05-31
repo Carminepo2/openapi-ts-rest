@@ -1,4 +1,4 @@
-import { throwError } from "./errors";
+import { invalidHttpMethodError, invalidStatusCodeError } from "./errors";
 
 export function validateOpenAPIStatusCode({
   method,
@@ -15,14 +15,7 @@ export function validateOpenAPIStatusCode({
 
   const statusCodeNumber = Number(statusCode);
   if (!Number.isInteger(statusCodeNumber) || statusCodeNumber < 100 || statusCodeNumber >= 600) {
-    throwError({
-      payload: {
-        method,
-        path,
-        statusCode,
-      },
-      type: "InvalidStatusCode",
-    });
+    throw invalidStatusCodeError({ method, path, statusCode });
   }
 }
 
@@ -38,12 +31,6 @@ export function validateOpenAPIHttpMethod({
       method.toLowerCase()
     )
   ) {
-    throwError({
-      payload: {
-        method,
-        path,
-      },
-      type: "InvalidHttpMethod",
-    });
+    throw invalidHttpMethodError({ method, path });
   }
 }

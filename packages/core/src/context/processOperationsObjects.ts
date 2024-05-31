@@ -1,30 +1,22 @@
 import type {
+  OpenAPIObject,
   ParameterObject,
   ReferenceObject,
-  RequestBodyObject,
   ResponseObject,
 } from "openapi3-ts/oas30";
 
-import camelcase from "camelcase";
 import isEqual from "lodash/isEqual";
 
-import type { Context } from "./context";
+import type { APIOperationObject, OpenAPIObjectComponent } from "../domain/types";
 
-import { validateOpenAPIHttpMethod, validateOpenAPIStatusCode } from "./domain/validators";
+import { validateOpenAPIHttpMethod, validateOpenAPIStatusCode } from "../domain/validators";
+import { convertPathToVariableName } from "../lib/utils";
 
-export interface APIOperationObject {
-  description: string | undefined;
-  method: string;
-  operationId: string;
-  parameters: ParameterObject[];
-  path: string;
-  requestBody: RequestBodyObject | undefined;
-  responses: Record<string, ResponseObject>;
-  summary: string | undefined;
-}
-
-export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
-  const pathsObject = ctx.openAPIDoc.paths;
+export function processOperationsObjects(
+  openAPIDoc: OpenAPIObject,
+  resolveObject: <T extends OpenAPIObjectComponent>(refOrObject: ReferenceObject | T) => T
+): APIOperationObject[] {
+  const pathsObject = openAPIDoc.paths;
   const operationObjects: APIOperationObject[] = [];
 
   for (const [path, pathItem] of Object.entries(pathsObject)) {
@@ -43,10 +35,10 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
           if (acc.some((p) => isEqual(p, param))) return acc;
           return [...acc, param];
         }, [])
-        .map((param) => ctx.resolveParameterObject(param));
+        .map((param) => resolveObject(param));
 
       const requestBody = pathOperation.requestBody
-        ? ctx.resolveRequestBodyObject(pathOperation.requestBody)
+        ? resolveObject(pathOperation.requestBody)
         : undefined;
 
       const responsesEntries = Object.entries(pathOperation.responses) as Array<
@@ -56,7 +48,7 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
       const responses = responsesEntries.reduce<APIOperationObject["responses"]>(
         (acc, [statusCode, response]) => {
           validateOpenAPIStatusCode({ method, path, statusCode });
-          return { ...acc, [statusCode]: ctx.resolveResponseObject(response) };
+          return { ...acc, [statusCode]: resolveObject(response) };
         },
         {}
       );
@@ -76,20 +68,3 @@ export function getAPIOperationsObjects(ctx: Context): APIOperationObject[] {
 
   return operationObjects;
 }
-
-/**
- * Converts a path to a variable name.
- * It replaces all slashes, dots, and curly braces with dashes and camelcases the result.
- *
- * @param path - The path to convert.
- * @returns The variable name.
- *
- * @example
- * ```typescript
- * pathToVariableName("/path/to/{id}") // "pathToId"
- * pathToVariableName("/path/to/resource") // "pathToResource"
- * pathToVariableName("/robots.txt") // "robotsTxt"
- * ```
- */
-const convertPathToVariableName = (path: string): string =>
-  camelcase(path.replaceAll(/(\/|\.|{)/g, "-").replaceAll("}", ""));
