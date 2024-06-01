@@ -7,25 +7,38 @@ import type { APIOperationObject } from "./domain/types";
 
 import { validateOpenAPIHttpMethod, validateOpenAPIStatusCode } from "./domain/validators";
 
+/**
+ * Parses and extracts the API operation objects from the OpenAPI document, resolving all the references.
+ *
+ * It validates the HTTP methods and status codes and deduplicates the parameters from the path and operation.
+ *
+ * @param ctx - The context object.
+ * @returns The API operation objects.
+ */
 export function getApiOperationObjects(ctx: Context): APIOperationObject[] {
   const pathsObject = ctx.openAPIDoc.paths;
   const operationObjects: APIOperationObject[] = [];
 
   if (!pathsObject) return [];
 
+  // ["/path", { get: { ... }, post: { ... } }]
   for (const [path, pathItemOrRef] of Object.entries(pathsObject)) {
     if (!pathItemOrRef) continue;
+
     const pathItem = ctx.resolveObject(pathItemOrRef);
 
+    // Filter out the non-operation properties
     const pathOperations = Object.entries(pathItem).filter(
       ([property]) => !["description", "parameters", "servers", "summary"].includes(property)
     );
 
+    // ["get", { ... }]
     for (const [method, pathOperation] of pathOperations) {
       validateOpenAPIHttpMethod({ method, path });
 
       if (!pathOperation || !pathOperation?.responses) continue;
 
+      // Merge parameters from path and operation
       const parameters = (pathItem.parameters ?? [])
         .concat(pathOperation.parameters ?? [])
         // Remove duplicate parameters
