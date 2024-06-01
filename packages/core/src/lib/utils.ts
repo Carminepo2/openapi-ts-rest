@@ -87,60 +87,6 @@ export const formatToIdentifierString = (str: string): string => {
 };
 
 /**
- * Performs a topological sort on a directed graph.
- *
- * A topological sort is used here to sort the components in an OpenAPI schema in the correct order.
- * Meaning that if a component depends on another component, the dependent component will be sorted after the dependency.
- * So, the components can be generated in the correct order.
- *
- * @param graph - The graph to sort, represented as an adjacency list.
- *
- * @returns An array of vertices in topologically sorted order.
- *
- * @example
- * const graph = {
- *   a: ['b', 'c'],
- *   b: ['d'],
- *   c: [],
- *   d: []
- * };
- * const sorted = topologicalSort(graph);
- * console.log(sorted); // Output: ['a', 'c', 'b', 'd']
- */
-export function topologicalSort(graph: Record<string, Set<string>>): string[] {
-  const sorted = new Set<string>();
-  const visited: Record<string, boolean> = {};
-
-  function visit(name: string, ancestors: Set<string>): void {
-    ancestors.add(name);
-    visited[name] = true;
-
-    const node = graph[name] as Set<string> | undefined;
-
-    if (node) {
-      node.forEach((dep) => {
-        if (ancestors.has(dep)) {
-          // Handle circular dependencies
-          return;
-        }
-        if (visited[dep]) return;
-        visit(dep, ancestors);
-      });
-    }
-
-    sorted.add(name);
-  }
-
-  Object.keys(graph).forEach((name) => {
-    if (!visited[name]) {
-      visit(name, new Set());
-    }
-  });
-
-  return Array.from(sorted);
-}
-
-/**
  * Converts a path to a variable name.
  * It replaces all slashes, dots, and curly braces with dashes and camelcases the result.
  *

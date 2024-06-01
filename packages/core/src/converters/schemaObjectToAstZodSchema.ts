@@ -66,7 +66,7 @@ export function schemaObjectToAstZodSchema(
       const isRequired = Boolean(schema.required?.includes(key));
 
       if (isReferenceObject(refOrSchema)) {
-        const schemaToExport = ctx.schemasToExportMap.get(refOrSchema.$ref);
+        const schemaToExport = ctx.exportedComponentSchemasMap.get(refOrSchema.$ref);
         if (schemaToExport) {
           return [
             key,
@@ -139,7 +139,7 @@ export function schemaObjectToAstZodSchema(
       if (!schema.items) return buildZodSchema("z", ["array", buildZodSchema("z", ["any"])]);
 
       if (isReferenceObject(schema.items)) {
-        const schemaToExport = ctx.schemasToExportMap.get(schema.items.$ref);
+        const schemaToExport = ctx.exportedComponentSchemasMap.get(schema.items.$ref);
         if (schemaToExport) {
           return buildZodSchema("z", ["array", tsIdentifier(schemaToExport.normalizedIdentifier)]);
         }

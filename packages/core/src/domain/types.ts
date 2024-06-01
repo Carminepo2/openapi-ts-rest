@@ -23,7 +23,7 @@ export type OpenAPIObjectComponent =
 export interface APIOperationObject {
   description: string | undefined;
   method: string;
-  operationId: string;
+  operationId: string | undefined;
   parameters: ParameterObject[];
   path: string;
   requestBody: RequestBodyObject | undefined;

@@ -1,4 +1,4 @@
-import { generateTsRestContractFromOpenAPI } from "../src";
+import { generateTsRestContractFromOpenAPI } from "../src/generateTsRestContractFromOpenAPI";
 
 describe("generateTsRestContractFromOpenAPI", () => {
   it("should not throw", () => {

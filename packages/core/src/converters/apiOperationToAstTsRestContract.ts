@@ -14,6 +14,7 @@ import type { Context } from "../context";
 import type { APIOperationObject } from "../domain/types";
 
 import { type TsLiteralOrExpression, tsChainedMethodCall, tsIdentifier, tsObject } from "../lib/ts";
+import { convertPathToVariableName } from "../lib/utils";
 import { schemaObjectToAstZodSchema } from "./schemaObjectToAstZodSchema";
 
 type ContractPropertyKey =
@@ -59,7 +60,11 @@ export function apiOperationToAstTsRestContract(
     tsObject(...toContractResponses(operation.responses, ctx)),
   ]);
 
-  return [camelcase(operation.operationId), tsObject(...contractProperties)];
+  const contractOperationName = operation.operationId
+    ? camelcase(operation.operationId)
+    : convertPathToVariableName(operation.path);
+
+  return [contractOperationName, tsObject(...contractProperties)];
 }
 
 function toContractResponses(
@@ -181,7 +186,7 @@ function getZodSchemaAndContentTypeFromContentObject(
   }
 
   if (isReferenceObject(maybeSchemaObject)) {
-    const exported = ctx.schemasToExportMap.get(maybeSchemaObject.$ref);
+    const exported = ctx.exportedComponentSchemasMap.get(maybeSchemaObject.$ref);
     if (exported) {
       return { contentType, zodSchema: tsIdentifier(exported.normalizedIdentifier) };
     }
