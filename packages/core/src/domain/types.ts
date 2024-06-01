@@ -1,14 +1,16 @@
 import type {
   HeadersObject,
   ParameterObject,
+  PathItemObject,
   RequestBodyObject,
   ResponseObject,
   SchemaObject,
-} from "openapi3-ts/oas30";
+} from "openapi3-ts/oas31";
 
 export type OpenAPIComponentPath =
   | "headers"
   | "parameters"
+  | "pathItems"
   | "requestBodies"
   | "responses"
   | "schemas";
@@ -16,6 +18,7 @@ export type OpenAPIComponentPath =
 export type OpenAPIObjectComponent =
   | HeadersObject
   | ParameterObject
+  | PathItemObject
   | RequestBodyObject
   | ResponseObject
   | SchemaObject;

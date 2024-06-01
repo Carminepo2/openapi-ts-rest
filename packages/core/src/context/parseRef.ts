@@ -18,6 +18,7 @@ export function parseRef(ref: string): {
     "requestBodies",
     "responses",
     "headers",
+    "pathItems",
   ];
   const isValid = componentPaths.some((componentPath) =>
     ref.startsWith(`#/components/${componentPath}/`)

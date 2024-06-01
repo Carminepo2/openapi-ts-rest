@@ -7,7 +7,7 @@ import {
   type RequestBodyObject,
   type ResponseObject,
   isReferenceObject,
-} from "openapi3-ts/oas30";
+} from "openapi3-ts/oas31";
 import { match } from "ts-pattern";
 
 import type { Context } from "../context";
