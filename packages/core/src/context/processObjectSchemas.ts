@@ -2,8 +2,7 @@ import { type OpenAPIObject, type SchemaObject } from "openapi3-ts/oas31";
 
 import type { ObjectSchemaMeta } from "../domain/types";
 
-import { formatToIdentifierString } from "../lib/utils";
-import { parseRef } from "./parseRef";
+import { formatToIdentifierString, parseRefComponents } from "../lib/utils";
 
 export function processObjectSchemas(
   openAPIDoc: OpenAPIObject,
@@ -17,7 +16,7 @@ export function processObjectSchemas(
   );
 
   componentRefs.forEach((ref) => {
-    const { componentName: identifier } = parseRef(ref);
+    const { identifier } = parseRefComponents(ref);
     const schema = getSchemaByRef(ref);
     const normalizedIdentifier = formatToIdentifierString(identifier);
     const componentMeta: ObjectSchemaMeta = { identifier, normalizedIdentifier, ref, schema };

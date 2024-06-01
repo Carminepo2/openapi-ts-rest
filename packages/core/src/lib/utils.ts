@@ -1,6 +1,10 @@
 import camelcase from "camelcase";
 import ts from "typescript";
 
+import type { OpenAPIComponentPath } from "../domain/types";
+
+import { validateRef } from "../domain/validators";
+
 /**
  * Converts an AST (Abstract Syntax Tree) to a string.
  *
@@ -102,3 +106,30 @@ export const formatToIdentifierString = (str: string): string => {
  */
 export const convertPathToVariableName = (path: string): string =>
   camelcase(path.replaceAll(/(\/|\.|{)/g, "-").replaceAll("}", ""));
+
+/**
+ * Validate and parse an OpenAPI ref string.
+ *
+ * @param ref - The OpenAPI ref string.
+ * @returns The component type and component identifier.
+ */
+export const parseRefComponents = (
+  ref: string
+): {
+  identifier: string;
+  type: OpenAPIComponentPath;
+} => {
+  validateRef(ref);
+
+  const [
+    _, // #/
+    __, // components/
+    type, // "(schemas|parameters|requestBodies|responses|headers)/"
+    identifier,
+  ] = ref.split("/") as [string, string, OpenAPIComponentPath, string];
+
+  return {
+    identifier,
+    type,
+  };
+};

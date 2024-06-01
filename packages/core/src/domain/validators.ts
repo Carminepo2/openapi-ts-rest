@@ -1,4 +1,8 @@
-import { invalidHttpMethodError, invalidStatusCodeError } from "./errors";
+import { P, match } from "ts-pattern";
+
+import type { OpenAPIComponentPath } from "./types";
+
+import { invalidHttpMethodError, invalidRefError, invalidStatusCodeError } from "./errors";
 
 export function validateOpenAPIStatusCode({
   method,
@@ -32,5 +36,24 @@ export function validateOpenAPIHttpMethod({
     )
   ) {
     throw invalidHttpMethodError({ method, path });
+  }
+}
+
+export function validateRef(ref: string): void {
+  const componentPaths = [
+    "schemas",
+    "parameters",
+    "requestBodies",
+    "responses",
+    "headers",
+    "pathItems",
+  ] as const satisfies OpenAPIComponentPath[];
+
+  const isValid = match(ref.split("/"))
+    .with(["#", "components", P.union(...componentPaths), P.string.minLength(1)], () => true)
+    .otherwise(() => false);
+
+  if (!isValid) {
+    throw invalidRefError({ ref });
   }
 }

@@ -3,7 +3,7 @@ import { type OpenAPIObject, type ReferenceObject, isReferenceObject } from "ope
 import type { OpenAPIObjectComponent } from "../domain/types";
 
 import { resolveRefError } from "../domain/errors";
-import { parseRef } from "./parseRef";
+import { parseRefComponents } from "../lib/utils";
 
 /**
  * Create a function that resolves OpenAPI refs.
@@ -34,9 +34,9 @@ export function makeRefObjectResolvers(openAPIDoc: OpenAPIObject): {
     ref: string,
     depth = 0
   ): TObjectComponent {
-    const { componentName, componentPath } = parseRef(ref);
+    const { identifier, type } = parseRefComponents(ref);
     // `pathItems` is not a valid component path in the OpenAPI type spec.
-    const objectOrRef = openAPIDoc.components?.[componentPath as never]?.[componentName];
+    const objectOrRef = openAPIDoc.components?.[type as never]?.[identifier];
 
     if (!objectOrRef || depth > 100) {
       throw resolveRefError({ ref });

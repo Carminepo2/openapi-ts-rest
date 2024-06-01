@@ -1,4 +1,9 @@
-import { convertPathToVariableName, formatToIdentifierString } from "../../src/lib/utils";
+import { invalidRefError } from "../../src/domain/errors";
+import {
+  convertPathToVariableName,
+  formatToIdentifierString,
+  parseRefComponents,
+} from "../../src/lib/utils";
 
 describe("utils", () => {
   describe("formatToIdentifierString", () => {
@@ -34,6 +39,25 @@ describe("utils", () => {
       expect(convertPathToVariableName("/hello/world/{id}/{id2}/{id3}/.txt")).toBe(
         "helloWorldIdId2Id3Txt"
       );
+    });
+  });
+
+  describe("parseRefComponents", () => {
+    it.each([
+      ["#/components/schemas/User", "schemas", "User"],
+      ["#/components/parameters/User", "parameters", "User"],
+      ["#/components/requestBodies/User", "requestBodies", "User"],
+      ["#/components/responses/User", "responses", "User"],
+      ["#/components/headers/User", "headers", "User"],
+      ["#/components/pathItems/User", "pathItems", "User"],
+    ])("should parse a valid ref", (ref, type, identifier) => {
+      const result = parseRefComponents(ref);
+      expect(result).toMatchObject({ identifier, type });
+    });
+
+    it("should throw an error if the ref is invalid", () => {
+      const ref = "#/components/schemas";
+      expect(() => parseRefComponents(ref)).toThrowError(invalidRefError({ ref }));
     });
   });
 });
