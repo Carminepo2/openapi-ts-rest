@@ -7,6 +7,7 @@ import { createContext } from "./context/index.js";
 import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstTsRestContract.js";
 import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
 import { getApiOperationObjects } from "./getApiOperationObjects.js";
+import { getTopologicallySortedSchema } from "./getTopologicallySortedSchema.js";
 import { prettify } from "./lib/prettier.js";
 import {
   tsChainedMethodCall,
@@ -17,7 +18,6 @@ import {
   tsVariableDeclaration,
 } from "./lib/ts.js";
 import { AstTsWriter } from "./lib/utils.js";
-import { processSchemasForExport } from "./processSchemasForExport.js";
 
 interface GenerateTsRestContractFromOpenAPIOptions {
   input: string;
@@ -48,7 +48,7 @@ export async function generateTsRestContractFromOpenAPI({
     .add(tsVariableDeclaration("const", "c", { eq: tsFunctionCall("initContract") }))
     .add(tsNewLine());
 
-  const schemasToExport = processSchemasForExport(ctx);
+  const schemasToExport = getTopologicallySortedSchema(ctx);
 
   // Generates the Zod schemas for each component schema.
   for (const { normalizedIdentifier, schema } of schemasToExport) {

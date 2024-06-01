@@ -3,7 +3,7 @@ import { type ReferenceObject, type SchemaObject, isReferenceObject } from "open
 import type { Context } from "./context";
 import type { ObjectSchemaMeta } from "./domain/types";
 
-export function processSchemasForExport(ctx: Context): ObjectSchemaMeta[] {
+export function getTopologicallySortedSchema(ctx: Context): ObjectSchemaMeta[] {
   const graph = createSchemaComponentsDependencyGraph(ctx);
   const topologicallySortedRefs = topologicalSort(graph);
 
