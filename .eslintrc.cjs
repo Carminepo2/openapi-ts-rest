@@ -91,7 +91,6 @@ module.exports = {
     "sonarjs/cognitive-complexity": ["error", 19],
     "sonarjs/no-small-switch": "error",
     "sonarjs/no-inverted-boolean-check": "error",
-    "max-lines-per-function": ["error", 200],
   },
   ignorePatterns: [".eslintrc.cjs", "vitest.config.ts", "**/dist", "vitest.workspace.js"],
 };

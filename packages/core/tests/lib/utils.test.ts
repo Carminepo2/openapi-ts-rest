@@ -1,7 +1,11 @@
 import { invalidRefError } from "../../src/domain/errors";
+import { tsArray, tsObject } from "../../src/lib/ts";
 import {
+  AstTsWriter,
+  astToString,
   convertPathToVariableName,
   formatToIdentifierString,
+  noop,
   parseRefComponents,
 } from "../../src/lib/utils";
 
@@ -58,6 +62,28 @@ describe("utils", () => {
     it("should throw an error if the ref is invalid", () => {
       const ref = "#/components/schemas";
       expect(() => parseRefComponents(ref)).toThrowError(invalidRefError({ ref }));
+    });
+  });
+
+  describe("noop", () => {
+    it("should return undefined", () => {
+      expect(noop()).toBeUndefined();
+    });
+  });
+
+  describe("astToString", () => {
+    it("should convert an AST to a string", () => {
+      const ast = tsObject();
+      expect(astToString(ast)).toBe("{}\n");
+    });
+  });
+
+  describe("AstTsWriter", () => {
+    it("should correctly write an array of AST nodes", () => {
+      const astWriter = new AstTsWriter();
+      astWriter.add(tsObject());
+      astWriter.add(tsArray());
+      expect(astWriter.toString()).toBe("{}\n[]\n");
     });
   });
 });

@@ -250,6 +250,7 @@ export function tsObject(
           tsLiteralOrExpression(value)
         );
       }
+      // If the value is undefined, create a shorthand property assignment
       return factory.createShorthandPropertyAssignment(
         typeof key === "string" ? factory.createIdentifier(key) : key,
         undefined
@@ -289,7 +290,7 @@ export function tsArray(...elements: TsLiteralOrExpression[]): ArrayLiteralExpre
  * ```
  */
 export function tsChainedMethodCall(identifier: string, ...chain: TsFunctionCall[]): Expression {
-  if (identifier.length === 0) return factory.createIdentifier(identifier);
+  if (chain.length === 0) return factory.createIdentifier(identifier);
 
   return chain.reduce(
     (expression, [method, ...args]) =>

@@ -164,6 +164,16 @@ describe("ts", () => {
         `"{ "foo": { "bar": ["baz", fn("arg")] }, "qux": [{ "quux": "quuz", "corge": fn("arg", {}) }] }"`
       );
     });
+
+    it("should create an object when passing the key as an ast literal", () => {
+      const result = tsObject([tsIdentifier("foo")]);
+      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"{ foo }"`);
+    });
+
+    it("should create an object when passing only the key as a string", () => {
+      const result = tsObject(["foo"]);
+      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"{ foo }"`);
+    });
   });
 
   describe("tsArray", () => {
@@ -189,6 +199,11 @@ describe("ts", () => {
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(
         `"foo.bar(1).baz({}).qux(["quux"])"`
       );
+    });
+
+    it("should only create the identifier if the is no function chain call", () => {
+      const result = tsChainedMethodCall("foo");
+      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"foo"`);
     });
   });
 
