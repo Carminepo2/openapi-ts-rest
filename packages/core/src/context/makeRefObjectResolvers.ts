@@ -35,7 +35,8 @@ export function makeRefObjectResolvers(openAPIDoc: OpenAPIObject): {
     depth = 0
   ): TObjectComponent {
     const { componentName, componentPath } = parseRef(ref);
-    const objectOrRef = openAPIDoc.components?.[componentPath]?.[componentName];
+    // `pathItems` is not a valid component path in the OpenAPI type spec.
+    const objectOrRef = openAPIDoc.components?.[componentPath as never]?.[componentName];
 
     if (!objectOrRef || depth > 100) {
       throw resolveRefError({ ref });
