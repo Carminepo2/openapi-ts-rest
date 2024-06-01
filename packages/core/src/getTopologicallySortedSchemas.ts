@@ -3,7 +3,19 @@ import { type ReferenceObject, type SchemaObject, isReferenceObject } from "open
 import type { Context } from "./context";
 import type { ObjectSchemaMeta } from "./domain/types";
 
-export function getTopologicallySortedSchema(ctx: Context): ObjectSchemaMeta[] {
+import { circularRefDependencyError } from "./domain/errors";
+
+/**
+ * Returns an array of ObjectSchemaMeta objects sorted in topological order.
+ *
+ * This function creates a dependency graph of schema components, sorts them topologically.
+ * This ensures that if a component depends on another component, the dependent component will be placed after the dependency.
+ * So, the components can be generated in the correct order.
+ *
+ * @param ctx - The context object containing the exportedComponentSchemasMap.
+ * @returns  An array of ObjectSchemaMeta objects sorted in topological order.
+ */
+export function getTopologicallySortedSchemas(ctx: Context): ObjectSchemaMeta[] {
   const graph = createSchemaComponentsDependencyGraph(ctx);
   const topologicallySortedRefs = topologicalSort(graph);
 
@@ -12,6 +24,15 @@ export function getTopologicallySortedSchema(ctx: Context): ObjectSchemaMeta[] {
     .filter((schema): schema is NonNullable<ObjectSchemaMeta> => schema !== undefined);
 }
 
+/**
+ * Creates a dependency graph of schema components.
+ *
+ * This function creates a directed graph of schema components where each vertex is a schema component reference.
+ * The graph is represented as an adjacency list.
+ *
+ * @param ctx - The context object containing the exportedComponentSchemasMap.
+ * @returns A dependency graph of schema components.
+ */
 function createSchemaComponentsDependencyGraph(ctx: Context): Record<string, Set<string>> {
   const graph: Record<string, Set<string>> = {};
   const visitedRefs: Record<string, boolean> = {};
@@ -34,27 +55,32 @@ function createSchemaComponentsDependencyGraph(ctx: Context): Record<string, Set
       return;
     }
 
-    (["allOf", "oneOf", "anyOf"] as const satisfies Array<keyof SchemaObject>).forEach((key) => {
-      component[key]?.forEach((subComponent) => {
-        visit(subComponent, fromRef);
-      });
-    });
+    // TODO: "allOf", "oneOf", "anyOf" are not supported yet.
+    // (["allOf", "oneOf", "anyOf"] as const satisfies Array<keyof SchemaObject>).forEach((key) => {
+    //   component[key]?.forEach((subComponent) => {
+    //     visit(subComponent, fromRef);
+    //   });
+    // });
 
     if (component.type === "array" && component.items) {
       visit(component.items, fromRef);
       return;
     }
 
-    if (component.type === "object" || component.properties || component.additionalProperties) {
+    if (
+      component.type === "object" ||
+      component.properties /** || component.additionalProperties */
+    ) {
       if (component.properties) {
         Object.values(component.properties).forEach((component) => {
           visit(component, fromRef);
         });
       }
 
-      if (component.additionalProperties && typeof component.additionalProperties === "object") {
-        visit(component.additionalProperties, fromRef);
-      }
+      // TODO: "additionalProperties" is not supported yet.
+      // if (component.additionalProperties && typeof component.additionalProperties === "object") {
+      //   visit(component.additionalProperties, fromRef);
+      // }
     }
   }
 
@@ -75,7 +101,6 @@ function createSchemaComponentsDependencyGraph(ctx: Context): Record<string, Set
  * So, the components can be generated in the correct order.
  *
  * @param graph - The graph to sort, represented as an adjacency list.
- *
  * @returns An array of vertices in topologically sorted order.
  *
  * @example
@@ -101,8 +126,9 @@ export function topologicalSort(graph: Record<string, Set<string>>): string[] {
     if (node) {
       node.forEach((dep) => {
         if (ancestors.has(dep)) {
-          // Handle circular dependencies
-          return;
+          // TODO: Handle circular dependencies, for now just throw an error.
+          const depsPath = [...Array.from(ancestors), dep];
+          throw circularRefDependencyError({ depsPath });
         }
         if (visited[dep]) return;
         visit(dep, ancestors);
@@ -113,9 +139,7 @@ export function topologicalSort(graph: Record<string, Set<string>>): string[] {
   }
 
   Object.keys(graph).forEach((name) => {
-    if (!visited[name]) {
-      visit(name, new Set());
-    }
+    visit(name, new Set());
   });
 
   return Array.from(sorted);

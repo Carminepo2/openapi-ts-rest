@@ -1,4 +1,5 @@
 type OpenApiTsRestContractErrorCode =
+  | "CircularRefDependencyError"
   | "InvalidHttpMethodError"
   | "InvalidRefError"
   | "InvalidStatusCodeError"
@@ -54,5 +55,16 @@ export function resolveRefError({ ref }: { ref: string }): RiskAnalysisTemplateI
   return new RiskAnalysisTemplateIssue({
     code: "ResolveRefError",
     detail: `Could not resolve reference: ${ref}`,
+  });
+}
+
+export function circularRefDependencyError({
+  depsPath,
+}: {
+  depsPath: string[];
+}): RiskAnalysisTemplateIssue {
+  return new RiskAnalysisTemplateIssue({
+    code: "CircularRefDependencyError",
+    detail: `Circular reference detected: ${depsPath.join(" -> ")}`,
   });
 }

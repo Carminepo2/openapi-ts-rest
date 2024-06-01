@@ -1,19 +1,10 @@
-import { createContext } from "../src/context";
 import { invalidHttpMethodError, invalidStatusCodeError } from "../src/domain/errors";
 import { getApiOperationObjects } from "../src/getApiOperationObjects";
-
-const openAPIMock = {
-  info: {
-    title: "test",
-    version: "3.0",
-  },
-  openapi: "3.0",
-};
+import { createMockContext } from "./test.utils";
 
 describe("getApiOperationObjects", () => {
   it("should return an array of APIOperationObject", () => {
-    const ctx = createContext({
-      ...openAPIMock,
+    const ctx = createMockContext({
       paths: { "/hello": { get: { responses: { 200: { description: "200" } } } } },
     });
 
@@ -29,8 +20,7 @@ describe("getApiOperationObjects", () => {
   });
 
   it("should correctly resolve the api item ref", () => {
-    const ctx = createContext({
-      ...openAPIMock,
+    const ctx = createMockContext({
       components: {
         // @ts-expect-error @typescript-eslint/ban-ts-comment
         pathItems: {
@@ -58,8 +48,7 @@ describe("getApiOperationObjects", () => {
   });
 
   it("should ignore a path without operations", () => {
-    const ctx = createContext({
-      ...openAPIMock,
+    const ctx = createMockContext({
       paths: { "/hello": {} },
     });
 
@@ -68,8 +57,7 @@ describe("getApiOperationObjects", () => {
   });
 
   it("should ignore a path operation without responses", () => {
-    const ctx = createContext({
-      ...openAPIMock,
+    const ctx = createMockContext({
       paths: { "/hello": { get: {} } },
     });
 
@@ -78,8 +66,7 @@ describe("getApiOperationObjects", () => {
   });
 
   it("should throw an error if the HTTP method is invalid", () => {
-    const ctx = createContext({
-      ...openAPIMock,
+    const ctx = createMockContext({
       // @ts-expect-error @typescript-eslint/ban-ts-comment
       paths: { "/hello": { invalid: { responses: { 200: { description: "200" } } } } },
     });
@@ -90,8 +77,7 @@ describe("getApiOperationObjects", () => {
   });
 
   it("should merge parameters from path and operation", () => {
-    const ctx = createContext({
-      ...openAPIMock,
+    const ctx = createMockContext({
       paths: {
         "/hello": {
           get: {
@@ -109,8 +95,7 @@ describe("getApiOperationObjects", () => {
   });
 
   it("should remove duplicate parameters", () => {
-    const ctx = createContext({
-      ...openAPIMock,
+    const ctx = createMockContext({
       paths: {
         "/hello": {
           get: {
@@ -128,8 +113,7 @@ describe("getApiOperationObjects", () => {
   });
 
   it("should correctly resolve the request body", () => {
-    const ctx = createContext({
-      ...openAPIMock,
+    const ctx = createMockContext({
       paths: {
         "/hello": {
           get: {
@@ -151,8 +135,7 @@ describe("getApiOperationObjects", () => {
   });
 
   it("should throw an error if the status code is invalid", () => {
-    const ctx = createContext({
-      ...openAPIMock,
+    const ctx = createMockContext({
       paths: {
         "/hello": {
           get: {
@@ -168,17 +151,14 @@ describe("getApiOperationObjects", () => {
   });
 
   it("should return an empty array if there are no paths", () => {
-    const ctx = createContext({
-      ...openAPIMock,
-    });
+    const ctx = createMockContext({});
 
     const result = getApiOperationObjects(ctx);
     expect(result).toHaveLength(0);
   });
 
   it("should skip the path if it is empty", () => {
-    const ctx = createContext({
-      ...openAPIMock,
+    const ctx = createMockContext({
       paths: {
         // @ts-expect-error @typescript-eslint/ban-ts-comment
         "/hello": undefined,
