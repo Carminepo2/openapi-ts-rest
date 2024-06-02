@@ -1,4 +1,4 @@
-import { type OpenAPIObject, type ReferenceObject, isReferenceObject } from "openapi3-ts/oas31";
+import { type OpenAPIObject, type ReferenceObject, isReferenceObject } from "openapi3-ts";
 
 import type { OpenAPIObjectComponent } from "../domain/types";
 

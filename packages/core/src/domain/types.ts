@@ -5,7 +5,7 @@ import type {
   RequestBodyObject,
   ResponseObject,
   SchemaObject,
-} from "openapi3-ts/oas31";
+} from "openapi3-ts";
 
 export type OpenAPIComponentPath =
   | "headers"

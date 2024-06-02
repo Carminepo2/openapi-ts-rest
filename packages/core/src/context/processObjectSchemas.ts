@@ -1,4 +1,4 @@
-import { type OpenAPIObject, type SchemaObject } from "openapi3-ts/oas31";
+import { type OpenAPIObject, type SchemaObject } from "openapi3-ts";
 
 import type { ObjectSchemaMeta } from "../domain/types";
 

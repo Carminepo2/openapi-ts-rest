@@ -1,4 +1,4 @@
-import type { SchemaObject } from "openapi3-ts/oas31";
+import type { SchemaObject } from "openapi3-ts";
 
 import { match } from "ts-pattern";
 

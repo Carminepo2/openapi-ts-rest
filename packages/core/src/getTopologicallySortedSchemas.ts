@@ -1,4 +1,4 @@
-import { type ReferenceObject, type SchemaObject, isReferenceObject } from "openapi3-ts/oas31";
+import { type ReferenceObject, type SchemaObject, isReferenceObject } from "openapi3-ts";
 
 import type { Context } from "./context";
 import type { ObjectSchemaMeta } from "./domain/types";

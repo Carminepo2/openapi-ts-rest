@@ -1,4 +1,4 @@
-import { type OpenAPIObject } from "openapi3-ts/oas31";
+import { type OpenAPIObject } from "openapi3-ts";
 
 import { makeRefObjectResolvers } from "./makeRefObjectResolvers";
 import { processObjectSchemas } from "./processObjectSchemas";

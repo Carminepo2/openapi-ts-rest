@@ -1,4 +1,4 @@
-import type { OpenAPIObject } from "openapi3-ts/oas31";
+import type { OpenAPIObject } from "openapi3-ts";
 
 import { type Context, createContext } from "../src/context";
 

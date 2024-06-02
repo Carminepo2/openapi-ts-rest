@@ -1,6 +1,11 @@
-import type { ParameterObject, ReferenceObject, ResponseObject } from "openapi3-ts/oas31";
-
 import isEqual from "lodash/isEqual";
+import {
+  type OperationObject,
+  type ParameterObject,
+  type PathItemObject,
+  type ReferenceObject,
+  type ResponseObject,
+} from "openapi3-ts";
 
 import type { Context } from "./context";
 import type { APIOperationObject } from "./domain/types";
@@ -25,7 +30,7 @@ export function getApiOperationObjects(ctx: Context): APIOperationObject[] {
   for (const [path, pathItemOrRef] of Object.entries(pathsObject)) {
     if (!pathItemOrRef) continue;
 
-    const pathItem = ctx.resolveObject(pathItemOrRef);
+    const pathItem = ctx.resolveObject<PathItemObject>(pathItemOrRef);
 
     // Filter out the non-operation properties
     const pathOperations = Object.entries(pathItem).filter(
@@ -33,7 +38,7 @@ export function getApiOperationObjects(ctx: Context): APIOperationObject[] {
     );
 
     // ["get", { ... }]
-    for (const [method, pathOperation] of pathOperations) {
+    for (const [method, pathOperation] of pathOperations as Array<[string, OperationObject]>) {
       validateOpenAPIHttpMethod({ method, path });
 
       if (!pathOperation || !pathOperation?.responses) continue;

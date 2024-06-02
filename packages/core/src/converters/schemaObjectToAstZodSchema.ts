@@ -1,6 +1,6 @@
 import type { Expression } from "typescript";
 
-import { type SchemaObject, isReferenceObject } from "openapi3-ts/oas31";
+import { type SchemaObject, isReferenceObject } from "openapi3-ts";
 import { P, match } from "ts-pattern";
 
 import type { Context } from "../context";
