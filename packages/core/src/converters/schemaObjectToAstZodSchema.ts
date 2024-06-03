@@ -5,6 +5,7 @@ import { P, match } from "ts-pattern";
 
 import type { Context } from "../context";
 
+import { notImplementedError, unexpectedError } from "../domain/errors";
 import {
   type TsLiteralOrExpression,
   tsArray,
@@ -42,11 +43,11 @@ export function schemaObjectToAstZodSchema(
 ): Expression {
   if (schema.oneOf || schema.anyOf || schema.allOf) {
     // TODO: Add support for `oneOf`, `anyOf` and `allOf`
-    throw new Error("oneOf, anyOf and allOf are currently not supported");
+    throw notImplementedError({ detail: "oneOf, anyOf and allOf are currently not supported" });
   }
 
   function buildZodSchema(
-    identifier = "z",
+    identifier: string,
     zodMethod?: ZodTypeMethodCall,
     customOptions = options
   ): Expression {
@@ -157,6 +158,6 @@ export function schemaObjectToAstZodSchema(
     )
     .with(P.nullish, () => buildZodSchema("z", ["unknown"]))
     .otherwise((t) => {
-      throw new Error(`Unsupported schema type ${t as unknown as string}`);
+      throw unexpectedError({ detail: `Unsupported schema type ${t as unknown as string}` });
     });
 }

@@ -3,7 +3,9 @@ type OpenApiTsRestContractErrorCode =
   | "InvalidHttpMethodError"
   | "InvalidRefError"
   | "InvalidStatusCodeError"
-  | "ResolveRefError";
+  | "NotImplementedError"
+  | "ResolveRefError"
+  | "UnexpectedError";
 
 class RiskAnalysisTemplateIssue extends Error {
   public readonly code: OpenApiTsRestContractErrorCode;
@@ -66,5 +68,19 @@ export function circularRefDependencyError({
   return new RiskAnalysisTemplateIssue({
     code: "CircularRefDependencyError",
     detail: `Circular reference detected: ${depsPath.join(" -> ")}`,
+  });
+}
+
+export function notImplementedError({ detail }: { detail: string }): RiskAnalysisTemplateIssue {
+  return new RiskAnalysisTemplateIssue({
+    code: "NotImplementedError",
+    detail,
+  });
+}
+
+export function unexpectedError({ detail }: { detail: string }): RiskAnalysisTemplateIssue {
+  return new RiskAnalysisTemplateIssue({
+    code: "UnexpectedError",
+    detail,
   });
 }

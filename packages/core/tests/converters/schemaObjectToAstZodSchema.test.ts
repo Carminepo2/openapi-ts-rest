@@ -1,20 +1,32 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import type { SchemaObject } from "openapi3-ts";
 
 import { describe, expect, test } from "vitest";
 
-import type { Context } from "../../src/context";
-
 import { schemaObjectToAstZodSchema } from "../../src/converters/schemaObjectToAstZodSchema";
+import { notImplementedError } from "../../src/domain/errors";
 import { astToString } from "../../src/lib/utils";
+import { createMockContext } from "../test.utils";
 
-const mockCtx = {
-  resolveObject: <T>(arg: T) => arg,
-} as Context;
+const mockCtx = createMockContext();
 
-const wrappedSchemaObjectToAstZodSchema = (schema: SchemaObject): string =>
-  astToString(schemaObjectToAstZodSchema(schema, mockCtx)).trim();
+const wrappedSchemaObjectToAstZodSchema = (schema: SchemaObject, ctx = mockCtx): string =>
+  astToString(schemaObjectToAstZodSchema(schema, ctx)).trim();
 
 describe("schemaObjectToAstZodSchema", () => {
+  test("snapshot testing schema", () => {
+    expect(wrappedSchemaObjectToAstZodSchema({ type: undefined })).toMatchInlineSnapshot(
+      `"z.unknown()"`
+    );
+  });
+
+  it("should throw an error if given unsopperted schema type", () => {
+    expect(() =>
+      // @ts-expect-error @typescript-eslint/ban-ts-comment
+      wrappedSchemaObjectToAstZodSchema({ type: "unsupported" })
+    ).toThrowError(notImplementedError({ detail: "Unsupported schema type unsupported" }));
+  });
+
   test("snapshot testing schema type string", () => {
     expect(wrappedSchemaObjectToAstZodSchema({ type: "string" })).toMatchInlineSnapshot(
       `"z.string()"`
@@ -37,21 +49,6 @@ describe("schemaObjectToAstZodSchema", () => {
     expect(
       wrappedSchemaObjectToAstZodSchema({ format: "binary", type: "string" })
     ).toMatchInlineSnapshot(`"z.instanceof(File)"`);
-    expect(
-      wrappedSchemaObjectToAstZodSchema({ enum: ["a", "b", "c"], type: "string" })
-    ).toMatchInlineSnapshot(`"z.enum(["a", "b", "c"])"`);
-    expect(
-      wrappedSchemaObjectToAstZodSchema({ enum: ["a"], type: "string" })
-    ).toMatchInlineSnapshot(`"z.literal("a")"`);
-    expect(
-      wrappedSchemaObjectToAstZodSchema({ enum: [1, 2, 3], type: "string" })
-    ).toMatchInlineSnapshot(`"z.enum([1, 2, 3])"`);
-    expect(wrappedSchemaObjectToAstZodSchema({ enum: [1], type: "string" })).toMatchInlineSnapshot(
-      `"z.literal(1)"`
-    );
-    expect(
-      wrappedSchemaObjectToAstZodSchema({ enum: ["a", 1, true], type: "string" })
-    ).toMatchInlineSnapshot(`"z.enum(["a", 1, true])"`);
   });
 
   test("snapshot testing schema type number", () => {
@@ -158,6 +155,38 @@ describe("schemaObjectToAstZodSchema", () => {
         type: "array",
       })
     ).toMatchInlineSnapshot(`"z.array(z.array(z.number()).min(5).max(10).default([1, 2, 3]))"`);
+
+    const ctx = createMockContext({
+      components: {
+        schemas: {
+          RefSchema: { type: "string" },
+        },
+      },
+    });
+
+    expect(
+      wrappedSchemaObjectToAstZodSchema(
+        {
+          items: { $ref: "#/components/schemas/RefSchema" },
+          type: "array",
+        },
+        ctx
+      )
+    ).toMatchInlineSnapshot(`"z.array(RefSchema)"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema(
+        {
+          items: { $ref: "#/components/schemas/RefSchema" },
+          type: "array",
+        },
+        { ...ctx, exportedComponentSchemasMap: new Map() }
+      )
+    ).toMatchInlineSnapshot(`"z.array(z.string())"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        type: "array",
+      })
+    ).toMatchInlineSnapshot(`"z.array(z.any())"`);
   });
 
   test("snapshot testing schema type object", () => {
@@ -185,6 +214,85 @@ describe("schemaObjectToAstZodSchema", () => {
         type: "object",
       })
     ).toMatchInlineSnapshot(`"z.object({ "a": z.string(), "b": z.number().optional() })"`);
+
+    const ctx = createMockContext({
+      components: {
+        schemas: {
+          RefSchema: {
+            properties: {
+              a: { type: "string" },
+              b: { type: "number" },
+            },
+            type: "object",
+          },
+        },
+      },
+    });
+
+    expect(
+      wrappedSchemaObjectToAstZodSchema(
+        {
+          properties: {
+            a: { $ref: "#/components/schemas/RefSchema" },
+            b: { type: "number" },
+          },
+          required: ["a"],
+          type: "object",
+        },
+        ctx
+      )
+    ).toMatchInlineSnapshot(`"z.object({ "a": RefSchema, "b": z.number().optional() })"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema(
+        {
+          properties: {
+            a: { $ref: "#/components/schemas/RefSchema" },
+            b: { type: "number" },
+          },
+          required: ["a"],
+          type: "object",
+        },
+        { ...ctx, exportedComponentSchemasMap: new Map() }
+      )
+    ).toMatchInlineSnapshot(`"z.object({ "a": z.object({ "a": z.string().optional(), "b": z.number().optional() }), "b": z.number().optional() })"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        type: "object",
+      })
+    ).toMatchInlineSnapshot(`"z.object({})"`);
+  });
+
+  test("snapshot testing schema with enum", () => {
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ enum: ["a", "b", "c"], type: "string" })
+    ).toMatchInlineSnapshot(`"z.enum(["a", "b", "c"])"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ enum: ["a"], type: "string" })
+    ).toMatchInlineSnapshot(`"z.literal("a")"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ enum: [1, 2, 3], type: "string" })
+    ).toMatchInlineSnapshot(`"z.enum([1, 2, 3])"`);
+    expect(wrappedSchemaObjectToAstZodSchema({ enum: [1], type: "string" })).toMatchInlineSnapshot(
+      `"z.literal(1)"`
+    );
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ enum: ["a", 1, true], type: "string" })
+    ).toMatchInlineSnapshot(`"z.enum(["a", 1, true])"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ enum: ["a", "b", "c"], nullable: true, type: "string" })
+    ).toMatchInlineSnapshot(`"z.enum(["a", "b", "c"]).nullish()"`);
+    expect(wrappedSchemaObjectToAstZodSchema({ enum: ["a", "b", "c"] })).toMatchInlineSnapshot(
+      `"z.never()"`
+    );
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ enum: [false], type: "boolean" })
+    ).toMatchInlineSnapshot(`"z.literal(false)"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ enum: [1, 2, 3], type: "number" })
+    ).toMatchInlineSnapshot(`"z.enum([z.literal(1), z.literal(2), z.literal(3)])"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({ enum: [1, null], type: "string" })
+    ).toMatchInlineSnapshot(`"z.enum([1, "null"])"`);
   });
 
   test("snapshot testing schema with array of types", () => {
@@ -211,5 +319,44 @@ describe("schemaObjectToAstZodSchema", () => {
     ).toMatchInlineSnapshot(
       `"z.union([z.string().nullish(), z.number().nullish(), z.boolean().nullish()]).nullish()"`
     );
+  });
+
+  describe("snapshot testing schema with anyOf property", () => {
+    it("should throw an error", () => {
+      expect(() =>
+        wrappedSchemaObjectToAstZodSchema({
+          anyOf: [{ type: "string" }, { type: "number" }],
+          type: "string",
+        })
+      ).toThrowError(
+        notImplementedError({ detail: "oneOf, anyOf and allOf are currently not supported" })
+      );
+    });
+  });
+
+  describe("snapshot testing schema with oneOf property", () => {
+    it("should throw an error", () => {
+      expect(() =>
+        wrappedSchemaObjectToAstZodSchema({
+          oneOf: [{ type: "string" }, { type: "number" }],
+          type: "string",
+        })
+      ).toThrowError(
+        notImplementedError({ detail: "oneOf, anyOf and allOf are currently not supported" })
+      );
+    });
+  });
+
+  describe("snapshot testing schema with allOf property", () => {
+    it("should throw an error", () => {
+      expect(() =>
+        wrappedSchemaObjectToAstZodSchema({
+          allOf: [{ type: "string" }, { type: "number" }],
+          type: "string",
+        })
+      ).toThrowError(
+        notImplementedError({ detail: "oneOf, anyOf and allOf are currently not supported" })
+      );
+    });
   });
 });

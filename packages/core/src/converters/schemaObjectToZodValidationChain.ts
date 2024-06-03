@@ -1,6 +1,6 @@
 import type { SchemaObject } from "openapi3-ts";
 
-import { match } from "ts-pattern";
+import { P, match } from "ts-pattern";
 
 import type { SchemaObjectToAstZosSchemaOptions } from "./schemaObjectToAstZodSchema";
 
@@ -50,15 +50,14 @@ export function schemaObjectToZodValidationChain(
 
   if (schema.default !== undefined) {
     const value = match(schema.type)
+      .with("string", () => String(schema.default))
       .with("number", "integer", () => Number(schema.default))
       .with("boolean", () => Boolean(schema.default))
-      .when(
-        () => typeof schema.default === "string",
-        () => schema.default as string
-      )
       .with("array", () => tsArray(...(schema.default as TsLiteralOrExpression[])))
-      .otherwise(() => JSON.stringify(schema.default));
-    validationChain.push(["default", value]);
+      .with(P._, noop)
+      .exhaustive();
+
+    if (value !== undefined) validationChain.push(["default", value]);
   }
 
   return validationChain;
@@ -95,27 +94,6 @@ function buildZodStringValidationChain(schema: SchemaObject): ZodValidationMetho
   }
 
   return zodValidationMethods;
-}
-
-function sanitizeAndFormatRegex(pattern: string): string {
-  const CONTROL_CHARS_REGEX =
-    // eslint-disable-next-line no-control-regex
-    /[\t\n\r\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\uFFFE\uFFFF]/g;
-  const HEX_PADDING_FOR_BYTE = "00";
-  const HEX_PADDING_FOR_UNICODE = "0000";
-
-  const sanitizedPattern =
-    pattern.startsWith("/") && pattern.endsWith("/") ? pattern.slice(1, -1) : pattern;
-
-  const formattedPattern = sanitizedPattern.replace(CONTROL_CHARS_REGEX, (match) => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const dec = match.codePointAt(0)!;
-    const hex = dec.toString(16);
-    const padding = dec <= 0xff ? HEX_PADDING_FOR_BYTE : HEX_PADDING_FOR_UNICODE;
-    return `\\x${padding}${hex}`.slice(-2);
-  });
-
-  return `/${formattedPattern}/`;
 }
 
 function buildZodNumberValidationChain(schema: SchemaObject): ZodValidationMethodCall[] {
@@ -158,4 +136,21 @@ function buildZodArrayValidationChain(schema: SchemaObject): ZodValidationMethod
   }
 
   return zodValidationMethods;
+}
+
+function sanitizeAndFormatRegex(pattern: string): string {
+  const result = (pattern.startsWith("/") && pattern.endsWith("/") ? pattern.slice(1, -1) : pattern)
+    .replace(/\t/g, "\\t") // U+0009
+    .replace(/\n/g, "\\n") // U+000A
+    .replace(/\r/g, "\\r") // U+000D
+    // eslint-disable-next-line no-control-regex
+    .replace(/([\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\uFFFE\uFFFF])/g, (_m, p1) => {
+      const dec: number = p1.codePointAt();
+      const hex: string = dec.toString(16);
+      if (dec <= 0xff) return `\\x${`00${hex}`.slice(-2)}`;
+      return `\\u${`0000${hex}`.slice(-4)}`;
+    })
+    .replace(/\//g, "\\/");
+
+  return `/${result}/`;
 }
