@@ -13,6 +13,7 @@ import { match } from "ts-pattern";
 import type { Context } from "../context";
 import type { APIOperationObject } from "../domain/types";
 
+import { invalidStatusCodeError, missingSchemaInParameterError } from "../domain/errors";
 import { type TsLiteralOrExpression, tsChainedMethodCall, tsIdentifier, tsObject } from "../lib/ts";
 import { convertPathToVariableName } from "../lib/utils";
 import { schemaObjectToAstZodSchema } from "./schemaObjectToAstZodSchema";
@@ -43,11 +44,18 @@ export function apiOperationToAstTsRestContract(
     contractProperties.push(["summary", summary]);
   }
 
-  const paramTypes = ["headers", "query", "pathParams"] as const;
-  paramTypes.forEach((type) => {
-    const params = operation.parameters.filter((param) => param.in === type);
+  const paramTypes = [
+    ["header", "headers"],
+    ["query", "query"],
+    ["path", "pathParams"],
+  ] as const;
+  paramTypes.forEach(([openApiParamType, tsContractParamType]) => {
+    const params = operation.parameters.filter((param) => param.in === openApiParamType);
     if (params.length > 0) {
-      contractProperties.push([type, toContractParameters(params, type, ctx)]);
+      contractProperties.push([
+        tsContractParamType,
+        toContractParameters(params, tsContractParamType, operation, ctx),
+      ]);
     }
   });
 
@@ -57,7 +65,7 @@ export function apiOperationToAstTsRestContract(
 
   contractProperties.push([
     "responses",
-    tsObject(...toContractResponses(operation.responses, ctx)),
+    tsObject(...toContractResponses(operation.responses, operation, ctx)),
   ]);
 
   const contractOperationName = operation.operationId
@@ -69,6 +77,7 @@ export function apiOperationToAstTsRestContract(
 
 function toContractResponses(
   responses: Record<string, ResponseObject>,
+  apiOperation: APIOperationObject,
   ctx: Context
 ): Array<[string, TsLiteralOrExpression]> {
   const responsesResult: Array<[string, TsLiteralOrExpression | undefined]> = [];
@@ -128,7 +137,13 @@ function toContractResponses(
         const { zodSchema } = getZodSchemaAndContentTypeFromContentObject(contentObject, ctx);
         statusCodes.forEach((c) => responsesResult.push([c, zodSchema]));
       })
-      .run();
+      .otherwise(() => {
+        throw invalidStatusCodeError({
+          method: apiOperation.method,
+          path: apiOperation.path,
+          statusCode,
+        });
+      });
   }
 
   return responsesResult.filter(([, value]) => value !== undefined) as Array<
@@ -151,12 +166,19 @@ function toContractBodyAndContentType(
 function toContractParameters(
   params: ParameterObject[],
   paramType: "headers" | "pathParams" | "query",
+  apiOperation: APIOperationObject,
   ctx: Context
 ): Expression {
   const pathParams = params.map((param): [string, TsLiteralOrExpression] => {
-    if (!param.schema) throw new Error("Parameter schema is required");
+    if (!param.schema) {
+      throw missingSchemaInParameterError({
+        method: apiOperation.method,
+        paramType,
+        path: apiOperation.path,
+      });
+    }
 
-    // pathParams are always required
+    // pathParams (/get-post/:id) are always required
     const isRequired = paramType === "pathParams" || param.required === true;
 
     const objectSchema = ctx.resolveObject(param.schema);
@@ -199,6 +221,12 @@ function getZodSchemaAndContentTypeFromContentObject(
   };
 }
 
+/**
+ * ts-rest contracts uses a different path format than OpenAPI.
+ * ts-rest specifies path parameters using a colon (:) instead of curly braces ({})
+ * @param path
+ * @returns the path with the correct format
+ */
 function toContractPath(path: string): string {
   return path.replace(/{/g, ":").replace(/}/g, "");
 }
@@ -209,5 +237,6 @@ function getCompatibleMediaType(mediaTypes: string[]): string | undefined {
     "multipart/form-data",
     "application/x-www-form-urlencoded",
   ];
+
   return mediaTypes.find((c) => compatibleMediaTypes.includes(c));
 }

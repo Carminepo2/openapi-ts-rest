@@ -1,9 +1,9 @@
-import { schemaObjectToZodValidationChain } from "../../src/converters/schemaObjectToZodValidationChain";
+import { schemaObjectToZodValidators } from "../../src/converters/schemaObjectToZodValidators";
 import { tsArray, tsObject } from "../../src/lib/ts";
 
-describe("schemaObjectToZodValidationChain", () => {
+describe("schemaObjectToZodValidators", () => {
   it("should correctly get zod validations methods with string schema with minLenght validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       minLength: 2,
       type: "string",
     });
@@ -13,7 +13,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with string schema with maxLenght validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       maxLength: 2,
       type: "string",
     });
@@ -23,7 +23,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should not set maxLenght nor minLenght validation is the string schema is an enum", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       enum: ["a", "b"],
       maxLength: 2,
       minLength: 1,
@@ -34,7 +34,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with string schema with regex validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       pattern: "a\u0001b\u0008c\u007Fd\u009Fe\uFFFEf\uFFFFg",
       type: "string",
     });
@@ -44,7 +44,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with string schema with regex validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       pattern: "/a\u0001b\u0008c\u007Fd\u009Fe\uFFFEf\uFFFFg/",
       type: "string",
     });
@@ -64,7 +64,7 @@ describe("schemaObjectToZodValidationChain", () => {
   ])(
     "should correctly transform a schema with %s formatting validation",
     (formatOption, expectedResult) => {
-      const result = schemaObjectToZodValidationChain({
+      const result = schemaObjectToZodValidators({
         format: formatOption,
         type: "string",
       });
@@ -75,7 +75,7 @@ describe("schemaObjectToZodValidationChain", () => {
   );
 
   it("should ignore unknown format validation options", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       format: "unknown",
       type: "string",
     });
@@ -84,7 +84,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly set default value for string schema", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       default: "default",
       type: "string",
     });
@@ -94,7 +94,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with a integer schema", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       type: "integer",
     });
 
@@ -103,7 +103,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with a integer schema and a minimum value validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       minimum: 2,
       type: "integer",
     });
@@ -114,7 +114,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with a number schema and a minimum value validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       minimum: 2,
       type: "number",
     });
@@ -124,7 +124,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with a number schema and a minimum value validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       minimum: 2,
       type: "number",
     });
@@ -134,7 +134,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with a number schema and a exclusiveMinimum with a number value validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       exclusiveMinimum: 2,
       type: "number",
     });
@@ -144,7 +144,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with a number schema and a exclusiveMinimum with a boolean value validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       exclusiveMinimum: true,
       minimum: 2,
       type: "number",
@@ -155,7 +155,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with a number schema and a maximum value validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       maximum: 2,
       type: "number",
     });
@@ -165,7 +165,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with a number schema and a exclusiveMaximum with a number value validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       exclusiveMaximum: 2,
       type: "number",
     });
@@ -175,7 +175,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with a number schema and a exclusiveMaximum with a boolean value validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       exclusiveMaximum: true,
       maximum: 2,
       type: "number",
@@ -186,7 +186,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with a number schema and a multipleOf validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       multipleOf: 2,
       type: "number",
     });
@@ -198,7 +198,7 @@ describe("schemaObjectToZodValidationChain", () => {
   it.each(["integer", "number"])(
     "should ignore all validations if the schema of type %s has an enum",
     (type) => {
-      const result = schemaObjectToZodValidationChain({
+      const result = schemaObjectToZodValidators({
         enum: ["a", "b"],
         maximum: 2,
         minimum: 1,
@@ -212,7 +212,7 @@ describe("schemaObjectToZodValidationChain", () => {
   );
 
   it("should correctly set default value for number schema", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       default: 1,
       type: "number",
     });
@@ -222,7 +222,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly set default value for integer schema", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       default: 1,
       type: "integer",
     });
@@ -232,7 +232,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly set default value for boolean schema", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       default: true,
       type: "boolean",
     });
@@ -242,11 +242,11 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should not set any default values for null or object schemas", () => {
-    const resultNull = schemaObjectToZodValidationChain({
+    const resultNull = schemaObjectToZodValidators({
       default: null,
       type: "null",
     });
-    const resultObj = schemaObjectToZodValidationChain({
+    const resultObj = schemaObjectToZodValidators({
       default: {},
       type: "object",
     });
@@ -256,7 +256,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with an array schema and a minItems validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       minItems: 2,
       type: "array",
     });
@@ -266,7 +266,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly get zod validations methods with an array schema and a maxItems validation", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       maxItems: 2,
       type: "array",
     });
@@ -276,7 +276,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly set default value for array schema", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       default: [1, 2, 3],
       type: "array",
     });
@@ -286,7 +286,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should not add any validation if the schema is not a string, number or array", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       type: "object",
     });
 
@@ -294,7 +294,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly add nullish validation if the schema is nullable but is not required", () => {
-    const result = schemaObjectToZodValidationChain({
+    const result = schemaObjectToZodValidators({
       nullable: true,
       type: "string",
     });
@@ -304,7 +304,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly add nullish validation if the schema is nullable but is required", () => {
-    const result = schemaObjectToZodValidationChain(
+    const result = schemaObjectToZodValidators(
       {
         nullable: true,
         type: "string",
@@ -317,7 +317,7 @@ describe("schemaObjectToZodValidationChain", () => {
   });
 
   it("should correctly add the correct validation if the schema is expressely not required", () => {
-    const result = schemaObjectToZodValidationChain(
+    const result = schemaObjectToZodValidators(
       {
         type: "string",
       },

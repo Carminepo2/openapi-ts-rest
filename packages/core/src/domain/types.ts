@@ -24,14 +24,14 @@ export type OpenAPIObjectComponent =
   | SchemaObject;
 
 export interface APIOperationObject {
-  description: string | undefined;
+  description?: string;
   method: string;
-  operationId: string | undefined;
+  operationId?: string;
   parameters: ParameterObject[];
   path: string;
-  requestBody: RequestBodyObject | undefined;
+  requestBody?: RequestBodyObject;
   responses: Record<string, ResponseObject>;
-  summary: string | undefined;
+  summary?: string;
 }
 
 export interface ObjectSchemaMeta {

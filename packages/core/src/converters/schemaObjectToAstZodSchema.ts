@@ -13,7 +13,7 @@ import {
   tsIdentifier,
   tsObject,
 } from "../lib/ts";
-import { schemaObjectToZodValidationChain } from "./schemaObjectToZodValidationChain";
+import { schemaObjectToZodValidators } from "./schemaObjectToZodValidators";
 
 type ZodType =
   | "any"
@@ -54,7 +54,7 @@ export function schemaObjectToAstZodSchema(
     return tsChainedMethodCall(
       identifier,
       ...(zodMethod ? [zodMethod] : []),
-      ...schemaObjectToZodValidationChain(schema, customOptions)
+      ...schemaObjectToZodValidators(schema, customOptions)
     );
   }
 

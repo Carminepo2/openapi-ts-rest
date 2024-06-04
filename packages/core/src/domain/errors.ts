@@ -3,6 +3,7 @@ type OpenApiTsRestContractErrorCode =
   | "InvalidHttpMethodError"
   | "InvalidRefError"
   | "InvalidStatusCodeError"
+  | "MissingSchemaInParameterError"
   | "NotImplementedError"
   | "ResolveRefError"
   | "UnexpectedError";
@@ -82,5 +83,20 @@ export function unexpectedError({ detail }: { detail: string }): RiskAnalysisTem
   return new RiskAnalysisTemplateIssue({
     code: "UnexpectedError",
     detail,
+  });
+}
+
+export function missingSchemaInParameterError({
+  method,
+  paramType,
+  path,
+}: {
+  method: string;
+  paramType: string;
+  path: string;
+}): RiskAnalysisTemplateIssue {
+  return new RiskAnalysisTemplateIssue({
+    code: "MissingSchemaInParameterError",
+    detail: `Missing schema in parameter ${paramType} at path ${method} ${path}`,
   });
 }
