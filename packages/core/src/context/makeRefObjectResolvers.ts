@@ -2,7 +2,7 @@ import { type OpenAPIObject, type ReferenceObject, isReferenceObject } from "ope
 
 import type { OpenAPIObjectComponent } from "../domain/types";
 
-import { resolveRefError } from "../domain/errors";
+import { refResolutionDepthExceededError, resolveRefError } from "../domain/errors";
 import { parseRefComponents } from "../lib/utils";
 
 /**
@@ -31,22 +31,33 @@ export function makeRefObjectResolvers(openAPIDoc: OpenAPIObject): {
   resolveRef: <TObjectComponent extends OpenAPIObjectComponent>(ref: string) => TObjectComponent;
 } {
   function resolveRef<TObjectComponent extends OpenAPIObjectComponent>(
-    ref: string,
-    depth = 0
+    ref: string
   ): TObjectComponent {
-    const { identifier, type } = parseRefComponents(ref);
-    // `pathItems` is not a valid component path in the OpenAPI type spec.
-    const objectOrRef = openAPIDoc.components?.[type as never]?.[identifier];
+    // First we take the type of the ref component we are trying to resolve
+    const { type } = parseRefComponents(ref);
 
-    if (!objectOrRef || depth > 100) {
-      throw resolveRefError({ ref });
+    // Then we recursively resolve the ref with that type.
+    function recursevelyResolveRef(internalRef: string, depth = 0): TObjectComponent {
+      const { identifier, type: internalType } = parseRefComponents(internalRef);
+
+      const objectOrRef = openAPIDoc.components?.[type as never]?.[identifier];
+
+      if (depth > 100) {
+        throw refResolutionDepthExceededError({ ref });
+      }
+
+      if (!objectOrRef || internalType !== type) {
+        throw resolveRefError({ ref });
+      }
+
+      if (isReferenceObject(objectOrRef)) {
+        return recursevelyResolveRef(objectOrRef.$ref, depth + 1);
+      }
+
+      return objectOrRef as TObjectComponent;
     }
 
-    if (isReferenceObject(objectOrRef)) {
-      return resolveRef<TObjectComponent>(objectOrRef.$ref, depth + 1);
-    }
-
-    return objectOrRef as TObjectComponent;
+    return recursevelyResolveRef(ref);
   }
 
   function resolveObject<TObjectComponent extends OpenAPIObjectComponent>(
@@ -54,14 +65,8 @@ export function makeRefObjectResolvers(openAPIDoc: OpenAPIObject): {
   ): TObjectComponent {
     if (!isReferenceObject(refOrObject)) return refOrObject;
 
-    const ref = refOrObject.$ref;
-    const component = resolveRef<TObjectComponent>(ref);
-
-    if (isReferenceObject(component)) {
-      return resolveObject<TObjectComponent>(component);
-    }
-
-    return component;
+    const component = resolveRef<TObjectComponent>(refOrObject.$ref);
+    return resolveObject<TObjectComponent>(component);
   }
 
   return { resolveObject, resolveRef };

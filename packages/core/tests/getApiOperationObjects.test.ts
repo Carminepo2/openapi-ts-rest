@@ -19,6 +19,15 @@ describe("getApiOperationObjects", () => {
     });
   });
 
+  it("should return an empty array if the paths object is falsy", () => {
+    const ctx = createMockContext({
+      paths: undefined,
+    });
+
+    const result = getApiOperationObjects(ctx);
+    expect(result).toHaveLength(0);
+  });
+
   it("should correctly resolve the api item ref", () => {
     const ctx = createMockContext({
       components: {
@@ -67,7 +76,6 @@ describe("getApiOperationObjects", () => {
 
   it("should throw an error if the HTTP method is invalid", () => {
     const ctx = createMockContext({
-      // @ts-expect-error @typescript-eslint/ban-ts-comment
       paths: { "/hello": { invalid: { responses: { 200: { description: "200" } } } } },
     });
 
@@ -160,7 +168,6 @@ describe("getApiOperationObjects", () => {
   it("should skip the path if it is empty", () => {
     const ctx = createMockContext({
       paths: {
-        // @ts-expect-error @typescript-eslint/ban-ts-comment
         "/hello": undefined,
         "/world": { get: { responses: { 200: { description: "200" } } } },
       },

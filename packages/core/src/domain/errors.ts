@@ -7,6 +7,8 @@ type OpenApiTsRestContractErrorCode =
   | "MissingSchemaInContentObjectError"
   | "MissingSchemaInParameterObjectError"
   | "NotImplementedError"
+  | "ObjectResolutionDepthExceededError"
+  | "RefResolutionDepthExceededError"
   | "ResolveRefError"
   | "UnexpectedError"
   | "UnsupportedRequestBodyContentTypeError";
@@ -60,7 +62,7 @@ export function invalidRefError({ ref }: { ref: string }): RiskAnalysisTemplateI
 export function resolveRefError({ ref }: { ref: string }): RiskAnalysisTemplateIssue {
   return new RiskAnalysisTemplateIssue({
     code: "ResolveRefError",
-    detail: `Could not resolve reference: ${ref}`,
+    detail: `Could not resolve component reference: ${ref}`,
   });
 }
 
@@ -142,5 +144,16 @@ export function unsupportedRequestBodyContentTypeError({
   return new RiskAnalysisTemplateIssue({
     code: "UnsupportedRequestBodyContentTypeError",
     detail: `Unsupported content type at path ${method} ${path}: ${contentType}`,
+  });
+}
+
+export function refResolutionDepthExceededError({
+  ref,
+}: {
+  ref: string;
+}): RiskAnalysisTemplateIssue {
+  return new RiskAnalysisTemplateIssue({
+    code: "RefResolutionDepthExceededError",
+    detail: `Ref resolution depth exceeded at ref: ${ref}\nThere might be a circular reference.`,
   });
 }
