@@ -3,10 +3,13 @@ type OpenApiTsRestContractErrorCode =
   | "InvalidHttpMethodError"
   | "InvalidRefError"
   | "InvalidStatusCodeError"
-  | "MissingSchemaInParameterError"
+  | "MissingContentTypeError"
+  | "MissingSchemaInContentObjectError"
+  | "MissingSchemaInParameterObjectError"
   | "NotImplementedError"
   | "ResolveRefError"
-  | "UnexpectedError";
+  | "UnexpectedError"
+  | "UnsupportedRequestBodyContentTypeError";
 
 class RiskAnalysisTemplateIssue extends Error {
   public readonly code: OpenApiTsRestContractErrorCode;
@@ -86,7 +89,7 @@ export function unexpectedError({ detail }: { detail: string }): RiskAnalysisTem
   });
 }
 
-export function missingSchemaInParameterError({
+export function missingSchemaInParameterObjectError({
   method,
   paramType,
   path,
@@ -96,7 +99,48 @@ export function missingSchemaInParameterError({
   path: string;
 }): RiskAnalysisTemplateIssue {
   return new RiskAnalysisTemplateIssue({
-    code: "MissingSchemaInParameterError",
+    code: "MissingSchemaInParameterObjectError",
     detail: `Missing schema in parameter ${paramType} at path ${method} ${path}`,
+  });
+}
+
+export function missingSchemaInContentObjectError({
+  method,
+  path,
+}: {
+  method: string;
+  path: string;
+}): RiskAnalysisTemplateIssue {
+  return new RiskAnalysisTemplateIssue({
+    code: "MissingSchemaInContentObjectError",
+    detail: `Missing schema in content object at path ${method} ${path}`,
+  });
+}
+
+export function missingContentTypeError({
+  method,
+  path,
+}: {
+  method: string;
+  path: string;
+}): RiskAnalysisTemplateIssue {
+  return new RiskAnalysisTemplateIssue({
+    code: "MissingContentTypeError",
+    detail: `Missing content type at path ${method} ${path}`,
+  });
+}
+
+export function unsupportedRequestBodyContentTypeError({
+  contentType,
+  method,
+  path,
+}: {
+  contentType: string;
+  method: string;
+  path: string;
+}): RiskAnalysisTemplateIssue {
+  return new RiskAnalysisTemplateIssue({
+    code: "UnsupportedRequestBodyContentTypeError",
+    detail: `Unsupported content type at path ${method} ${path}: ${contentType}`,
   });
 }

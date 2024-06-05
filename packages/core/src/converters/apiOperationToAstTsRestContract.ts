@@ -13,7 +13,17 @@ import { match } from "ts-pattern";
 import type { Context } from "../context";
 import type { APIOperationObject } from "../domain/types";
 
-import { invalidStatusCodeError, missingSchemaInParameterError } from "../domain/errors";
+import {
+  POSSIBLE_STATUS_CODES_TS_REST_OUTPUT,
+  TS_REST_RESPONSE_BODY_SUPPORTED_CONTENT_TYPES,
+} from "../domain/constants";
+import {
+  invalidStatusCodeError,
+  missingContentTypeError,
+  missingSchemaInContentObjectError,
+  missingSchemaInParameterObjectError,
+  unsupportedRequestBodyContentTypeError,
+} from "../domain/errors";
 import { type TsLiteralOrExpression, tsChainedMethodCall, tsIdentifier, tsObject } from "../lib/ts";
 import { convertPathToVariableName } from "../lib/utils";
 import { schemaObjectToAstZodSchema } from "./schemaObjectToAstZodSchema";
@@ -60,7 +70,7 @@ export function apiOperationToAstTsRestContract(
   });
 
   if (operation.requestBody || operation.method !== "get") {
-    contractProperties.push(...toContractBodyAndContentType(operation.requestBody, ctx));
+    contractProperties.push(...toContractBodyAndContentType(operation.requestBody, operation, ctx));
   }
 
   contractProperties.push([
@@ -82,22 +92,6 @@ function toContractResponses(
 ): Array<[string, TsLiteralOrExpression]> {
   const responsesResult: Array<[string, TsLiteralOrExpression | undefined]> = [];
 
-  // Common HTTP status codes, we will use them to handle the default status code
-  // and the range of status codes (1XX, 2XX, 3XX etc...)
-  const commonStatusCodes = [
-    "200",
-    "201",
-    "204",
-    "400",
-    "401",
-    "403",
-    "404",
-    "405",
-    "409",
-    "415",
-    "500",
-  ];
-
   for (const [statusCode, response] of Object.entries(responses)) {
     const contentObject = response.content;
 
@@ -109,33 +103,64 @@ function toContractResponses(
       continue;
     }
 
-    match(statusCode)
+    function buildResponse(
+      statusCode: string,
+      contentType: string,
+      zodSchema: Expression
+    ): [string, TsLiteralOrExpression] {
+      if (contentType === "application/json") {
+        return [statusCode, zodSchema];
+      }
+      return [
+        statusCode,
+        tsChainedMethodCall("c", [
+          "otherResponse",
+          tsObject(["contentType", contentType], ["body", zodSchema]),
+        ]),
+      ];
+    }
+
+    match(statusCode.toLowerCase())
       // If the status code is a valid HTTP status code...
       .when(
         (statusCode) => /^[1-5][0-9][0-9]$/.test(statusCode),
         () => {
-          const { zodSchema } = getZodSchemaAndContentTypeFromContentObject(contentObject, ctx);
-          responsesResult.push([statusCode, zodSchema]);
+          const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(
+            contentObject,
+            apiOperation,
+            ctx
+          );
+          responsesResult.push(buildResponse(statusCode, contentType, zodSchema));
         }
       )
       // ...or a range of status codes (1XX, 2XX, 3XX etc...)
       .when(
-        (statusCode) => /^[1-5]XX$/.test(statusCode),
+        (statusCode) => /^[1-5]xx$/.test(statusCode),
         () => {
-          const statusCodes = commonStatusCodes.filter(
+          const statusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter(
             (c) => c.startsWith(statusCode[0]) && !Object.keys(responses).includes(c)
           );
-          const { zodSchema } = getZodSchemaAndContentTypeFromContentObject(contentObject, ctx);
-          statusCodes.forEach((c) => responsesResult.push([c, zodSchema]));
+          const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(
+            contentObject,
+            apiOperation,
+            ctx
+          );
+          statusCodes.forEach((c) =>
+            responsesResult.push(buildResponse(c, contentType, zodSchema))
+          );
         }
       )
       // ...or the default status code
       .with("default", () => {
-        const statusCodes = commonStatusCodes.filter(
+        const statusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter(
           (c) => !responsesResult.find(([r]) => r === c)
         );
-        const { zodSchema } = getZodSchemaAndContentTypeFromContentObject(contentObject, ctx);
-        statusCodes.forEach((c) => responsesResult.push([c, zodSchema]));
+        const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(
+          contentObject,
+          apiOperation,
+          ctx
+        );
+        statusCodes.forEach((c) => responsesResult.push(buildResponse(c, contentType, zodSchema)));
       })
       .otherwise(() => {
         throw invalidStatusCodeError({
@@ -153,10 +178,25 @@ function toContractResponses(
 
 function toContractBodyAndContentType(
   body: RequestBodyObject | undefined,
+  apiOperation: APIOperationObject,
   ctx: Context
 ): [["body", TsLiteralOrExpression], ["contentType", string]] | [["body", TsLiteralOrExpression]] {
   if (!body) return [["body", tsChainedMethodCall("z", ["void"])]];
-  const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(body.content, ctx);
+
+  const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(
+    body.content,
+    apiOperation,
+    ctx
+  );
+
+  if (!TS_REST_RESPONSE_BODY_SUPPORTED_CONTENT_TYPES.find((r) => r === contentType)) {
+    throw unsupportedRequestBodyContentTypeError({
+      contentType,
+      method: apiOperation.method,
+      path: apiOperation.path,
+    });
+  }
+
   return [
     ["body", zodSchema],
     ["contentType", contentType],
@@ -171,7 +211,7 @@ function toContractParameters(
 ): Expression {
   const pathParams = params.map((param): [string, TsLiteralOrExpression] => {
     if (!param.schema) {
-      throw missingSchemaInParameterError({
+      throw missingSchemaInParameterObjectError({
         method: apiOperation.method,
         paramType,
         path: apiOperation.path,
@@ -190,35 +230,36 @@ function toContractParameters(
 
 function getZodSchemaAndContentTypeFromContentObject(
   content: ContentObject,
+  apiOperation: APIOperationObject,
   ctx: Context
 ): {
   contentType: string;
   zodSchema: Expression;
 } {
-  const contentType = getCompatibleMediaType(Object.keys(content));
+  const contentType = Object.keys(content)[0];
 
   if (!contentType) {
-    throw new Error(`Unsupported media types: ${Object.keys(content).join(", ")}`);
+    throw missingContentTypeError({ method: apiOperation.method, path: apiOperation.path });
   }
 
   const maybeSchemaObject = content[contentType].schema;
 
   if (!maybeSchemaObject) {
-    throw new Error("Schema is required");
+    throw missingSchemaInContentObjectError({
+      method: apiOperation.method,
+      path: apiOperation.path,
+    });
   }
 
-  if (isReferenceObject(maybeSchemaObject)) {
-    const exported = ctx.exportedComponentSchemasMap.get(maybeSchemaObject.$ref);
-    if (exported) {
-      return { contentType, zodSchema: tsIdentifier(exported.normalizedIdentifier) };
-    }
-  }
+  const exported =
+    isReferenceObject(maybeSchemaObject) &&
+    ctx.exportedComponentSchemasMap.get(maybeSchemaObject.$ref);
 
-  const schemaObject = ctx.resolveObject(maybeSchemaObject);
-  return {
-    contentType,
-    zodSchema: schemaObjectToAstZodSchema(schemaObject, ctx, { isRequired: true }),
-  };
+  const zodSchema = exported
+    ? tsIdentifier(exported.normalizedIdentifier)
+    : schemaObjectToAstZodSchema(ctx.resolveObject(maybeSchemaObject), ctx, { isRequired: true });
+
+  return { contentType, zodSchema };
 }
 
 /**
@@ -229,14 +270,4 @@ function getZodSchemaAndContentTypeFromContentObject(
  */
 function toContractPath(path: string): string {
   return path.replace(/{/g, ":").replace(/}/g, "");
-}
-
-function getCompatibleMediaType(mediaTypes: string[]): string | undefined {
-  const compatibleMediaTypes = [
-    "application/json",
-    "multipart/form-data",
-    "application/x-www-form-urlencoded",
-  ];
-
-  return mediaTypes.find((c) => compatibleMediaTypes.includes(c));
 }

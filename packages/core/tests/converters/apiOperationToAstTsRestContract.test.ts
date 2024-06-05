@@ -3,7 +3,14 @@ import merge from "lodash/merge";
 import type { APIOperationObject } from "../../src/domain/types";
 
 import { apiOperationToAstTsRestContract } from "../../src/converters/apiOperationToAstTsRestContract";
-import { missingSchemaInParameterError } from "../../src/domain/errors";
+import { POSSIBLE_STATUS_CODES_TS_REST_OUTPUT } from "../../src/domain/constants";
+import {
+  invalidStatusCodeError,
+  missingContentTypeError,
+  missingSchemaInContentObjectError,
+  missingSchemaInParameterObjectError,
+  unsupportedRequestBodyContentTypeError,
+} from "../../src/domain/errors";
 import { tsObject } from "../../src/lib/ts";
 import { astToString } from "../../src/lib/utils";
 import { createMockContext } from "../test.utils";
@@ -23,7 +30,7 @@ const wrappedApiOperationToAstTsRestContract = (
             parameters: [],
             path: "/getPosts",
             responses: {
-              200: {
+              "200": {
                 content: {
                   "application/json": {
                     schema: {
@@ -132,11 +139,459 @@ describe("apiOperationToAstTsRestContract", () => {
         parameters: [{ in: "query", name: "a", required: true }],
       })
     ).toThrowError(
-      missingSchemaInParameterError({
+      missingSchemaInParameterObjectError({
         method: "get",
         paramType: "query",
         path: "/getPosts",
       })
+    );
+  });
+
+  it("should add z.void() body if the operation method is different from get and has no request body", () => {
+    expect(
+      wrappedApiOperationToAstTsRestContract({
+        method: "post",
+      })
+    ).toContain(`"body": z.void()`);
+  });
+
+  it("should not add z.void() body if the operation method GET and has no request body", () => {
+    expect(
+      wrappedApiOperationToAstTsRestContract({
+        method: "get",
+      })
+    ).not.toContain(`"body": z.void()`);
+  });
+
+  it("should throw an error if a body has an unsupported content type", () => {
+    expect(() =>
+      wrappedApiOperationToAstTsRestContract({
+        requestBody: {
+          content: {
+            "application/xml": {
+              schema: {
+                type: "string",
+              },
+            },
+          },
+        },
+      })
+    ).toThrowError(
+      unsupportedRequestBodyContentTypeError({
+        contentType: "application/xml",
+        method: "get",
+        path: "/getPosts",
+      })
+    );
+  });
+
+  it("should throw an error if a body with a content type does not have a schema", () => {
+    expect(() =>
+      wrappedApiOperationToAstTsRestContract({
+        requestBody: {
+          content: {
+            "application/json": {},
+          },
+        },
+      })
+    ).toThrowError(
+      missingSchemaInContentObjectError({
+        method: "get",
+        path: "/getPosts",
+      })
+    );
+  });
+
+  it("should correctly convert a body with a schema", () => {
+    expect(
+      wrappedApiOperationToAstTsRestContract({
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                properties: {
+                  a: { type: "string" },
+                  b: { type: "number" },
+                },
+                type: "object",
+              },
+            },
+          },
+        },
+      })
+    ).toContain(`"body": z.object({ "a": z.string().optional(), "b": z.number().optional() })`);
+  });
+
+  it("should correctly convert a body with a schema containing an exported ref", () => {
+    const mockCtx = createMockContext({
+      components: {
+        schemas: {
+          Post: {
+            properties: {
+              a: { type: "string" },
+              b: { type: "number" },
+            },
+            type: "object",
+          },
+        },
+      },
+    });
+    expect(
+      wrappedApiOperationToAstTsRestContract(
+        {
+          requestBody: {
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/Post",
+                },
+              },
+            },
+          },
+        },
+        mockCtx
+      )
+    ).toContain(`"body": Post`);
+  });
+
+  it("should correctly convert a body with a schema containing an not exported ref", () => {
+    const mockCtx = createMockContext({
+      components: {
+        schemas: {
+          Post: {
+            properties: {
+              a: { type: "string" },
+              b: { type: "number" },
+            },
+            type: "object",
+          },
+        },
+      },
+    });
+    expect(
+      wrappedApiOperationToAstTsRestContract(
+        {
+          requestBody: {
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/Post",
+                },
+              },
+            },
+          },
+        },
+        { ...mockCtx, exportedComponentSchemasMap: new Map() }
+      )
+    ).toContain(`"body": z.object({ "a": z.string().optional(), "b": z.number().optional() })`);
+  });
+
+  it.each(POSSIBLE_STATUS_CODES_TS_REST_OUTPUT)(
+    "should correctly convert a response object with a status code %s",
+    (statusCode) => {
+      expect(
+        wrappedApiOperationToAstTsRestContract({
+          responses: {
+            [statusCode]: {
+              content: {
+                "application/json": {
+                  schema: {
+                    properties: {
+                      a: { type: "string" },
+                      b: { type: "number" },
+                    },
+                    type: "object",
+                  },
+                },
+              },
+              description: "OK",
+            },
+          },
+        })
+      ).toContain(
+        `"${statusCode}": z.object({ "a": z.string().optional(), "b": z.number().optional() })`
+      );
+    }
+  );
+
+  it.each(["2xx", "4xx", "5XX"])(
+    "should correctly convert a response object with a range of status code %s",
+    (range) => {
+      const result = wrappedApiOperationToAstTsRestContract({
+        responses: {
+          [range]: {
+            content: {
+              "application/json": {
+                schema: {
+                  type: "boolean",
+                },
+              },
+            },
+            description: "OK",
+          },
+        },
+      });
+
+      const possibleStatusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter(
+        (statusCode) => statusCode.startsWith(range.charAt(0)) && statusCode !== "200"
+      );
+
+      possibleStatusCodes.forEach((statusCode) => {
+        expect(result).toContain(`"${statusCode}": z.boolean()`);
+      });
+    }
+  );
+
+  it("should correctly convert a response object with a default status code", () => {
+    const result = wrappedApiOperationToAstTsRestContract({
+      responses: {
+        default: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "boolean",
+              },
+            },
+          },
+          description: "OK",
+        },
+      },
+    });
+
+    POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.forEach((statusCode) => {
+      if (statusCode !== "200") {
+        expect(result).toContain(`"${statusCode}": z.boolean()`);
+      }
+    });
+  });
+
+  it("default status code should not override existing status codes", () => {
+    const result = wrappedApiOperationToAstTsRestContract({
+      responses: {
+        "403": {
+          content: {
+            "application/json": {
+              schema: {
+                type: "string",
+              },
+            },
+          },
+          description: "OK",
+        },
+        "404": {
+          content: {
+            "application/json": {
+              schema: {
+                type: "string",
+              },
+            },
+          },
+          description: "OK",
+        },
+        default: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "boolean",
+              },
+            },
+          },
+          description: "OK",
+        },
+      },
+    });
+
+    expect(result).toContain(`"404": z.string()`);
+    expect(result).toContain(`"403": z.string()`);
+  });
+
+  it("range status code should not override existing status codes", () => {
+    const result = wrappedApiOperationToAstTsRestContract({
+      responses: {
+        "4xx": {
+          content: {
+            "application/json": {
+              schema: {
+                type: "boolean",
+              },
+            },
+          },
+          description: "OK",
+        },
+        "403": {
+          content: {
+            "application/json": {
+              schema: {
+                type: "string",
+              },
+            },
+          },
+          description: "OK",
+        },
+        "404": {
+          content: {
+            "application/json": {
+              schema: {
+                type: "string",
+              },
+            },
+          },
+          description: "OK",
+        },
+      },
+    });
+
+    expect(result).toContain(`"404": z.string()`);
+    expect(result).toContain(`"403": z.string()`);
+  });
+
+  it("should override correctly status code in responses objects correctly", () => {
+    const result = wrappedApiOperationToAstTsRestContract({
+      responses: {
+        "4xx": {
+          content: {
+            "application/json": {
+              schema: {
+                type: "string",
+              },
+            },
+          },
+          description: "OK",
+        },
+        "400": {
+          content: {
+            "application/json": {
+              schema: {
+                type: "boolean",
+              },
+            },
+          },
+          description: "OK",
+        },
+        default: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "null",
+              },
+            },
+          },
+          description: "OK",
+        },
+      },
+    });
+
+    expect(result).toContain(`"400": z.boolean()`);
+    const possible4xxStatusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter(
+      (statusCode) => statusCode.startsWith("4") && statusCode !== "400"
+    );
+    possible4xxStatusCodes.forEach((statusCode) => {
+      expect(result).toContain(`"${statusCode}": z.string()`);
+    });
+    const restOfStatusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter(
+      (statusCode) => !statusCode.startsWith("4") && statusCode !== "200"
+    );
+    restOfStatusCodes.forEach((statusCode) => {
+      expect(result).toContain(`"${statusCode}": z.null()`);
+    });
+  });
+
+  it("should correctly convert a response object with a content type differente from application/json", () => {
+    const result = wrappedApiOperationToAstTsRestContract({
+      responses: {
+        "204": {
+          content: {
+            "application/pdf": {
+              schema: {
+                type: "string",
+              },
+            },
+          },
+          description: "OK",
+        },
+      },
+    });
+
+    expect(result).toContain(
+      `"204": c.otherResponse({ "contentType": "application/pdf", "body": z.string() })`
+    );
+  });
+
+  it("should throw error if an invalid status code is provided", () => {
+    expect(() =>
+      wrappedApiOperationToAstTsRestContract({
+        responses: {
+          "2010": {
+            content: {
+              "application/json": {
+                schema: {
+                  type: "string",
+                },
+              },
+            },
+            description: "OK",
+          },
+        },
+      })
+    ).toThrowError(
+      invalidStatusCodeError({
+        method: "get",
+        path: "/getPosts",
+        statusCode: "2010",
+      })
+    );
+  });
+
+  it("should throw an error if the response object does not have a content type", () => {
+    expect(() =>
+      wrappedApiOperationToAstTsRestContract({
+        responses: {
+          "204": {
+            content: {},
+            description: "OK",
+          },
+        },
+      })
+    ).toThrowError(
+      missingContentTypeError({
+        method: "get",
+        path: "/getPosts",
+      })
+    );
+  });
+
+  it("should skip the response if it does not have a content object", () => {
+    expect(
+      wrappedApiOperationToAstTsRestContract({
+        responses: {
+          "204": {
+            content: undefined,
+            description: "OK",
+          },
+        },
+      })
+    ).not.toContain(`"204"`);
+  });
+
+  it("should use the operationId as the contract operation name if given", () => {
+    expect(
+      wrappedApiOperationToAstTsRestContract({
+        operationId: "getPosts",
+      })
+    ).toContain(`"getPosts"`);
+  });
+
+  it("should convert the operationId to camelcase if it contains a dash", () => {
+    expect(
+      wrappedApiOperationToAstTsRestContract({
+        operationId: "get-posts",
+      })
+    ).toContain(`"getPosts"`);
+  });
+
+  it("should use the path as the contract operation name if operationId is not given", () => {
+    expect(wrappedApiOperationToAstTsRestContract({ operationId: undefined })).toContain(
+      `"getPosts"`
     );
   });
 });
