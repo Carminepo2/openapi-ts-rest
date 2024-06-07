@@ -96,10 +96,7 @@ function toContractResponses(
     const contentObject = response.content;
 
     if (!contentObject) {
-      // We will filter out the status code later,
-      // For now we just want to track the handled status codes in order to avoid duplicates
-      // when we add the default status codes
-      responsesResult.push([statusCode, undefined]);
+      responsesResult.push([statusCode, tsChainedMethodCall("z", ["void"])]);
       continue;
     }
 
@@ -137,6 +134,9 @@ function toContractResponses(
       .when(
         (statusCode) => /^[1-5]xx$/.test(statusCode),
         () => {
+          // If there is already a 2XX status code, we don't need to add the other success status codes
+          if (statusCode === "2xx" && responsesResult.some(([r]) => r.startsWith("2"))) return;
+
           const statusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter(
             (c) => c.startsWith(statusCode[0]) && !Object.keys(responses).includes(c)
           );
@@ -152,9 +152,12 @@ function toContractResponses(
       )
       // ...or the default status code
       .with("default", () => {
-        const statusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter(
-          (c) => !responsesResult.find(([r]) => r === c)
-        );
+        const statusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT
+          // Filter out the status codes that are already handled
+          .filter((c) => !responsesResult.find(([r]) => r === c))
+          // Filter out all the success status codes (2XX) if there is already a 2XX status code
+          .filter((c) => !(responsesResult.some(([r]) => r.startsWith("2")) && c.startsWith("2")));
+
         const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(
           contentObject,
           apiOperation,
@@ -189,7 +192,9 @@ function toContractBodyAndContentType(
     ctx
   );
 
-  if (!TS_REST_RESPONSE_BODY_SUPPORTED_CONTENT_TYPES.find((r) => r === contentType)) {
+  const bodyContentType = contentType.includes("json") ? "application/json" : contentType;
+
+  if (!TS_REST_RESPONSE_BODY_SUPPORTED_CONTENT_TYPES.find((r) => r === bodyContentType)) {
     throw unsupportedRequestBodyContentTypeError({
       contentType,
       method: apiOperation.method,
@@ -199,7 +204,7 @@ function toContractBodyAndContentType(
 
   return [
     ["body", zodSchema],
-    ["contentType", contentType],
+    ["contentType", bodyContentType],
   ];
 }
 

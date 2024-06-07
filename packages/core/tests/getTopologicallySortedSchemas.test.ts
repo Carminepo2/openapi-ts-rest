@@ -99,18 +99,4 @@ describe("getTopologicallySortedSchema", () => {
     const result = getTopologicallySortedSchemas(ctx);
     expect(result).toHaveLength(0);
   });
-
-  it("should ignore object properties if there are no properties", async () => {
-    const ctx = createMockContext({
-      components: {
-        schemas: {
-          Schema1: {
-            type: "object",
-          },
-        },
-      },
-    });
-    const result = getTopologicallySortedSchemas(ctx);
-    expect(result).toHaveLength(0);
-  });
 });

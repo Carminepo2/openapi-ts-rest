@@ -41,11 +41,11 @@ function createSchemaComponentsDependencyGraph(ctx: Context): Record<string, Set
   const schemaComponents = ctx.openAPIDoc.components?.schemas;
 
   function visit(component: ReferenceObject | SchemaObject, fromRef: string): void {
-    if (isReferenceObject(component)) {
-      if (!(fromRef in graph)) {
-        graph[fromRef] = new Set();
-      }
+    if (!(fromRef in graph)) {
+      graph[fromRef] = new Set();
+    }
 
+    if (isReferenceObject(component)) {
       graph[fromRef].add(component.$ref);
 
       if (visitedRefs[component.$ref]) return;
@@ -67,15 +67,10 @@ function createSchemaComponentsDependencyGraph(ctx: Context): Record<string, Set
       return;
     }
 
-    if (
-      component.type === "object" ||
-      component.properties /** || component.additionalProperties */
-    ) {
-      if (component.properties) {
-        Object.values(component.properties).forEach((component) => {
-          visit(component, fromRef);
-        });
-      }
+    if (component.properties /** || component.additionalProperties */) {
+      Object.values(component.properties).forEach((component) => {
+        visit(component, fromRef);
+      });
 
       // TODO: "additionalProperties" is not supported yet.
       // if (component.additionalProperties && typeof component.additionalProperties === "object") {
@@ -121,19 +116,17 @@ export function topologicalSort(graph: Record<string, Set<string>>): string[] {
     ancestors.add(name);
     visited[name] = true;
 
-    const node = graph[name] as Set<string> | undefined;
+    const node = graph[name] as Set<string>;
 
-    if (node) {
-      node.forEach((dep) => {
-        if (ancestors.has(dep)) {
-          // TODO: Handle circular dependencies, for now just throw an error.
-          const depsPath = [...Array.from(ancestors), dep];
-          throw circularRefDependencyError({ depsPath });
-        }
-        if (visited[dep]) return;
-        visit(dep, ancestors);
-      });
-    }
+    node.forEach((dep) => {
+      if (ancestors.has(dep)) {
+        // TODO: Handle circular dependencies, for now just throw an error.
+        const depsPath = [...Array.from(ancestors), dep];
+        throw circularRefDependencyError({ depsPath });
+      }
+      if (visited[dep]) return;
+      visit(dep, ancestors);
+    });
 
     sorted.add(name);
   }

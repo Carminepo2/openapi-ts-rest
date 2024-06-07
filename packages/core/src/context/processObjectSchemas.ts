@@ -11,6 +11,7 @@ export function processObjectSchemas(
   exportedComponentSchemasMap: Map<string, ObjectSchemaMeta>;
 } {
   const exportedComponentSchemasMap = new Map<string, ObjectSchemaMeta>();
+
   const componentRefs = Object.keys(openAPIDoc.components?.schemas ?? []).map(
     (c) => `#/components/schemas/${c}`
   );

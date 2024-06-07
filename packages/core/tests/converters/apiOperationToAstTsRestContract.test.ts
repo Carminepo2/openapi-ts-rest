@@ -29,22 +29,7 @@ const wrappedApiOperationToAstTsRestContract = (
             method: "get",
             parameters: [],
             path: "/getPosts",
-            responses: {
-              "200": {
-                content: {
-                  "application/json": {
-                    schema: {
-                      properties: {
-                        a: { type: "string" },
-                        b: { type: "number" },
-                      },
-                      type: "object",
-                    },
-                  },
-                },
-                description: "OK",
-              },
-            },
+            responses: {},
           },
           overrides
         ),
@@ -56,7 +41,7 @@ const wrappedApiOperationToAstTsRestContract = (
 describe("apiOperationToAstTsRestContract", () => {
   it("should correctly convert a simple GET operation", () => {
     expect(wrappedApiOperationToAstTsRestContract()).toMatchInlineSnapshot(
-      `"{ "getPosts": { "method": "GET", "path": "/getPosts", "responses": { "200": z.object({ "a": z.string().optional(), "b": z.number().optional() }) } } }"`
+      `"{ "getPosts": { "method": "GET", "path": "/getPosts", "responses": {} } }"`
     );
   });
 
@@ -314,6 +299,18 @@ describe("apiOperationToAstTsRestContract", () => {
     }
   );
 
+  it("It should correctly parse a response without content", () => {
+    const result = wrappedApiOperationToAstTsRestContract({
+      responses: {
+        "204": {
+          description: "OK",
+        },
+      },
+    });
+
+    expect(result).contain('"204": z.void()');
+  });
+
   it.each(["2xx", "4xx", "5XX"])(
     "should correctly convert a response object with a range of status code %s",
     (range) => {
@@ -332,8 +329,8 @@ describe("apiOperationToAstTsRestContract", () => {
         },
       });
 
-      const possibleStatusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter(
-        (statusCode) => statusCode.startsWith(range.charAt(0)) && statusCode !== "200"
+      const possibleStatusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter((statusCode) =>
+        statusCode.startsWith(range.charAt(0))
       );
 
       possibleStatusCodes.forEach((statusCode) => {
@@ -341,6 +338,40 @@ describe("apiOperationToAstTsRestContract", () => {
       });
     }
   );
+
+  it("should not add the range of status codes 2XX if there is already a 2XX status code", () => {
+    const result = wrappedApiOperationToAstTsRestContract({
+      responses: {
+        "2xx": {
+          content: {
+            "application/json": {
+              schema: {
+                type: "boolean",
+              },
+            },
+          },
+          description: "OK",
+        },
+        "200": {
+          content: {
+            "application/json": {
+              schema: {
+                type: "string",
+              },
+            },
+          },
+          description: "OK",
+        },
+      },
+    });
+
+    expect(result).toContain(`"200": z.string()`);
+    POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter(
+      (statusCode) => statusCode.startsWith("2") && statusCode !== "200"
+    ).forEach((statusCode) => {
+      expect(result).not.toContain(`"${statusCode}": z.string()`);
+    });
+  });
 
   it("should correctly convert a response object with a default status code", () => {
     const result = wrappedApiOperationToAstTsRestContract({
@@ -359,10 +390,42 @@ describe("apiOperationToAstTsRestContract", () => {
     });
 
     POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.forEach((statusCode) => {
-      if (statusCode !== "200") {
-        expect(result).toContain(`"${statusCode}": z.boolean()`);
-      }
+      expect(result).toContain(`"${statusCode}": z.boolean()`);
     });
+  });
+
+  it("should not add the 2xx status codes on the default status code if there is already a 2xx status code", () => {
+    const result = wrappedApiOperationToAstTsRestContract({
+      responses: {
+        "200": {
+          content: {
+            "application/json": {
+              schema: {
+                type: "boolean",
+              },
+            },
+          },
+          description: "OK",
+        },
+        default: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "string",
+              },
+            },
+          },
+          description: "OK",
+        },
+      },
+    });
+
+    expect(result).toContain(`"200": z.boolean()`);
+    POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter((statusCode) => statusCode.startsWith("2")).forEach(
+      (statusCode) => {
+        expect(result).not.toContain(`"${statusCode}": z.string()`);
+      }
+    );
   });
 
   it("default status code should not override existing status codes", () => {
@@ -558,19 +621,6 @@ describe("apiOperationToAstTsRestContract", () => {
         path: "/getPosts",
       })
     );
-  });
-
-  it("should skip the response if it does not have a content object", () => {
-    expect(
-      wrappedApiOperationToAstTsRestContract({
-        responses: {
-          "204": {
-            content: undefined,
-            description: "OK",
-          },
-        },
-      })
-    ).not.toContain(`"204"`);
   });
 
   it("should use the operationId as the contract operation name if given", () => {
