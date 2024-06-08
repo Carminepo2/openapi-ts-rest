@@ -4,30 +4,11 @@
  */
 
 import { P, match } from "ts-pattern";
-import {
-  type ArrayLiteralExpression,
-  type CallExpression,
-  type ExportDeclaration,
-  type Expression,
-  type FalseLiteral,
-  type Identifier,
-  type ImportDeclaration,
-  NodeFlags,
-  type NullLiteral,
-  type NumericLiteral,
-  type ObjectLiteralExpression,
-  type RegularExpressionLiteral,
-  type StringLiteral,
-  SyntaxKind,
-  type TrueLiteral,
-  type VariableStatement,
-  factory,
-  isExpression,
-} from "typescript";
+import ts from "typescript";
 
 export type TsKeyword = "const" | "let" | "var";
 export type TsLiteral = boolean | null | number | string;
-export type TsLiteralOrExpression = Expression | TsLiteral;
+export type TsLiteralOrExpression = TsLiteral | ts.Expression;
 export type TsFunctionCall = [identifier: string, ...args: TsLiteralOrExpression[]];
 
 /**
@@ -49,19 +30,19 @@ export function tsNamedImport({
 }: {
   from: string;
   import_: string[];
-}): ImportDeclaration {
-  return factory.createImportDeclaration(
+}): ts.ImportDeclaration {
+  return ts.factory.createImportDeclaration(
     undefined,
-    factory.createImportClause(
+    ts.factory.createImportClause(
       false,
       undefined,
-      factory.createNamedImports(
+      ts.factory.createNamedImports(
         import_.map((name) =>
-          factory.createImportSpecifier(false, undefined, factory.createIdentifier(name))
+          ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier(name))
         )
       )
     ),
-    factory.createStringLiteral(from),
+    ts.factory.createStringLiteral(from),
     undefined
   );
 }
@@ -78,12 +59,14 @@ export function tsNamedImport({
  * // export { foo, bar };
  * ```
  */
-export function tsNamedExport({ export_: names }: { export_: string[] }): ExportDeclaration {
-  return factory.createExportDeclaration(
+export function tsNamedExport({ export_: names }: { export_: string[] }): ts.ExportDeclaration {
+  return ts.factory.createExportDeclaration(
     undefined,
     false,
-    factory.createNamedExports(
-      names.map((n) => factory.createExportSpecifier(false, undefined, factory.createIdentifier(n)))
+    ts.factory.createNamedExports(
+      names.map((n) =>
+        ts.factory.createExportSpecifier(false, undefined, ts.factory.createIdentifier(n))
+      )
     ),
     undefined,
     undefined
@@ -115,34 +98,46 @@ export function tsNamedExport({ export_: names }: { export_: string[] }): Export
  * // StringLiteral { text: "foo" }
  * ```
  */
-export function tsLiteralOrExpression(value: string): StringLiteral;
-export function tsLiteralOrExpression(value: number): NumericLiteral;
-export function tsLiteralOrExpression(value: true): TrueLiteral;
-export function tsLiteralOrExpression(value: false): FalseLiteral;
-export function tsLiteralOrExpression(value: null): NullLiteral;
-export function tsLiteralOrExpression(value: Expression): Expression;
+export function tsLiteralOrExpression(value: string): ts.StringLiteral;
+export function tsLiteralOrExpression(value: number): ts.NumericLiteral;
+export function tsLiteralOrExpression(value: true): ts.TrueLiteral;
+export function tsLiteralOrExpression(value: false): ts.FalseLiteral;
+export function tsLiteralOrExpression(value: null): ts.NullLiteral;
+export function tsLiteralOrExpression(value: ts.Expression): ts.Expression;
 export function tsLiteralOrExpression(
   value: TsLiteralOrExpression
-): Expression | FalseLiteral | NullLiteral | NumericLiteral | StringLiteral | TrueLiteral;
+):
+  | ts.Expression
+  | ts.FalseLiteral
+  | ts.NullLiteral
+  | ts.NumericLiteral
+  | ts.StringLiteral
+  | ts.TrueLiteral;
 export function tsLiteralOrExpression(
   value: TsLiteralOrExpression
-): Expression | FalseLiteral | NullLiteral | NumericLiteral | StringLiteral | TrueLiteral {
+):
+  | ts.Expression
+  | ts.FalseLiteral
+  | ts.NullLiteral
+  | ts.NumericLiteral
+  | ts.StringLiteral
+  | ts.TrueLiteral {
   return match(value)
-    .with(P.string, (value) => factory.createStringLiteral(value))
+    .with(P.string, (value) => ts.factory.createStringLiteral(value))
     .with(
       P.number,
       (v) => v < 0,
       (v) =>
-        factory.createPrefixUnaryExpression(
-          SyntaxKind.MinusToken,
-          factory.createNumericLiteral(Math.abs(v))
+        ts.factory.createPrefixUnaryExpression(
+          ts.SyntaxKind.MinusToken,
+          ts.factory.createNumericLiteral(Math.abs(v))
         )
     )
-    .with(P.number, (value) => factory.createNumericLiteral(value))
-    .with(true, () => factory.createTrue())
-    .with(false, () => factory.createFalse())
-    .with(null, () => factory.createNull())
-    .when(isExpression, (v) => v)
+    .with(P.number, (value) => ts.factory.createNumericLiteral(value))
+    .with(true, () => ts.factory.createTrue())
+    .with(false, () => ts.factory.createFalse())
+    .with(null, () => ts.factory.createNull())
+    .when(ts.isExpression, (v) => v)
     .exhaustive();
 }
 
@@ -152,15 +147,15 @@ export function tsLiteralOrExpression(
  * @param keyword - The keyword.
  * @returns The TypeScript AST node for the keyword.
  */
-export function tsKeyword(keyword: "var"): NodeFlags.None;
-export function tsKeyword(keyword: "let"): NodeFlags.Let;
-export function tsKeyword(keyword: "const"): NodeFlags.Const;
-export function tsKeyword(keyword: TsKeyword): NodeFlags;
-export function tsKeyword(keyword: TsKeyword): NodeFlags {
+export function tsKeyword(keyword: "var"): ts.NodeFlags.None;
+export function tsKeyword(keyword: "let"): ts.NodeFlags.Let;
+export function tsKeyword(keyword: "const"): ts.NodeFlags.Const;
+export function tsKeyword(keyword: TsKeyword): ts.NodeFlags;
+export function tsKeyword(keyword: TsKeyword): ts.NodeFlags {
   return match(keyword)
-    .with("var", () => NodeFlags.None)
-    .with("let", () => NodeFlags.Let)
-    .with("const", () => NodeFlags.Const)
+    .with("var", () => ts.NodeFlags.None)
+    .with("let", () => ts.NodeFlags.Let)
+    .with("const", () => ts.NodeFlags.Const)
     .exhaustive();
 }
 
@@ -190,13 +185,13 @@ export function tsVariableDeclaration(
   keyword: TsKeyword,
   identifier: string,
   { eq: value, export_ }: { eq: TsLiteralOrExpression; export_?: boolean }
-): VariableStatement {
-  return factory.createVariableStatement(
-    export_ ? [factory.createToken(SyntaxKind.ExportKeyword)] : undefined,
-    factory.createVariableDeclarationList(
+): ts.VariableStatement {
+  return ts.factory.createVariableStatement(
+    export_ ? [ts.factory.createToken(ts.SyntaxKind.ExportKeyword)] : undefined,
+    ts.factory.createVariableDeclarationList(
       [
-        factory.createVariableDeclaration(
-          factory.createIdentifier(identifier),
+        ts.factory.createVariableDeclaration(
+          ts.factory.createIdentifier(identifier),
           undefined,
           undefined,
           tsLiteralOrExpression(value)
@@ -219,10 +214,10 @@ export function tsVariableDeclaration(
  * // fn("arg1", "arg2");
  * ```
  */
-export function tsFunctionCall(...fn: TsFunctionCall): CallExpression {
+export function tsFunctionCall(...fn: TsFunctionCall): ts.CallExpression {
   const [identifier, ...fnCallArgs] = fn;
-  return factory.createCallExpression(
-    factory.createIdentifier(identifier),
+  return ts.factory.createCallExpression(
+    ts.factory.createIdentifier(identifier),
     undefined,
     fnCallArgs.map(tsLiteralOrExpression)
   );
@@ -240,19 +235,19 @@ export function tsFunctionCall(...fn: TsFunctionCall): CallExpression {
  * ```
  */
 export function tsObject(
-  ...properties: Array<[key: Identifier | string] | [key: string, value: TsLiteralOrExpression]>
-): ObjectLiteralExpression {
-  return factory.createObjectLiteralExpression(
+  ...properties: Array<[key: string | ts.Identifier] | [key: string, value: TsLiteralOrExpression]>
+): ts.ObjectLiteralExpression {
+  return ts.factory.createObjectLiteralExpression(
     properties.map(([key, value]) => {
       if (value && typeof key === "string") {
-        return factory.createPropertyAssignment(
-          factory.createStringLiteral(key),
+        return ts.factory.createPropertyAssignment(
+          ts.factory.createStringLiteral(key),
           tsLiteralOrExpression(value)
         );
       }
       // If the value is undefined, create a shorthand property assignment
-      return factory.createShorthandPropertyAssignment(
-        typeof key === "string" ? factory.createIdentifier(key) : key,
+      return ts.factory.createShorthandPropertyAssignment(
+        typeof key === "string" ? ts.factory.createIdentifier(key) : key,
         undefined
       );
     })
@@ -270,8 +265,8 @@ export function tsObject(
  * // ["foo", 42]
  * ```
  */
-export function tsArray(...elements: TsLiteralOrExpression[]): ArrayLiteralExpression {
-  return factory.createArrayLiteralExpression(elements.map(tsLiteralOrExpression));
+export function tsArray(...elements: TsLiteralOrExpression[]): ts.ArrayLiteralExpression {
+  return ts.factory.createArrayLiteralExpression(elements.map(tsLiteralOrExpression));
 }
 
 /**
@@ -289,17 +284,17 @@ export function tsArray(...elements: TsLiteralOrExpression[]): ArrayLiteralExpre
  * // foo.bar("baz").qux("quux")
  * ```
  */
-export function tsChainedMethodCall(identifier: string, ...chain: TsFunctionCall[]): Expression {
-  if (chain.length === 0) return factory.createIdentifier(identifier);
+export function tsChainedMethodCall(identifier: string, ...chain: TsFunctionCall[]): ts.Expression {
+  if (chain.length === 0) return ts.factory.createIdentifier(identifier);
 
   return chain.reduce(
     (expression, [method, ...args]) =>
-      factory.createCallExpression(
-        factory.createPropertyAccessExpression(expression, factory.createIdentifier(method)),
+      ts.factory.createCallExpression(
+        ts.factory.createPropertyAccessExpression(expression, ts.factory.createIdentifier(method)),
         undefined,
         args.map(tsLiteralOrExpression)
       ),
-    factory.createIdentifier(identifier) as Expression
+    ts.factory.createIdentifier(identifier) as ts.Expression
   );
 }
 
@@ -310,8 +305,8 @@ export function tsChainedMethodCall(identifier: string, ...chain: TsFunctionCall
  *
  * @returns
  */
-export function tsNewLine(): Identifier {
-  return factory.createIdentifier("\n");
+export function tsNewLine(): ts.Identifier {
+  return ts.factory.createIdentifier("\n");
 }
 
 /**
@@ -320,8 +315,8 @@ export function tsNewLine(): Identifier {
  * @param name the name of the identifier
  * @returns the AST Typescript identifier
  */
-export function tsIdentifier(name: string): Identifier {
-  return factory.createIdentifier(name);
+export function tsIdentifier(name: string): ts.Identifier {
+  return ts.factory.createIdentifier(name);
 }
 
 /**
@@ -329,6 +324,6 @@ export function tsIdentifier(name: string): Identifier {
  * @param pattern the pattern of the regular expression
  * @returns the AST Typescript regular expression literal
  */
-export function tsRegex(pattern: string): RegularExpressionLiteral {
-  return factory.createRegularExpressionLiteral(pattern);
+export function tsRegex(pattern: string): ts.RegularExpressionLiteral {
+  return ts.factory.createRegularExpressionLiteral(pattern);
 }

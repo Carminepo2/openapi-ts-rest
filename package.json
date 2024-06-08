@@ -13,9 +13,6 @@
     "turbo": "^2.0.3",
     "typescript-eslint": "^7.10.0"
   },
-  "engines": {
-    "node": ">=16.0.0"
-  },
   "private": true,
   "scripts": {
     "build": "turbo build",
