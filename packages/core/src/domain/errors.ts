@@ -3,8 +3,6 @@ type OpenApiTsRestContractErrorCode =
   | "InvalidHttpMethodError"
   | "InvalidRefError"
   | "InvalidStatusCodeError"
-  | "MissingContentTypeError"
-  | "MissingSchemaInContentObjectError"
   | "MissingSchemaInParameterObjectError"
   | "NotImplementedError"
   | "ObjectResolutionDepthExceededError"
@@ -103,32 +101,6 @@ export function missingSchemaInParameterObjectError({
   return new RiskAnalysisTemplateIssue({
     code: "MissingSchemaInParameterObjectError",
     detail: `Missing schema in parameter ${paramType} at path ${method} ${path}`,
-  });
-}
-
-export function missingSchemaInContentObjectError({
-  method,
-  path,
-}: {
-  method: string;
-  path: string;
-}): RiskAnalysisTemplateIssue {
-  return new RiskAnalysisTemplateIssue({
-    code: "MissingSchemaInContentObjectError",
-    detail: `Missing schema in content object at path ${method} ${path}`,
-  });
-}
-
-export function missingContentTypeError({
-  method,
-  path,
-}: {
-  method: string;
-  path: string;
-}): RiskAnalysisTemplateIssue {
-  return new RiskAnalysisTemplateIssue({
-    code: "MissingContentTypeError",
-    detail: `Missing content type at path ${method} ${path}`,
   });
 }
 

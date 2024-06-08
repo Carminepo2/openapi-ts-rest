@@ -19,11 +19,13 @@ export const POSSIBLE_STATUS_CODES_TS_REST_OUTPUT = [
   "500",
 ] as const;
 
+export const APPLICATION_JSON = "application/json";
+
 /**
  * ts-rest supports the following content types for the response body
  */
 export const TS_REST_RESPONSE_BODY_SUPPORTED_CONTENT_TYPES = [
-  "application/json",
+  APPLICATION_JSON,
   "multipart/form-data",
   "application/x-www-form-urlencoded",
 ] as const;

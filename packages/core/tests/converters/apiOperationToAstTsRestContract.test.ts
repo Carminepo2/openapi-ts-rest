@@ -6,8 +6,6 @@ import { apiOperationToAstTsRestContract } from "../../src/converters/apiOperati
 import { POSSIBLE_STATUS_CODES_TS_REST_OUTPUT } from "../../src/domain/constants";
 import {
   invalidStatusCodeError,
-  missingContentTypeError,
-  missingSchemaInContentObjectError,
   missingSchemaInParameterObjectError,
   unsupportedRequestBodyContentTypeError,
 } from "../../src/domain/errors";
@@ -170,21 +168,15 @@ describe("apiOperationToAstTsRestContract", () => {
     );
   });
 
-  it("should throw an error if a body with a content type does not have a schema", () => {
-    expect(() =>
-      wrappedApiOperationToAstTsRestContract({
-        requestBody: {
-          content: {
-            "application/json": {},
-          },
+  it("should correctly set an empty body if a body with a content type does not have a schema", () => {
+    const result = wrappedApiOperationToAstTsRestContract({
+      requestBody: {
+        content: {
+          "application/json": {},
         },
-      })
-    ).toThrowError(
-      missingSchemaInContentObjectError({
-        method: "get",
-        path: "/getPosts",
-      })
-    );
+      },
+    });
+    expect(result).toContain('"body": z.void()');
   });
 
   it("should correctly convert a body with a schema", () => {
@@ -606,21 +598,15 @@ describe("apiOperationToAstTsRestContract", () => {
   });
 
   it("should throw an error if the response object does not have a content type", () => {
-    expect(() =>
-      wrappedApiOperationToAstTsRestContract({
-        responses: {
-          "204": {
-            content: {},
-            description: "OK",
-          },
+    const result = wrappedApiOperationToAstTsRestContract({
+      responses: {
+        "204": {
+          content: {},
+          description: "OK",
         },
-      })
-    ).toThrowError(
-      missingContentTypeError({
-        method: "get",
-        path: "/getPosts",
-      })
-    );
+      },
+    });
+    expect(result).toContain(`"204": z.void()`);
   });
 
   it("should use the operationId as the contract operation name if given", () => {

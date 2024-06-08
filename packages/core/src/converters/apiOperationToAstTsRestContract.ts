@@ -14,13 +14,12 @@ import type { Context } from "../context";
 import type { APIOperationObject } from "../domain/types";
 
 import {
+  APPLICATION_JSON,
   POSSIBLE_STATUS_CODES_TS_REST_OUTPUT,
   TS_REST_RESPONSE_BODY_SUPPORTED_CONTENT_TYPES,
 } from "../domain/constants";
 import {
   invalidStatusCodeError,
-  missingContentTypeError,
-  missingSchemaInContentObjectError,
   missingSchemaInParameterObjectError,
   unsupportedRequestBodyContentTypeError,
 } from "../domain/errors";
@@ -95,17 +94,12 @@ function toContractResponses(
   for (const [statusCode, response] of Object.entries(responses)) {
     const contentObject = response.content;
 
-    if (!contentObject) {
-      responsesResult.push([statusCode, tsChainedMethodCall("z", ["void"])]);
-      continue;
-    }
-
     function buildResponse(
       statusCode: string,
       contentType: string,
       zodSchema: Expression
     ): [string, TsLiteralOrExpression] {
-      if (contentType === "application/json") {
+      if (contentType === APPLICATION_JSON) {
         return [statusCode, zodSchema];
       }
       return [
@@ -124,7 +118,6 @@ function toContractResponses(
         () => {
           const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(
             contentObject,
-            apiOperation,
             ctx
           );
           responsesResult.push(buildResponse(statusCode, contentType, zodSchema));
@@ -142,7 +135,6 @@ function toContractResponses(
           );
           const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(
             contentObject,
-            apiOperation,
             ctx
           );
           statusCodes.forEach((c) =>
@@ -160,7 +152,6 @@ function toContractResponses(
 
         const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(
           contentObject,
-          apiOperation,
           ctx
         );
         statusCodes.forEach((c) => responsesResult.push(buildResponse(c, contentType, zodSchema)));
@@ -186,13 +177,9 @@ function toContractBodyAndContentType(
 ): [["body", TsLiteralOrExpression], ["contentType", string]] | [["body", TsLiteralOrExpression]] {
   if (!body) return [["body", tsChainedMethodCall("z", ["void"])]];
 
-  const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(
-    body.content,
-    apiOperation,
-    ctx
-  );
+  const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(body.content, ctx);
 
-  const bodyContentType = contentType.includes("json") ? "application/json" : contentType;
+  const bodyContentType = contentType.includes("json") ? APPLICATION_JSON : contentType;
 
   if (!TS_REST_RESPONSE_BODY_SUPPORTED_CONTENT_TYPES.find((r) => r === bodyContentType)) {
     throw unsupportedRequestBodyContentTypeError({
@@ -234,26 +221,26 @@ function toContractParameters(
 }
 
 function getZodSchemaAndContentTypeFromContentObject(
-  content: ContentObject,
-  apiOperation: APIOperationObject,
+  content: ContentObject | undefined,
   ctx: Context
 ): {
   contentType: string;
   zodSchema: Expression;
 } {
-  const contentType = Object.keys(content)[0];
+  const defaultReturn = {
+    contentType: APPLICATION_JSON,
+    zodSchema: tsChainedMethodCall("z", ["void"]),
+  };
 
-  if (!contentType) {
-    throw missingContentTypeError({ method: apiOperation.method, path: apiOperation.path });
+  if (!content) {
+    return defaultReturn;
   }
 
-  const maybeSchemaObject = content[contentType].schema;
+  const contentType = Object.keys(content)[0];
+  const maybeSchemaObject = content[contentType]?.schema;
 
-  if (!maybeSchemaObject) {
-    throw missingSchemaInContentObjectError({
-      method: apiOperation.method,
-      path: apiOperation.path,
-    });
+  if (!contentType || !maybeSchemaObject) {
+    return defaultReturn;
   }
 
   const exported =
