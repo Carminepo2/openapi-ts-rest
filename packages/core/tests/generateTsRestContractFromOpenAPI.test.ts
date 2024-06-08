@@ -2,13 +2,13 @@ import ts from "typescript";
 
 import { generateTsRestContractFromOpenAPI } from "../src/generateTsRestContractFromOpenAPI";
 
-const FIXTURES = [
+const OPENAPI_DOCS = [
   "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/examples/v3.0/petstore.yaml",
   "https://raw.githubusercontent.com/teamdigitale/api-openapi-samples/master/openapi-v3/defibrillatori-example.yaml",
 ];
 
 describe("generateTsRestContractFromOpenAPI", () => {
-  it.each(FIXTURES)("should successfully transpile module without ts errors", async (input) => {
+  it.each(OPENAPI_DOCS)("should successfully transpile module without ts errors", async (input) => {
     const module = await generateTsRestContractFromOpenAPI({
       input,
     });
@@ -26,7 +26,7 @@ describe("generateTsRestContractFromOpenAPI", () => {
     expect(output.diagnostics).toHaveLength(0);
   });
 
-  it.each(FIXTURES)("should match snapshot", async (input) => {
+  it.each(OPENAPI_DOCS)("should match snapshot for %s", async (input) => {
     const module = await generateTsRestContractFromOpenAPI({
       input,
     });
