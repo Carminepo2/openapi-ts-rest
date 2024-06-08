@@ -1,9 +1,11 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
+  "globalDependencies": ["tsconfig.json"],
+  "tasks": {
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "dependsOn": ["^build"]
     },
     "build": {
       "dependsOn": ["^build"],
@@ -14,6 +16,5 @@
       "cache": false,
       "persistent": true
     }
-  },
-  "globalDependencies": ["tsconfig.json"]
+  }
 }
