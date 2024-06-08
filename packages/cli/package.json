@@ -1,6 +1,6 @@
 {
   "name": "@openapi-to-ts-rest/cli",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "type": "module",
   "main": "./dist/index.js",
@@ -13,8 +13,7 @@
   "bin": {
     "openapi-to-ts-rest": "./dist/index.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Carminepo2",
   "dependencies": {
     "@commander-js/extra-typings": "^12.1.0",
     "commander": "^12.1.0",

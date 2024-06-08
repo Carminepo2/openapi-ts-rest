@@ -1,6 +1,6 @@
 {
   "name": "openapi-ts-rest-contract",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "devDependencies": {
     "@vitest/coverage-istanbul": "^1.6.0",
     "eslint": "^8.57.0",
@@ -19,12 +19,15 @@
     "dev": "turbo dev --parallel",
     "lint": "turbo lint",
     "test": "turbo test",
-    "deploy": "turbo deploy",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "clean": "turbo clean && rm -rf node_modules"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
-  "packageManager": "bun@1.1.12"
+  "packageManager": "bun@1.1.12",
+  "dependencies": {
+    "@changesets/cli": "^2.27.5"
+  }
 }

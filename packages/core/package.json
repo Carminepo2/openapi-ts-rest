@@ -1,6 +1,6 @@
 {
   "name": "@openapi-to-ts-rest/core",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
@@ -12,8 +12,7 @@
     "coverage": "vitest --coverage",
     "lint": "eslint ."
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Carminepo2",
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.0",
     "camelcase": "^8.0.0",
