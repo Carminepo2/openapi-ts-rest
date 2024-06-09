@@ -1,8 +1,6 @@
 import { type ReferenceObject, type SchemaObject, isReferenceObject } from "openapi3-ts";
 import { P, match } from "ts-pattern";
 
-import type { SchemaObjectToAstZosSchemaOptions } from "./schemaObjectToAstZodSchema";
-
 import { type TsLiteralOrExpression, tsArray, tsObject, tsRegex } from "../lib/ts";
 import { noop } from "../lib/utils";
 
@@ -31,13 +29,24 @@ type ZodValidatorMethod =
 
 type ZodValidatorCall = [zodValidatorMethod: ZodValidatorMethod, ...args: TsLiteralOrExpression[]];
 
+export interface SchemaObjectToZodValidatorsOptions {
+  /**
+   * Indicates if the schema is a required property of an object schema.
+   */
+  isRequired?: boolean;
+  /**
+   * Forces to not put the `passthrough` validator in the schema.
+   */
+  strict?: boolean;
+}
+
 /**
  * Given a schema object, returns an array of Zod validator methods with their arguments, if any.
  * A Zod validator method is a tuple where the first element is the method name and the rest are the arguments.
  * A given schema object can have multiple validators, so this function returns an array.
  *
  * @param schema The schema object to convert to Zod validators.
- * @param options In some cases, we need to know if the schema we are converting is a required property of an object schema or not. This option allows us to pass that information.
+ * @param options In some cases, we need to know if the schema we are converting is a required property of an object schema or not, plus other infos.
  * @returns An array of Zod validator methods with their arguments.
  *
  * @example
@@ -52,7 +61,7 @@ type ZodValidatorCall = [zodValidatorMethod: ZodValidatorMethod, ...args: TsLite
  */
 export function schemaObjectToZodValidators(
   schema: ReferenceObject | SchemaObject,
-  options?: SchemaObjectToAstZosSchemaOptions
+  options?: SchemaObjectToZodValidatorsOptions
 ): ZodValidatorCall[] {
   if (isReferenceObject(schema)) {
     return buildOptionalNullableValidators(schema, options);
@@ -62,7 +71,7 @@ export function schemaObjectToZodValidators(
     .with("string", () => buildZodStringValidators(schema))
     .with("number", "integer", () => buildZodNumberValidators(schema))
     .with("array", () => buildZodArrayValidators(schema))
-    .with("object", () => buildZodObjectValidators(schema))
+    .with("object", () => buildZodObjectValidators(schema, options))
     .otherwise(() => []);
 
   zodValidators.push(...buildOptionalNullableValidators(schema, options));
@@ -73,7 +82,7 @@ export function schemaObjectToZodValidators(
 
 function buildOptionalNullableValidators(
   schema: ReferenceObject | SchemaObject,
-  options?: SchemaObjectToAstZosSchemaOptions
+  options?: SchemaObjectToZodValidatorsOptions
 ): ZodValidatorCall[] {
   const zodValidators: ZodValidatorCall[] = [];
 
@@ -179,11 +188,15 @@ function buildZodArrayValidators(schema: SchemaObject): ZodValidatorCall[] {
   return zodValidators;
 }
 
-function buildZodObjectValidators(schema: SchemaObject): ZodValidatorCall[] {
+function buildZodObjectValidators(
+  schema: SchemaObject,
+  options: SchemaObjectToZodValidatorsOptions | undefined
+): ZodValidatorCall[] {
   const zodValidators: ZodValidatorCall[] = [];
 
   match(schema.additionalProperties)
     .with(false, noop)
+    .when(() => options?.strict === true, noop)
     .otherwise(() => zodValidators.push(["passthrough"]));
 
   return zodValidators;

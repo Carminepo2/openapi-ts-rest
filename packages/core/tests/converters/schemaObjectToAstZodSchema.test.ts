@@ -20,7 +20,7 @@ describe("schemaObjectToAstZodSchema", () => {
     );
   });
 
-  it("should throw an error if given unsopperted schema type", () => {
+  it("should throw an error if given unsupported schema type", () => {
     expect(() =>
       // @ts-expect-error @typescript-eslint/ban-ts-comment
       wrappedSchemaObjectToAstZodSchema({ type: "unsupported" })
@@ -213,7 +213,9 @@ describe("schemaObjectToAstZodSchema", () => {
         required: ["a"],
         type: "object",
       })
-    ).toMatchInlineSnapshot(`"z.object({ "a": z.string(), "b": z.number().optional() }).passthrough()"`);
+    ).toMatchInlineSnapshot(
+      `"z.object({ "a": z.string(), "b": z.number().optional() }).passthrough()"`
+    );
 
     const ctx = createMockContext({
       components: {
@@ -241,7 +243,9 @@ describe("schemaObjectToAstZodSchema", () => {
         },
         ctx
       )
-    ).toMatchInlineSnapshot(`"z.object({ "a": RefSchema, "b": z.number().optional() }).passthrough()"`);
+    ).toMatchInlineSnapshot(
+      `"z.object({ "a": RefSchema, "b": z.number().optional() }).passthrough()"`
+    );
     expect(
       wrappedSchemaObjectToAstZodSchema(
         {
@@ -254,12 +258,38 @@ describe("schemaObjectToAstZodSchema", () => {
         },
         { ...ctx, exportedComponentSchemasMap: new Map() }
       )
-    ).toMatchInlineSnapshot(`"z.object({ "a": z.object({ "a": z.string().optional(), "b": z.number().optional() }), "b": z.number().optional() }).passthrough()"`);
+    ).toMatchInlineSnapshot(
+      `"z.object({ "a": z.object({ "a": z.string().optional(), "b": z.number().optional() }), "b": z.number().optional() }).passthrough()"`
+    );
     expect(
       wrappedSchemaObjectToAstZodSchema({
         type: "object",
       })
     ).toMatchInlineSnapshot(`"z.object({}).passthrough()"`);
+
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        additionalProperties: true,
+        properties: undefined,
+        type: "object",
+      })
+    ).toMatchInlineSnapshot(`"z.record(z.any())"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        additionalProperties: true,
+        properties: {},
+        type: "object",
+      })
+    ).toMatchInlineSnapshot(`"z.record(z.any())"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        additionalProperties: {
+          type: "string",
+        },
+        properties: {},
+        type: "object",
+      })
+    ).toMatchInlineSnapshot(`"z.record(z.string())"`);
   });
 
   test("snapshot testing schema with enum", () => {

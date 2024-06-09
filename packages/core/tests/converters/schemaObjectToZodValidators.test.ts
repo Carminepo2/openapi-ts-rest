@@ -328,4 +328,55 @@ describe("schemaObjectToZodValidators", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual(["optional"]);
   });
+
+  it("should add the passthrough validation if the schema is of type object and the `additionalProperties` is not set", () => {
+    const result = schemaObjectToZodValidators({
+      type: "object",
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(["passthrough"]);
+  });
+
+  it("should add the passthrough validation if the schema is of type object and the `additionalProperties` is set to true", () => {
+    const result = schemaObjectToZodValidators({
+      additionalProperties: true,
+      type: "object",
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(["passthrough"]);
+  });
+
+  it("should not add the passthrough validation if the schema is of type object and the `additionalProperties` is set to false", () => {
+    const result = schemaObjectToZodValidators({
+      additionalProperties: false,
+      type: "object",
+    });
+
+    expect(result).toHaveLength(0);
+  });
+
+  it("should return optional validators if the schema passed is a reference object and is not required", () => {
+    const result = schemaObjectToZodValidators(
+      {
+        $ref: "#/components/schemas/Example",
+      },
+      { isRequired: false }
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(["optional"]);
+  });
+
+  it("shoud not return optional validators if the schema passed is a reference object and is required", () => {
+    const result = schemaObjectToZodValidators(
+      {
+        $ref: "#/components/schemas/Example",
+      },
+      { isRequired: true }
+    );
+
+    expect(result).toHaveLength(0);
+  });
 });

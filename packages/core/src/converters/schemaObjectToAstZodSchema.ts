@@ -13,7 +13,10 @@ import {
   tsIdentifier,
   tsObject,
 } from "../lib/ts";
-import { schemaObjectToZodValidators } from "./schemaObjectToZodValidators";
+import {
+  type SchemaObjectToZodValidatorsOptions,
+  schemaObjectToZodValidators,
+} from "./schemaObjectToZodValidators";
 
 type ZodType =
   | "any"
@@ -33,24 +36,20 @@ type ZodType =
 
 type ZodTypeMethodCall = [zodType: ZodType, ...args: TsLiteralOrExpression[]] | [zodType: ZodType];
 
-export interface SchemaObjectToAstZosSchemaOptions {
-  isRequired?: boolean;
-}
-
 export function schemaObjectToAstZodSchema(
   schemaOrRef: ReferenceObject | SchemaObject,
   ctx: Context,
-  options?: SchemaObjectToAstZosSchemaOptions
+  validatorOptions?: SchemaObjectToZodValidatorsOptions
 ): Expression {
   function buildZodSchema(
     identifier: string,
     zodMethod?: ZodTypeMethodCall,
-    customOptions = options
+    customValidatorOptions = validatorOptions
   ): Expression {
     return tsChainedMethodCall(
       identifier,
       ...(zodMethod ? [zodMethod] : []),
-      ...schemaObjectToZodValidators(schemaOrRef, customOptions)
+      ...schemaObjectToZodValidators(schemaOrRef, customValidatorOptions)
     );
   }
 
@@ -134,7 +133,7 @@ export function schemaObjectToAstZodSchema(
     .with("boolean", () => buildZodSchema("z", ["boolean"]))
     .with("null", () => buildZodSchema("z", ["null"]))
     .with("array", () => {
-      if (!schema.items) return buildZodSchema("z", ["array", buildZodSchema("z", ["any"])]);
+      if (!schema.items) return buildZodSchema("z", ["array", tsChainedMethodCall("z", ["any"])]);
       return buildZodSchema("z", ["array", schemaObjectToAstZodSchema(schema.items, ctx)]);
     })
     .when(
@@ -142,14 +141,17 @@ export function schemaObjectToAstZodSchema(
       () => {
         if (!schema.properties || Object.keys(schema.properties).length === 0) {
           if (schema.additionalProperties === true) {
-            return buildZodSchema("z", ["record", buildZodSchema("z", ["any"])]);
+            return buildZodSchema("z", ["record", tsChainedMethodCall("z", ["any"])], {
+              strict: true,
+            });
           }
 
           if (typeof schema.additionalProperties === "object") {
-            return buildZodSchema("z", [
-              "record",
-              schemaObjectToAstZodSchema(schema.additionalProperties, ctx),
-            ]);
+            return buildZodSchema(
+              "z",
+              ["record", schemaObjectToAstZodSchema(schema.additionalProperties, ctx)],
+              { strict: true }
+            );
           }
         }
         return buildZodSchema("z", [
