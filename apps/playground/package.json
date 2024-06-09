@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
-    "@openapi-to-ts-rest/core": "workspace:*",
+    "@openapi-ts-rest-contract/core": "workspace:*",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
     "@radix-ui/react-slot": "^1.0.2",
     "ajv": "^8.14.0",
