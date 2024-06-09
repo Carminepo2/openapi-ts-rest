@@ -247,6 +247,7 @@ describe("schemaObjectToZodValidators", () => {
       type: "null",
     });
     const resultObj = schemaObjectToZodValidators({
+      additionalProperties: false,
       default: {},
       type: "object",
     });
@@ -287,7 +288,7 @@ describe("schemaObjectToZodValidators", () => {
 
   it("should not add any validation if the schema is not a string, number or array", () => {
     const result = schemaObjectToZodValidators({
-      type: "object",
+      type: "null",
     });
 
     expect(result).toHaveLength(0);

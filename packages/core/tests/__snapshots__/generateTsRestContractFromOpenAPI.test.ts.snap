@@ -6,13 +6,17 @@ import { z } from "zod";
 
 const c = initContract();
 
-const Pet = z.object({
-  id: z.number().int(),
-  name: z.string(),
-  tag: z.string().optional(),
-});
+const Pet = z
+  .object({
+    id: z.number().int(),
+    name: z.string(),
+    tag: z.string().optional(),
+  })
+  .passthrough();
 const Pets = z.array(Pet).max(100);
-const Error = z.object({ code: z.number().int(), message: z.string() });
+const Error = z
+  .object({ code: z.number().int(), message: z.string() })
+  .passthrough();
 
 export const schemas = { Pet, Pets, Error };
 

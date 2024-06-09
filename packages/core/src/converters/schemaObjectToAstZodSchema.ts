@@ -26,6 +26,7 @@ type ZodType =
   | "null"
   | "number"
   | "object"
+  | "record"
   | "string"
   | "union"
   | "unknown";
@@ -138,8 +139,24 @@ export function schemaObjectToAstZodSchema(
     })
     .when(
       (t) => Boolean(t === "object" || schema.properties),
-      () =>
-        buildZodSchema("z", ["object", tsObject(...buildSchemaObjectProperties(schema.properties))])
+      () => {
+        if (!schema.properties || Object.keys(schema.properties).length === 0) {
+          if (schema.additionalProperties === true) {
+            return buildZodSchema("z", ["record", buildZodSchema("z", ["any"])]);
+          }
+
+          if (typeof schema.additionalProperties === "object") {
+            return buildZodSchema("z", [
+              "record",
+              schemaObjectToAstZodSchema(schema.additionalProperties, ctx),
+            ]);
+          }
+        }
+        return buildZodSchema("z", [
+          "object",
+          tsObject(...buildSchemaObjectProperties(schema.properties)),
+        ]);
+      }
     )
     .with(P.nullish, () => buildZodSchema("z", ["unknown"]))
     .otherwise((t) => {

@@ -192,7 +192,7 @@ describe("schemaObjectToAstZodSchema", () => {
   test("snapshot testing schema type object", () => {
     expect(
       wrappedSchemaObjectToAstZodSchema({ properties: {}, type: "object" })
-    ).toMatchInlineSnapshot(`"z.object({})"`);
+    ).toMatchInlineSnapshot(`"z.object({}).passthrough()"`);
     expect(
       wrappedSchemaObjectToAstZodSchema({
         properties: {
@@ -202,7 +202,7 @@ describe("schemaObjectToAstZodSchema", () => {
         type: "object",
       })
     ).toMatchInlineSnapshot(
-      `"z.object({ "a": z.string().optional(), "b": z.number().optional() })"`
+      `"z.object({ "a": z.string().optional(), "b": z.number().optional() }).passthrough()"`
     );
     expect(
       wrappedSchemaObjectToAstZodSchema({
@@ -213,7 +213,7 @@ describe("schemaObjectToAstZodSchema", () => {
         required: ["a"],
         type: "object",
       })
-    ).toMatchInlineSnapshot(`"z.object({ "a": z.string(), "b": z.number().optional() })"`);
+    ).toMatchInlineSnapshot(`"z.object({ "a": z.string(), "b": z.number().optional() }).passthrough()"`);
 
     const ctx = createMockContext({
       components: {
@@ -241,7 +241,7 @@ describe("schemaObjectToAstZodSchema", () => {
         },
         ctx
       )
-    ).toMatchInlineSnapshot(`"z.object({ "a": RefSchema, "b": z.number().optional() })"`);
+    ).toMatchInlineSnapshot(`"z.object({ "a": RefSchema, "b": z.number().optional() }).passthrough()"`);
     expect(
       wrappedSchemaObjectToAstZodSchema(
         {
@@ -254,12 +254,12 @@ describe("schemaObjectToAstZodSchema", () => {
         },
         { ...ctx, exportedComponentSchemasMap: new Map() }
       )
-    ).toMatchInlineSnapshot(`"z.object({ "a": z.object({ "a": z.string().optional(), "b": z.number().optional() }), "b": z.number().optional() })"`);
+    ).toMatchInlineSnapshot(`"z.object({ "a": z.object({ "a": z.string().optional(), "b": z.number().optional() }), "b": z.number().optional() }).passthrough()"`);
     expect(
       wrappedSchemaObjectToAstZodSchema({
         type: "object",
       })
-    ).toMatchInlineSnapshot(`"z.object({})"`);
+    ).toMatchInlineSnapshot(`"z.object({}).passthrough()"`);
   });
 
   test("snapshot testing schema with enum", () => {

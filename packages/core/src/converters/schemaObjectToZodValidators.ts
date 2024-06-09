@@ -23,7 +23,9 @@ type ZodValidatorMethod =
   | "nullable"
   | "nullish"
   | "optional"
+  | "passthrough"
   | "regex"
+  | "strict"
   | "url"
   | "uuid";
 
@@ -60,6 +62,7 @@ export function schemaObjectToZodValidators(
     .with("string", () => buildZodStringValidators(schema))
     .with("number", "integer", () => buildZodNumberValidators(schema))
     .with("array", () => buildZodArrayValidators(schema))
+    .with("object", () => buildZodObjectValidators(schema))
     .otherwise(() => []);
 
   zodValidators.push(...buildOptionalNullableValidators(schema, options));
@@ -172,6 +175,16 @@ function buildZodArrayValidators(schema: SchemaObject): ZodValidatorCall[] {
   if (schema.maxItems !== undefined) {
     zodValidators.push(["max", schema.maxItems]);
   }
+
+  return zodValidators;
+}
+
+function buildZodObjectValidators(schema: SchemaObject): ZodValidatorCall[] {
+  const zodValidators: ZodValidatorCall[] = [];
+
+  match(schema.additionalProperties)
+    .with(false, noop)
+    .otherwise(() => zodValidators.push(["passthrough"]));
 
   return zodValidators;
 }
