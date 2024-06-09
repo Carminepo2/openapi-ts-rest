@@ -6,7 +6,6 @@ import {
   type ParameterObject,
   type RequestBodyObject,
   type ResponseObject,
-  isReferenceObject,
 } from "openapi3-ts";
 import { match } from "ts-pattern";
 
@@ -23,7 +22,7 @@ import {
   missingSchemaInParameterObjectError,
   unsupportedRequestBodyContentTypeError,
 } from "../domain/errors";
-import { type TsLiteralOrExpression, tsChainedMethodCall, tsIdentifier, tsObject } from "../lib/ts";
+import { type TsLiteralOrExpression, tsChainedMethodCall, tsObject } from "../lib/ts";
 import { convertPathToVariableName } from "../lib/utils";
 import { schemaObjectToAstZodSchema } from "./schemaObjectToAstZodSchema";
 
@@ -243,13 +242,7 @@ function getZodSchemaAndContentTypeFromContentObject(
     return defaultReturn;
   }
 
-  const exported =
-    isReferenceObject(maybeSchemaObject) &&
-    ctx.exportedComponentSchemasMap.get(maybeSchemaObject.$ref);
-
-  const zodSchema = exported
-    ? tsIdentifier(exported.normalizedIdentifier)
-    : schemaObjectToAstZodSchema(ctx.resolveObject(maybeSchemaObject), ctx, { isRequired: true });
+  const zodSchema = schemaObjectToAstZodSchema(maybeSchemaObject, ctx, { isRequired: true });
 
   return { contentType, zodSchema };
 }

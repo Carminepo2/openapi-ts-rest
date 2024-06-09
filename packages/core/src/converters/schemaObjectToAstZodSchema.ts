@@ -1,6 +1,6 @@
 import type { Expression } from "typescript";
 
-import { type SchemaObject, isReferenceObject } from "openapi3-ts";
+import { type ReferenceObject, type SchemaObject, isReferenceObject } from "openapi3-ts";
 import { P, match } from "ts-pattern";
 
 import type { Context } from "../context";
@@ -37,15 +37,10 @@ export interface SchemaObjectToAstZosSchemaOptions {
 }
 
 export function schemaObjectToAstZodSchema(
-  schema: SchemaObject,
+  schemaOrRef: ReferenceObject | SchemaObject,
   ctx: Context,
   options?: SchemaObjectToAstZosSchemaOptions
 ): Expression {
-  if (schema.oneOf || schema.anyOf || schema.allOf) {
-    // TODO: Add support for `oneOf`, `anyOf` and `allOf`
-    throw notImplementedError({ detail: "oneOf, anyOf and allOf are currently not supported" });
-  }
-
   function buildZodSchema(
     identifier: string,
     zodMethod?: ZodTypeMethodCall,
@@ -54,8 +49,22 @@ export function schemaObjectToAstZodSchema(
     return tsChainedMethodCall(
       identifier,
       ...(zodMethod ? [zodMethod] : []),
-      ...schemaObjectToZodValidators(schema, customOptions)
+      ...schemaObjectToZodValidators(schemaOrRef, customOptions)
     );
+  }
+
+  if (isReferenceObject(schemaOrRef)) {
+    const schemaToExport = ctx.exportedComponentSchemasMap.get(schemaOrRef.$ref);
+    if (schemaToExport) {
+      return buildZodSchema(schemaToExport.normalizedIdentifier, undefined);
+    }
+  }
+
+  const schema = ctx.resolveObject(schemaOrRef);
+
+  if (schema.oneOf || schema.anyOf || schema.allOf) {
+    // TODO: Add support for `oneOf`, `anyOf` and `allOf`
+    throw notImplementedError({ detail: "oneOf, anyOf and allOf are currently not supported" });
   }
 
   function buildSchemaObjectProperties(
@@ -65,20 +74,7 @@ export function schemaObjectToAstZodSchema(
 
     return Object.entries(properties).map(([key, refOrSchema]) => {
       const isRequired = Boolean(schema.required?.includes(key));
-
-      if (isReferenceObject(refOrSchema)) {
-        const schemaToExport = ctx.exportedComponentSchemasMap.get(refOrSchema.$ref);
-        if (schemaToExport) {
-          return [
-            key,
-            buildZodSchema(schemaToExport.normalizedIdentifier, undefined, { isRequired }),
-          ];
-        }
-      }
-
-      const schemaObject = ctx.resolveObject(refOrSchema);
-
-      return [key, schemaObjectToAstZodSchema(schemaObject, ctx, { isRequired })];
+      return [key, schemaObjectToAstZodSchema(refOrSchema, ctx, { isRequired })];
     });
   }
 
@@ -138,22 +134,11 @@ export function schemaObjectToAstZodSchema(
     .with("null", () => buildZodSchema("z", ["null"]))
     .with("array", () => {
       if (!schema.items) return buildZodSchema("z", ["array", buildZodSchema("z", ["any"])]);
-
-      if (isReferenceObject(schema.items)) {
-        const schemaToExport = ctx.exportedComponentSchemasMap.get(schema.items.$ref);
-        if (schemaToExport) {
-          return buildZodSchema("z", ["array", tsIdentifier(schemaToExport.normalizedIdentifier)]);
-        }
-      }
-
-      const schemaObject = ctx.resolveObject(schema.items);
-
-      return buildZodSchema("z", ["array", schemaObjectToAstZodSchema(schemaObject, ctx)]);
+      return buildZodSchema("z", ["array", schemaObjectToAstZodSchema(schema.items, ctx)]);
     })
     .when(
       (t) => Boolean(t === "object" || schema.properties),
       () =>
-        // TODO: Add support for `schema.additionalProperties`
         buildZodSchema("z", ["object", tsObject(...buildSchemaObjectProperties(schema.properties))])
     )
     .with(P.nullish, () => buildZodSchema("z", ["unknown"]))

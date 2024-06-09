@@ -1,5 +1,4 @@
-import type { SchemaObject } from "openapi3-ts";
-
+import { type ReferenceObject, type SchemaObject, isReferenceObject } from "openapi3-ts";
 import { P, match } from "ts-pattern";
 
 import type { SchemaObjectToAstZosSchemaOptions } from "./schemaObjectToAstZodSchema";
@@ -50,9 +49,13 @@ type ZodValidatorCall = [zodValidatorMethod: ZodValidatorMethod, ...args: TsLite
  * ```
  */
 export function schemaObjectToZodValidators(
-  schema: SchemaObject,
+  schema: ReferenceObject | SchemaObject,
   options?: SchemaObjectToAstZosSchemaOptions
 ): ZodValidatorCall[] {
+  if (isReferenceObject(schema)) {
+    return buildOptionalNullableValidators(schema, options);
+  }
+
   const zodValidators = match(schema.type)
     .with("string", () => buildZodStringValidators(schema))
     .with("number", "integer", () => buildZodNumberValidators(schema))
@@ -66,13 +69,14 @@ export function schemaObjectToZodValidators(
 }
 
 function buildOptionalNullableValidators(
-  schema: SchemaObject,
+  schema: ReferenceObject | SchemaObject,
   options?: SchemaObjectToAstZosSchemaOptions
 ): ZodValidatorCall[] {
   const zodValidators: ZodValidatorCall[] = [];
 
-  if (schema.nullable && !options?.isRequired) zodValidators.push(["nullish"]);
-  else if (schema.nullable) zodValidators.push(["nullable"]);
+  if ("nullable" in schema && schema.nullable && !options?.isRequired)
+    zodValidators.push(["nullish"]);
+  else if ("nullable" in schema && schema.nullable) zodValidators.push(["nullable"]);
   else if (typeof options?.isRequired !== "undefined" && !options.isRequired)
     zodValidators.push(["optional"]);
 
