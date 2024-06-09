@@ -1,7 +1,6 @@
 {
   "name": "@openapi-ts-rest-contract/core",
-  "version": "0.0.2",
-  "description": "",
+  "version": "0.0.0",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -31,5 +30,9 @@
     "@types/lodash": "^4.17.4",
     "@types/node": "^20.12.12",
     "tsup": "^8.0.2"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }
