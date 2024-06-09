@@ -36,11 +36,31 @@ type ZodType =
 
 type ZodTypeMethodCall = [zodType: ZodType, ...args: TsLiteralOrExpression[]] | [zodType: ZodType];
 
+/**
+ * Converts a SchemaObject or ReferenceObject to a Zod schema AST expression.
+ *
+ * @param schemaOrRef The schema object or reference object to convert.
+ * @param ctx The context object.
+ * @param validatorOptions Some additional options to pass to the `schemaObjectToZodValidators` function.
+ * @returns The AST expression for the Zod schema.
+ *
+ * @example
+ * ```ts
+ * const result = schemaObjectToAstZodSchema({
+ *    type: "string",
+ *    minLength: 2,
+ * });
+ * console.log(astToString(result)); // Output: z.string().min(2)
+ * ```
+ */
 export function schemaObjectToAstZodSchema(
   schemaOrRef: ReferenceObject | SchemaObject,
   ctx: Context,
   validatorOptions?: SchemaObjectToZodValidatorsOptions
 ): Expression {
+  /**
+   * Builds the ast expression for a Zod schema.
+   */
   function buildZodSchema(
     identifier: string,
     zodMethod?: ZodTypeMethodCall,
@@ -53,8 +73,14 @@ export function schemaObjectToAstZodSchema(
     );
   }
 
+  /**
+   * If the schema is a reference object, we need to check if it's an "exported" schema.
+   */
   if (isReferenceObject(schemaOrRef)) {
     const schemaToExport = ctx.exportedComponentSchemasMap.get(schemaOrRef.$ref);
+    /**
+     * If the schema is exported, we build the Zod schema from the identifier.
+     */
     if (schemaToExport) {
       return buildZodSchema(schemaToExport.normalizedIdentifier, undefined);
     }
@@ -65,17 +91,6 @@ export function schemaObjectToAstZodSchema(
   if (schema.oneOf || schema.anyOf || schema.allOf) {
     // TODO: Add support for `oneOf`, `anyOf` and `allOf`
     throw notImplementedError({ detail: "oneOf, anyOf and allOf are currently not supported" });
-  }
-
-  function buildSchemaObjectProperties(
-    properties: SchemaObject["properties"]
-  ): Array<[string, TsLiteralOrExpression]> {
-    if (!properties) return [];
-
-    return Object.entries(properties).map(([key, refOrSchema]) => {
-      const isRequired = Boolean(schema.required?.includes(key));
-      return [key, schemaObjectToAstZodSchema(refOrSchema, ctx, { isRequired })];
-    });
   }
 
   if (schema.enum) {
@@ -156,7 +171,7 @@ export function schemaObjectToAstZodSchema(
         }
         return buildZodSchema("z", [
           "object",
-          tsObject(...buildSchemaObjectProperties(schema.properties)),
+          tsObject(...buildSchemaObjectProperties(schema, ctx)),
         ]);
       }
     )
@@ -164,4 +179,19 @@ export function schemaObjectToAstZodSchema(
     .otherwise((t) => {
       throw unexpectedError({ detail: `Unsupported schema type ${t as unknown as string}` });
     });
+}
+
+/**
+ * Builds the properties for the Zod object schema from the schema properties.
+ */
+function buildSchemaObjectProperties(
+  schema: SchemaObject,
+  ctx: Context
+): Array<[string, TsLiteralOrExpression]> {
+  if (!schema.properties) return [];
+
+  return Object.entries(schema.properties).map(([key, refOrSchema]) => {
+    const isRequired = Boolean(schema.required?.includes(key));
+    return [key, schemaObjectToAstZodSchema(refOrSchema, ctx, { isRequired })];
+  });
 }
