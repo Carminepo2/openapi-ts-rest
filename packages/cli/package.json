@@ -1,5 +1,5 @@
 {
-  "name": "@openapi-to-ts-rest/cli",
+  "name": "@openapi-ts-rest-contract/cli",
   "version": "0.0.1",
   "description": "",
   "type": "module",
@@ -11,13 +11,13 @@
     "coverage": "vitest --coverage"
   },
   "bin": {
-    "openapi-to-ts-rest": "./dist/index.js"
+    "openapi-ts-rest-contract": "./dist/index.js"
   },
   "author": "Carminepo2",
   "dependencies": {
     "@commander-js/extra-typings": "^12.1.0",
     "commander": "^12.1.0",
-    "@openapi-to-ts-rest/core": "workspace:*",
+    "@openapi-ts-rest-contract/core": "workspace:*",
     "prettier": "^3.2.5"
   },
   "devDependencies": {

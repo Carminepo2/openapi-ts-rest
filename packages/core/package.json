@@ -1,5 +1,5 @@
 {
-  "name": "@openapi-to-ts-rest/core",
+  "name": "@openapi-ts-rest-contract/core",
   "version": "0.0.1",
   "description": "",
   "main": "./dist/index.mjs",

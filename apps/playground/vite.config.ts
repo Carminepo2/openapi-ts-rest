@@ -18,7 +18,7 @@ export default defineConfig({
         NodeModulesPolyfillPlugin(),
       ],
     },
-    exclude: ["@openapi-to-ts-rest/core"],
+    exclude: ["@openapi-ts-rest-contract/core"],
   },
   plugins: [react()],
   resolve: {

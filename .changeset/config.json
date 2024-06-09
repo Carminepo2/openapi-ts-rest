@@ -1,9 +1,9 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3.0.1/schema.json",
-  "changelog": "@changesets/cli/changelog",
+  "changelog": ["@changesets/changelog-github", { "repo": "Carminepo2/openapi-ts-rest-contract" }],
   "commit": false,
   "fixed": [],
-  "linked": [],
+  "linked": [["@openapi-ts-rest-contract/cli", "@openapi-ts-rest-contract/core"]],
   "access": "restricted",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
