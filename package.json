@@ -22,7 +22,7 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "clean": "turbo clean && rm -rf node_modules",
     "changeset": "changeset",
-    "publish:packages": "pnpm build && pnpm publish -r"
+    "publish:packages": "pnpm build && pnpm publish -r --no-git-checks"
   },
   "workspaces": [
     "packages/*",
