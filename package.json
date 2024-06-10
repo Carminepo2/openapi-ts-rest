@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.0",
-    "eslint": "^8.57.0",
+    "eslint": "^9.0.0",
     "eslint-plugin-functional": "^6.5.1",
     "eslint-plugin-perfectionist": "^2.10.0",
     "eslint-plugin-react": "^7.34.1",
