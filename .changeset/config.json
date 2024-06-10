@@ -1,13 +1,13 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3.0.1/schema.json",
-  "changelog": ["@changesets/changelog-github", { "repo": "Carminepo2/openapi-ts-rest-contract" }],
+  "changelog": ["@changesets/changelog-github", { "repo": "Carminepo2/openapi-ts-rest" }],
   "commit": false,
   "fixed": [],
-  "linked": [["@openapi-ts-rest-contract/cli", "@openapi-ts-rest-contract/core"]],
+  "linked": [["@openapi-ts-rest/cli", "@openapi-ts-rest/core"]],
   "access": "restricted",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@openapi-ts-rest-contract/playground"],
+  "ignore": ["@openapi-ts-rest/playground"],
   "privatePackages": {
     "version": true,
     "tag": true

@@ -3,7 +3,7 @@
 > Use at your own risk.
 
 <p align="center">
-  <img src="./assets/images/openapi-ts-rest-contract-avatar-light.png" />
+  <img src="./assets/images/openapi-ts-rest-avatar-light.png" />
 </p>
 
 # OpenAPI to ts-rest Contract

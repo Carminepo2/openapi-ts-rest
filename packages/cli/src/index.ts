@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "@commander-js/extra-typings";
-import { generateTsRestContractFromOpenAPI } from "@openapi-ts-rest-contract/core";
+import { generateTsRestContractFromOpenAPI } from "@openapi-ts-rest/core";
 import { writeFileSync } from "fs";
 import prettier from "prettier";
 
