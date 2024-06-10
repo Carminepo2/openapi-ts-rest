@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "test": "pnpm exec playwright install --with-deps && pnpm exec playwright test",
+    "test": "npx playwright install chromium && pnpm exec playwright test",
     "build": "echo \"Not yet implemented\"",
     "lint": "eslint ."
   },
