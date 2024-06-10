@@ -174,8 +174,8 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
       openapi3-ts:
-        specifier: 3.1.0
-        version: 3.1.0
+        specifier: 3.2.0
+        version: 3.2.0
       parse-json:
         specifier: ^8.1.0
         version: 8.1.0
@@ -4468,8 +4468,8 @@ packages:
     resolution: {integrity: sha512-N4YtSYJqghVu4iek2ZUvcN/0aqH1kRDuNqzcycDxhOUpg7GdvLa2F3DgS6yBNhInhv2r/6I0Flkn7CqL8+nIcw==}
     dev: false
 
-  /openapi3-ts@3.1.0:
-    resolution: {integrity: sha512-1qKTvCCVoV0rkwUh1zq5o8QyghmwYPuhdvtjv1rFjuOnJToXhQyF8eGjNETQ8QmGjr9Jz/tkAKLITIl2s7dw3A==}
+  /openapi3-ts@3.2.0:
+    resolution: {integrity: sha512-/ykNWRV5Qs0Nwq7Pc0nJ78fgILvOT/60OxEmB3v7yQ8a8Bwcm43D4diaYazG/KBn6czA+52XYy931WFLMCUeSg==}
     dependencies:
       yaml: 2.4.5
     dev: false
