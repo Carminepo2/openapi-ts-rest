@@ -1,4 +1,4 @@
-import { generateTsRestContractFromOpenAPI } from "@openapi-ts-rest-contract/core";
+import { generateTsRestContractFromOpenAPI } from "@openapi-ts-rest/core";
 import jsYaml from "js-yaml";
 import useSWRImmutable from "swr/immutable";
 
