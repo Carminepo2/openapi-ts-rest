@@ -1,5 +1,11 @@
 # @openapi-ts-rest/core
 
+## 0.0.2
+
+### Patch Changes
+
+- [#9](https://github.com/Carminepo2/openapi-ts-rest/pull/9) [`f96df28`](https://github.com/Carminepo2/openapi-ts-rest/commit/f96df2883ee7ab02837ee4b4992eba0e33bfe6c4) Thanks [@Carminepo2](https://github.com/Carminepo2)! - Switched from bun to pnpm
+
 ## 0.0.1
 
 ### Patch Changes
