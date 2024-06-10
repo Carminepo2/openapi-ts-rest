@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.0",
-    "@vitest/coverage-istanbul": "^1.6.0",
     "eslint": "^8.57.0",
     "eslint-plugin-functional": "^6.5.1",
     "eslint-plugin-perfectionist": "^2.10.0",
@@ -23,14 +22,17 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "clean": "turbo clean && rm -rf node_modules",
     "changeset": "changeset",
-    "publish:packages": "bun run build && changeset publish",
+    "publish:packages": "pnpm build && changeset publish",
     "version:packages": "changeset version"
   },
   "workspaces": [
     "packages/*",
     "apps/*"
   ],
-  "packageManager": "bun@1.1.12",
+  "packageManager": "pnpm@8.15.8",
+  "engines": {
+    "node": ">=16"
+  },
   "dependencies": {
     "@changesets/cli": "^2.27.5"
   }
