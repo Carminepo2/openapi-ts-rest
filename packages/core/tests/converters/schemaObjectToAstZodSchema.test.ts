@@ -358,9 +358,7 @@ describe("schemaObjectToAstZodSchema", () => {
           anyOf: [{ type: "string" }, { type: "number" }],
           type: "string",
         })
-      ).toThrowError(
-        notImplementedError({ detail: "oneOf, anyOf and allOf are currently not supported" })
-      );
+      ).toThrowError(notImplementedError({ detail: "anyOf is currently not supported" }));
     });
   });
 
@@ -377,16 +375,16 @@ describe("schemaObjectToAstZodSchema", () => {
     ).toMatchInlineSnapshot(`"z.number()"`);
   });
 
-  describe("snapshot testing schema with allOf property", () => {
-    it("should throw an error", () => {
-      expect(() =>
-        wrappedSchemaObjectToAstZodSchema({
-          allOf: [{ type: "string" }, { type: "number" }],
-          type: "string",
-        })
-      ).toThrowError(
-        notImplementedError({ detail: "oneOf, anyOf and allOf are currently not supported" })
-      );
-    });
+  test("snapshot testing schema with allOf property", () => {
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        allOf: [{ type: "number" }],
+      })
+    ).toMatchInlineSnapshot(`"z.number()"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        allOf: [{ type: "string" }, { type: "number" }, { type: "boolean" }],
+      })
+    ).toMatchInlineSnapshot(`"z.string().and(z.string()).and(z.number()).and(z.boolean())"`);
   });
 });
