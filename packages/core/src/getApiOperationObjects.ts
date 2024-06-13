@@ -1,11 +1,12 @@
-import isEqual from "lodash/isEqual.js";
-import {
-  type OperationObject,
-  type ParameterObject,
-  type PathItemObject,
-  type ReferenceObject,
-  type ResponseObject,
+import type {
+  OperationObject,
+  ParameterObject,
+  PathItemObject,
+  ReferenceObject,
+  ResponseObject,
 } from "openapi3-ts";
+
+import isEqual from "lodash/isEqual.js";
 
 import type { Context } from "./context";
 import type { APIOperationObject } from "./domain/types";

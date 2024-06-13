@@ -55,27 +55,27 @@ function createSchemaComponentsDependencyGraph(ctx: Context): Record<string, Set
       return;
     }
 
-    // TODO: "allOf", "oneOf", "anyOf" are not supported yet.
-    // (["allOf", "oneOf", "anyOf"] as const satisfies Array<keyof SchemaObject>).forEach((key) => {
-    //   component[key]?.forEach((subComponent) => {
-    //     visit(subComponent, fromRef);
-    //   });
-    // });
+    (["allOf", "oneOf", "anyOf"] as const satisfies Array<keyof SchemaObject>).forEach((key) => {
+      component[key]?.forEach((subComponent) => {
+        visit(subComponent, fromRef);
+      });
+    });
 
     if (component.type === "array" && component.items) {
       visit(component.items, fromRef);
       return;
     }
 
-    if (component.properties /** || component.additionalProperties */) {
-      Object.values(component.properties).forEach((component) => {
-        visit(component, fromRef);
-      });
+    if (component.type === "object" || component.properties || component.additionalProperties) {
+      if (component.properties) {
+        Object.values(component.properties).forEach((component) => {
+          visit(component, fromRef);
+        });
+      }
 
-      // TODO: "additionalProperties" is not supported yet.
-      // if (component.additionalProperties && typeof component.additionalProperties === "object") {
-      //   visit(component.additionalProperties, fromRef);
-      // }
+      if (component.additionalProperties && typeof component.additionalProperties === "object") {
+        visit(component.additionalProperties, fromRef);
+      }
     }
   }
 
