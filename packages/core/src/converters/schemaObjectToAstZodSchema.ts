@@ -88,6 +88,16 @@ export function schemaObjectToAstZodSchema(
 
   const schema = ctx.resolveObject(schemaOrRef);
 
+  if (schema.oneOf) {
+    if (schema.oneOf.length === 1) {
+      return schemaObjectToAstZodSchema(schema.oneOf[0], ctx);
+    }
+    return buildZodSchema("z", [
+      "union",
+      tsArray(...schema.oneOf.map((s) => schemaObjectToAstZodSchema(s, ctx))),
+    ]);
+  }
+
   if (schema.oneOf || schema.anyOf || schema.allOf) {
     // TODO: Add support for `oneOf`, `anyOf` and `allOf`
     throw notImplementedError({ detail: "oneOf, anyOf and allOf are currently not supported" });
