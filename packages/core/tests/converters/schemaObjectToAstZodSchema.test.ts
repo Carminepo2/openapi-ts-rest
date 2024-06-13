@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import type { SchemaObject } from "openapi3-ts";
 
-import { describe, expect, test } from "vitest";
+import { describe, expect, it, test } from "vitest";
 
 import { schemaObjectToAstZodSchema } from "../../src/converters/schemaObjectToAstZodSchema";
 import { notImplementedError } from "../../src/domain/errors";
@@ -364,17 +364,17 @@ describe("schemaObjectToAstZodSchema", () => {
     });
   });
 
-  describe("snapshot testing schema with oneOf property", () => {
-    it("should throw an error", () => {
-      expect(() =>
-        wrappedSchemaObjectToAstZodSchema({
-          oneOf: [{ type: "string" }, { type: "number" }],
-          type: "string",
-        })
-      ).toThrowError(
-        notImplementedError({ detail: "oneOf, anyOf and allOf are currently not supported" })
-      );
-    });
+  test("snapshot testing schema with oneOf property", () => {
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        oneOf: [{ type: "string" }, { type: "number" }],
+      })
+    ).toMatchInlineSnapshot(`"z.union([z.string(), z.number()])"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        oneOf: [{ type: "number" }],
+      })
+    ).toMatchInlineSnapshot(`"z.number()"`);
   });
 
   describe("snapshot testing schema with allOf property", () => {
