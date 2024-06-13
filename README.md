@@ -47,7 +47,7 @@ npx openapi-ts-rest path/to/openapi-spec.yaml -o path/to/output/dir
 If you prefer to integrate the functionality directly into your code, you can do so with the core library:
 
 ```typescript
-import { generateContract, GenerateContractOptions } from "@openapi-ts-rest/core";
+import { generateContract } from "@openapi-ts-rest/core";
 import fs from "fs";
 
 const result = await generateContract({ openApi: "path/to/openapi-spec.yaml" });
