@@ -47,10 +47,7 @@ If you prefer to integrate the functionality directly into your code, you can do
 import { generateContract, GenerateContractOptions } from "@openapi-ts-rest/core";
 import fs from "fs";
 
-const result = generateContract({ openApi: "path/to/openapi-spec.yaml" })
-  .then(() => console.log("Contract generated successfully!"))
-  .catch((error) => console.error("Error generating contract:", error));
-
+const result = await generateContract({ openApi: "path/to/openapi-spec.yaml" });
 fs.writeFileSync("path/to/output/dir", result);
 ```
 
