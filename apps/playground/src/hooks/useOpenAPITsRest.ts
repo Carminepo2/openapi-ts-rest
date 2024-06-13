@@ -1,4 +1,4 @@
-import { generateTsRestContractFromOpenAPI } from "@openapi-ts-rest/core";
+import { generateContract } from "@openapi-ts-rest/core";
 import jsYaml from "js-yaml";
 import useSWRImmutable from "swr/immutable";
 
@@ -11,8 +11,8 @@ export function useOpenAPITsRest(openAPIDoc: string) {
   return useSWRImmutable(
     debouncedOpenAPIDoc,
     async (value) =>
-      await generateTsRestContractFromOpenAPI({
-        input: jsYaml.load(value) as string,
+      await generateContract({
+        openApi: jsYaml.load(value) as string,
       }),
     { compare: (a, b) => a === b }
   );

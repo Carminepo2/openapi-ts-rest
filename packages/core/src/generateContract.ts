@@ -19,12 +19,12 @@ import {
 } from "./lib/ts.js";
 import { AstTsWriter } from "./lib/utils.js";
 
-interface GenerateTsRestContractFromOpenAPIOptions {
+export interface GenerateContractOptions {
   /**
    * The OpenAPI schema to generate the ts-rest contract from.
    * It can be either an OpenAPI schema object or a URL to an OpenAPI schema.
    */
-  input: OpenAPIObject | string;
+  openApi: OpenAPIObject | string;
   /**
    * The Prettier configuration to use for formatting the generated code.
    */
@@ -33,13 +33,13 @@ interface GenerateTsRestContractFromOpenAPIOptions {
 
 /**
  * Generates a ts-rest contract from an OpenAPI schema.
- * @param {GenerateTsRestContractFromOpenAPIOptions} options - The options for the generation.
+ * @param {generateContractOptions} options - The options for the generation.
  */
-export async function generateTsRestContractFromOpenAPI({
-  input,
+export async function generateContract({
+  openApi,
   prettierConfig,
-}: GenerateTsRestContractFromOpenAPIOptions): Promise<string> {
-  const openApiSchema = (await SwaggerParser.bundle(input as never)) as OpenAPIObject;
+}: GenerateContractOptions): Promise<string> {
+  const openApiSchema = (await SwaggerParser.bundle(openApi as never)) as OpenAPIObject;
 
   const ctx = createContext(openApiSchema);
 

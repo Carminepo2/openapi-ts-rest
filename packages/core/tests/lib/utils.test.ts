@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import { invalidRefError } from "../../src/domain/errors";
 import { tsArray, tsObject } from "../../src/lib/ts";
 import {
@@ -5,6 +7,7 @@ import {
   astToString,
   convertPathToVariableName,
   formatToIdentifierString,
+  generatePowerset,
   noop,
   parseRefComponents,
 } from "../../src/lib/utils";
@@ -84,6 +87,20 @@ describe("utils", () => {
       astWriter.add(tsObject());
       astWriter.add(tsArray());
       expect(astWriter.toString()).toBe("{}\n[]\n");
+    });
+  });
+
+  describe("generatePowerset", () => {
+    it("should generate the powerset of a set", () => {
+      const set = [1, 2, 3];
+      const powerset = generatePowerset(set);
+      expect(powerset).toEqual([[], [1], [2], [1, 2], [3], [1, 3], [2, 3], [1, 2, 3]]);
+    });
+
+    it("should generate the powerset of an empty array", () => {
+      const set: number[] = [];
+      const powerset = generatePowerset(set);
+      expect(powerset).toEqual([[]]);
     });
   });
 });

@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateTsRestContractFromOpenAPI > should match snapshot for https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/examples/v3.0/petstore.yaml 1`] = `
+exports[`generateContract > should match snapshot for https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/examples/v3.0/petstore.yaml 1`] = `
 "import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
@@ -77,7 +77,7 @@ export const contract = c.router({
 "
 `;
 
-exports[`generateTsRestContractFromOpenAPI > should match snapshot for https://raw.githubusercontent.com/teamdigitale/api-openapi-samples/master/openapi-v3/defibrillatori-example.yaml 1`] = `
+exports[`generateContract > should match snapshot for https://raw.githubusercontent.com/teamdigitale/api-openapi-samples/master/openapi-v3/defibrillatori-example.yaml 1`] = `
 "import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 

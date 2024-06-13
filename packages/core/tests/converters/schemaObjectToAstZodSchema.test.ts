@@ -351,15 +351,17 @@ describe("schemaObjectToAstZodSchema", () => {
     );
   });
 
-  describe("snapshot testing schema with anyOf property", () => {
-    it("should throw an error", () => {
-      expect(() =>
-        wrappedSchemaObjectToAstZodSchema({
-          anyOf: [{ type: "string" }, { type: "number" }],
-          type: "string",
-        })
-      ).toThrowError(notImplementedError({ detail: "anyOf is currently not supported" }));
-    });
+  test("snapshot testing schema with anyOf property", () => {
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        anyOf: [{ type: "string" }, { type: "number" }],
+      })
+    ).toMatchInlineSnapshot(`"z.union([z.string().merge(z.number()), z.number(), z.string()])"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        anyOf: [{ type: "number" }],
+      })
+    ).toMatchInlineSnapshot(`"z.number()"`);
   });
 
   test("snapshot testing schema with oneOf property", () => {
@@ -385,6 +387,6 @@ describe("schemaObjectToAstZodSchema", () => {
       wrappedSchemaObjectToAstZodSchema({
         allOf: [{ type: "string" }, { type: "number" }, { type: "boolean" }],
       })
-    ).toMatchInlineSnapshot(`"z.string().and(z.string()).and(z.number()).and(z.boolean())"`);
+    ).toMatchInlineSnapshot(`"z.string().and(z.number()).and(z.boolean())"`);
   });
 });

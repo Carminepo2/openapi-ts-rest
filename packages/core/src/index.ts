@@ -1,1 +1,1 @@
-export * from "./generateTsRestContractFromOpenAPI";
+export * from "./generateContract";
