@@ -12,13 +12,13 @@ const program = new Command();
 program
   .version(packageJson.version)
   .description("Generates a ts-rest contract from an OpenAPI schema.")
-  .argument("<input>", "The input OpenAPI schema file.")
+  .argument("<openApi>", "The OpenAPI schema file.")
   .requiredOption("-o, --output <output>", "The output file.")
-  .action(async (input, { output }) => {
+  .action(async (openApi, { output }) => {
     const prettierConfig = await prettier.resolveConfig("./");
 
     const result = await generateContract({
-      input,
+      openApi,
       prettierConfig,
     });
 

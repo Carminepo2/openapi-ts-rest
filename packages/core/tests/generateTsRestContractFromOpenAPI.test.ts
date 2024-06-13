@@ -9,27 +9,30 @@ const OPENAPI_DOCS = [
 ];
 
 describe("generateContract", () => {
-  it.each(OPENAPI_DOCS)("should successfully transpile module without ts errors", async (input) => {
+  it.each(OPENAPI_DOCS)(
+    "should successfully transpile module without ts errors",
+    async (openApi) => {
+      const module = await generateContract({
+        openApi,
+      });
+
+      const output = ts.transpileModule(module, {
+        compilerOptions: {
+          module: ts.ModuleKind.NodeNext,
+          noEmit: true,
+          strict: true,
+          target: ts.ScriptTarget.ESNext,
+        },
+        reportDiagnostics: true,
+      });
+
+      expect(output.diagnostics).toHaveLength(0);
+    }
+  );
+
+  it.each(OPENAPI_DOCS)("should match snapshot for %s", async (openApi) => {
     const module = await generateContract({
-      input,
-    });
-
-    const output = ts.transpileModule(module, {
-      compilerOptions: {
-        module: ts.ModuleKind.NodeNext,
-        noEmit: true,
-        strict: true,
-        target: ts.ScriptTarget.ESNext,
-      },
-      reportDiagnostics: true,
-    });
-
-    expect(output.diagnostics).toHaveLength(0);
-  });
-
-  it.each(OPENAPI_DOCS)("should match snapshot for %s", async (input) => {
-    const module = await generateContract({
-      input,
+      openApi,
     });
 
     expect(module).toMatchSnapshot();

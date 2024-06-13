@@ -24,7 +24,7 @@ export interface GenerateContractOptions {
    * The OpenAPI schema to generate the ts-rest contract from.
    * It can be either an OpenAPI schema object or a URL to an OpenAPI schema.
    */
-  input: OpenAPIObject | string;
+  openApi: OpenAPIObject | string;
   /**
    * The Prettier configuration to use for formatting the generated code.
    */
@@ -36,10 +36,10 @@ export interface GenerateContractOptions {
  * @param {generateContractOptions} options - The options for the generation.
  */
 export async function generateContract({
-  input,
+  openApi,
   prettierConfig,
 }: GenerateContractOptions): Promise<string> {
-  const openApiSchema = (await SwaggerParser.bundle(input as never)) as OpenAPIObject;
+  const openApiSchema = (await SwaggerParser.bundle(openApi as never)) as OpenAPIObject;
 
   const ctx = createContext(openApiSchema);
 

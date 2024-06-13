@@ -12,7 +12,7 @@ export function useOpenAPITsRest(openAPIDoc: string) {
     debouncedOpenAPIDoc,
     async (value) =>
       await generateContract({
-        input: jsYaml.load(value) as string,
+        openApi: jsYaml.load(value) as string,
       }),
     { compare: (a, b) => a === b }
   );
