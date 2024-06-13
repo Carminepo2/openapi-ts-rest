@@ -4,7 +4,7 @@
 [![CI](https://github.com/Carminepo2/openapi-ts-rest/actions/workflows/ci.yml/badge.svg)](https://github.com/Carminepo2/openapi-ts-rest/actions/workflows/ci.yml)
 
 > [!WARNING]  
-> This project is still in development and is not ready for production use.
+> This project is still in development and is not ready for production use, there may be bugs, missing features and breaking changes.
 > Use at your own risk.
 
 <p align="center">
@@ -34,7 +34,10 @@ pnpm add @openapi-ts-rest/core
 ### CLI Usage
 
 ```sh
+# If installed globally
 openapi-ts-rest path/to/openapi-spec.yaml -o path/to/output/dir
+# If installed in a project
+npx openapi-ts-rest path/to/openapi-spec.yaml -o path/to/output/dir
 ```
 
 - `-o`, `--output`: Directory where the generated TypeScript files will be saved.
