@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import { circularRefDependencyError } from "../src/domain/errors";
 import { getTopologicallySortedSchemas } from "../src/getTopologicallySortedSchemas";
 import { createMockContext } from "./test.utils";
@@ -65,9 +67,7 @@ describe("getTopologicallySortedSchema", () => {
       components: {
         schemas: {
           Schema1: {
-            properties: {
-              prop: { $ref: componentSchemaRef2 },
-            },
+            anyOf: [{ $ref: componentSchemaRef3 }],
             type: "object",
           },
           Schema2: {
@@ -75,8 +75,8 @@ describe("getTopologicallySortedSchema", () => {
             type: "array",
           },
           Schema3: {
-            properties: {
-              prop3: { $ref: componentSchemaRef4 },
+            additionalProperties: {
+              $ref: componentSchemaRef4,
             },
           },
           Schema4: {
@@ -90,8 +90,8 @@ describe("getTopologicallySortedSchema", () => {
 
     expect(result[0].normalizedIdentifier).toBe("Schema4");
     expect(result[1].normalizedIdentifier).toBe("Schema3");
-    expect(result[2].normalizedIdentifier).toBe("Schema2");
-    expect(result[3].normalizedIdentifier).toBe("Schema1");
+    expect(result[2].normalizedIdentifier).toBe("Schema1");
+    expect(result[3].normalizedIdentifier).toBe("Schema2");
   });
 
   it("should return empty array if there is no schema", async () => {

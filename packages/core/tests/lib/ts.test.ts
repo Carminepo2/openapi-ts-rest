@@ -1,4 +1,5 @@
 import { type Node, NodeFlags, isExpression } from "typescript";
+import { describe, expect, it } from "vitest";
 
 import {
   tsArray,
@@ -204,6 +205,11 @@ describe("ts", () => {
     it("should only create the identifier if the is no function chain call", () => {
       const result = tsChainedMethodCall("foo");
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"foo"`);
+    });
+
+    it("should create a chained method call with an Expression as the first argument", () => {
+      const result = tsChainedMethodCall(tsObject(), ["foo", 1]);
+      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"{}.foo(1)"`);
     });
   });
 
