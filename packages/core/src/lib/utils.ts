@@ -133,3 +133,30 @@ export const parseRefComponents = (
     type,
   };
 };
+
+/**
+ * Generates the powerset of an array.
+ *
+ * @param array - The array to generate the powerset from.
+ * @returns The powerset of the array.
+ *
+ * @example
+ * ```typescript
+ * generatePowerset([1, 2, 3]); // [[], [1], [2], [1, 2], [3], [1, 3], [2, 3], [1, 2, 3]]
+ * ```
+ */
+export function generatePowerset<T>(array: T[]): T[][] {
+  const result: T[][] = [];
+  result.push([]);
+
+  // eslint-disable-next-line functional/no-let, no-bitwise
+  for (let i = 1; i < 1 << array.length; i++) {
+    const subset = [];
+    // eslint-disable-next-line functional/no-let, no-bitwise
+    for (let j = 0; j < array.length; j++) if (i & (1 << j)) subset.push(array[j]);
+
+    result.push(subset);
+  }
+
+  return result;
+}

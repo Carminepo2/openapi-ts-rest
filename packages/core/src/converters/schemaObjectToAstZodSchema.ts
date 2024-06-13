@@ -5,7 +5,7 @@ import { P, match } from "ts-pattern";
 
 import type { Context } from "../context";
 
-import { notImplementedError, unexpectedError } from "../domain/errors";
+import { unexpectedError } from "../domain/errors";
 import {
   type TsFunctionCall,
   type TsLiteralOrExpression,
@@ -14,6 +14,7 @@ import {
   tsIdentifier,
   tsObject,
 } from "../lib/ts";
+import { generatePowerset } from "../lib/utils";
 import {
   type SchemaObjectToZodValidatorsOptions,
   schemaObjectToZodValidators,
@@ -98,8 +99,7 @@ export function schemaObjectToAstZodSchema(
   }
 
   if (schema.anyOf) {
-    // TODO: Add support for `anyOf`
-    throw notImplementedError({ detail: "anyOf is currently not supported" });
+    return buildZodSchemaFromAnyOfSchemaObject(schema.anyOf, ctx);
   }
 
   if (schema.enum) {
@@ -250,8 +250,48 @@ function buildZodSchemaFromAllOfSchemaObject(
 
   return tsChainedMethodCall(
     schemas[0], // Schema1
-    ...schemas.map((s) => ["and", s] satisfies TsFunctionCall) // .and(Schema2).and(Schema3) ...
+    ...schemas.slice(1).map((s) => ["and", s] satisfies TsFunctionCall) // .and(Schema2).and(Schema3) ...
   );
+}
+
+/**
+ * Creates a zod union of all possible combinations (powerset) of the schemas contained in the `anyOf` property.
+ * @example
+ * ```ts
+ * const schema = {
+ *   anyOf: [
+ *     { ref: "#/components/schemas/Schema1" },
+ *     { ref: "#/components/schemas/Schema2" },
+ *   ]
+ * }
+ *
+ * const result = buildZodSchemaFromAnyOfSchemaObject(schema.anyOf);
+ * console.log(astToString(result)); // Output: z.union(Schema1.merge(Schema2), Schema2, Schema1)
+ * ```
+ *
+ * @see {@link generatePowerset}
+ * @see {@link https://stackblitz.com/edit/typescript-bcarya}
+ */
+function buildZodSchemaFromAnyOfSchemaObject(
+  anyOf: NonNullable<SchemaObject["anyOf"]>,
+  ctx: Context
+): Expression {
+  if (anyOf.length === 1) {
+    return schemaObjectToAstZodSchema(anyOf[0], ctx);
+  }
+
+  const schemas = anyOf.map((s) => schemaObjectToAstZodSchema(s, ctx));
+  // drop empty set, sort largest to smallest
+  const schemasPowerSet = generatePowerset(schemas).slice(1).reverse();
+  const subsets = schemasPowerSet.map((set) => {
+    if (set.length === 1) return set[0];
+    return tsChainedMethodCall(
+      set[0], // Schema1
+      ...set.slice(1).map((s) => ["merge", s] satisfies TsFunctionCall) // .merge(Schema2).merge(Schema3) ...
+    );
+  });
+
+  return tsChainedMethodCall("z", ["union", tsArray(...subsets)]);
 }
 
 /**
