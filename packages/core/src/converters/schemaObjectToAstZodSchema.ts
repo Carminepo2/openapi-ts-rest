@@ -98,8 +98,8 @@ export function schemaObjectToAstZodSchema(
     ]);
   }
 
-  if (schema.oneOf || schema.anyOf || schema.allOf) {
-    // TODO: Add support for `oneOf`, `anyOf` and `allOf`
+  if (schema.anyOf || schema.allOf) {
+    // TODO: Add support for `anyOf` and `allOf`
     throw notImplementedError({ detail: "oneOf, anyOf and allOf are currently not supported" });
   }
 
