@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "@commander-js/extra-typings";
-import { generateTsRestContractFromOpenAPI } from "@openapi-ts-rest/core";
+import { generateContract } from "@openapi-ts-rest/core";
 import { writeFileSync } from "fs";
 import prettier from "prettier";
 
@@ -17,7 +17,7 @@ program
   .action(async (input, { output }) => {
     const prettierConfig = await prettier.resolveConfig("./");
 
-    const result = await generateTsRestContractFromOpenAPI({
+    const result = await generateContract({
       input,
       prettierConfig,
     });
