@@ -1,5 +1,16 @@
 # @openapi-ts-rest/cli
 
+## 0.1.0
+
+### Minor Changes
+
+- [#31](https://github.com/Carminepo2/openapi-ts-rest/pull/31) [`08bb818`](https://github.com/Carminepo2/openapi-ts-rest/commit/08bb81815c94a37e7bc5b645adbf91a0b816595b) Thanks [@Carminepo2](https://github.com/Carminepo2)! - Added support for allOf, anyOf and oneOf object schemas
+
+### Patch Changes
+
+- Updated dependencies [[`08bb818`](https://github.com/Carminepo2/openapi-ts-rest/commit/08bb81815c94a37e7bc5b645adbf91a0b816595b)]:
+  - @openapi-ts-rest/core@0.1.0
+
 ## 0.0.2
 
 ### Patch Changes
