@@ -284,8 +284,14 @@ export function tsArray(...elements: TsLiteralOrExpression[]): ts.ArrayLiteralEx
  * // foo.bar("baz").qux("quux")
  * ```
  */
-export function tsChainedMethodCall(identifier: string, ...chain: TsFunctionCall[]): ts.Expression {
-  if (chain.length === 0) return ts.factory.createIdentifier(identifier);
+export function tsChainedMethodCall(
+  identifier: string | ts.Expression,
+  ...chain: TsFunctionCall[]
+): ts.Expression {
+  const first =
+    typeof identifier === "string" ? ts.factory.createIdentifier(identifier) : identifier;
+
+  if (chain.length === 0) return first;
 
   return chain.reduce(
     (expression, [method, ...args]) =>
@@ -294,7 +300,7 @@ export function tsChainedMethodCall(identifier: string, ...chain: TsFunctionCall
         undefined,
         args.map(tsLiteralOrExpression)
       ),
-    ts.factory.createIdentifier(identifier) as ts.Expression
+    first
   );
 }
 

@@ -7,6 +7,7 @@ import type { Context } from "../context";
 
 import { notImplementedError, unexpectedError } from "../domain/errors";
 import {
+  type TsFunctionCall,
   type TsLiteralOrExpression,
   tsArray,
   tsChainedMethodCall,
@@ -89,18 +90,16 @@ export function schemaObjectToAstZodSchema(
   const schema = ctx.resolveObject(schemaOrRef);
 
   if (schema.oneOf) {
-    if (schema.oneOf.length === 1) {
-      return schemaObjectToAstZodSchema(schema.oneOf[0], ctx);
-    }
-    return buildZodSchema("z", [
-      "union",
-      tsArray(...schema.oneOf.map((s) => schemaObjectToAstZodSchema(s, ctx))),
-    ]);
+    return buildZodSchemaFromOneOfSchemaObject(schema.oneOf, ctx);
   }
 
-  if (schema.anyOf || schema.allOf) {
-    // TODO: Add support for `anyOf` and `allOf`
-    throw notImplementedError({ detail: "oneOf, anyOf and allOf are currently not supported" });
+  if (schema.allOf) {
+    return buildZodSchemaFromAllOfSchemaObject(schema.allOf, ctx);
+  }
+
+  if (schema.anyOf) {
+    // TODO: Add support for `anyOf`
+    throw notImplementedError({ detail: "anyOf is currently not supported" });
   }
 
   if (schema.enum) {
@@ -189,6 +188,70 @@ export function schemaObjectToAstZodSchema(
     .otherwise((t) => {
       throw unexpectedError({ detail: `Unsupported schema type ${t as unknown as string}` });
     });
+}
+
+/**
+ * Put all the schemas contained in the `oneOf` property in a zoo `union` method call.
+ * @example
+ * ```ts
+ * const schema = {
+ *  oneOf: [
+ *     { type: "string" },
+ *     { type: "number" },
+ *     { type: "boolean" },
+ *   ]
+ * }
+ *
+ * const result = buildZodSchemaFromOneOfSchemaObject(schema.oneOf);
+ * console.log(astToString(result)); // Output: z.union(z.string(), z.number(), z.boolean())
+ * ```
+ */
+function buildZodSchemaFromOneOfSchemaObject(
+  oneOf: NonNullable<SchemaObject["oneOf"]>,
+  ctx: Context
+): Expression {
+  if (oneOf.length === 1) {
+    return schemaObjectToAstZodSchema(oneOf[0], ctx);
+  }
+
+  return tsChainedMethodCall("z", [
+    "union",
+    tsArray(...oneOf.map((schema) => schemaObjectToAstZodSchema(schema, ctx))),
+  ]);
+}
+
+/**
+ * Chain all the schemas contained in the `allOf` property with the zod `and` method.
+ * @example
+ * ```ts
+ * const schema = {
+ *   allOf: [
+ *     { ref: "#/components/schemas/Schema1" },
+ *     { ref: "#/components/schemas/Schema2" },
+ *     { ref: "#/components/schemas/Schema3" },
+ *     { type: "string" },
+ *     { type: "boolean" },
+ *   ]
+ * }
+ *
+ * const result = buildZodSchemaFromAllOfSchemaObject(schema.allOf);
+ * console.log(astToString(result)); // Output: Schema1.and(Schema2).and(Schema3).and(z.string()).and(z.boolean())
+ * ```
+ */
+function buildZodSchemaFromAllOfSchemaObject(
+  allOf: NonNullable<SchemaObject["allOf"]>,
+  ctx: Context
+): Expression {
+  if (allOf.length === 1) {
+    return schemaObjectToAstZodSchema(allOf[0], ctx);
+  }
+
+  const schemas = allOf.map((s) => schemaObjectToAstZodSchema(s, ctx));
+
+  return tsChainedMethodCall(
+    schemas[0], // Schema1
+    ...schemas.map((s) => ["and", s] satisfies TsFunctionCall) // .and(Schema2).and(Schema3) ...
+  );
 }
 
 /**
