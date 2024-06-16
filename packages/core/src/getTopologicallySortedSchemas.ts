@@ -6,16 +6,16 @@ import type { ObjectSchemaMeta } from "./domain/types";
 import { circularRefDependencyError } from "./domain/errors";
 
 /**
- * Returns an array of ObjectSchemaMeta objects sorted in topological order.
+ * Returns an array of schemas objects sorted in topological order.
  *
  * This function creates a dependency graph of schema components, sorts them topologically.
  * This ensures that if a component depends on another component, the dependent component will be placed after the dependency.
  * So, the components can be generated in the correct order.
  *
- * @param ctx - The context object containing the exportedComponentSchemasMap.
+ * @param ctx - The context object.
  * @returns  An array of ObjectSchemaMeta objects sorted in topological order.
  */
-export function getTopologicallySortedSchemas(ctx: Context): ObjectSchemaMeta[] {
+export function getExportedSchemas(ctx: Context): ObjectSchemaMeta[] {
   const graph = createSchemaComponentsDependencyGraph(ctx);
   const topologicallySortedRefs = topologicalSort(graph);
 

@@ -7,7 +7,7 @@ import { createContext } from "./context/index.js";
 import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstTsRestContract.js";
 import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
 import { getApiOperationObjects } from "./getApiOperationObjects.js";
-import { getTopologicallySortedSchemas } from "./getTopologicallySortedSchemas.js";
+import { getExportedSchemas } from "./getTopologicallySortedSchemas.js";
 import { prettify } from "./lib/prettier.js";
 import {
   tsChainedMethodCall,
@@ -55,21 +55,21 @@ export async function generateContract({
     .add(tsVariableDeclaration("const", "c", { eq: tsFunctionCall("initContract") }))
     .add(tsNewLine());
 
-  const schemasToExport = getTopologicallySortedSchemas(ctx);
-
-  // Generates the Zod schemas for each component schema.
-  for (const { normalizedIdentifier, schema } of schemasToExport) {
-    // const [identifier] = z.object({ ... }) | z.string() | z.number() | ...
-    ast.add(
-      tsVariableDeclaration("const", normalizedIdentifier, {
-        eq: schemaObjectToAstZodSchema(schema, ctx),
-      })
-    );
-  }
-
-  ast.add(tsNewLine());
+  const schemasToExport = getExportedSchemas(ctx);
 
   if (schemasToExport.length > 0) {
+    // Generates the Zod schemas for each component schema.
+    for (const { normalizedIdentifier, schema } of schemasToExport) {
+      // const [identifier] = z.object({ ... }) | z.string() | z.number() | ...
+      ast.add(
+        tsVariableDeclaration("const", normalizedIdentifier, {
+          eq: schemaObjectToAstZodSchema(schema, ctx),
+        })
+      );
+    }
+
+    ast.add(tsNewLine());
+
     // export const schemas = { schema1, schema2, ... };
     ast
       .add(

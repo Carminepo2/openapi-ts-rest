@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { circularRefDependencyError } from "../src/domain/errors";
-import { getTopologicallySortedSchemas } from "../src/getTopologicallySortedSchemas";
+import { getExportedSchemas } from "../src/getTopologicallySortedSchemas";
 import { createMockContext } from "./test.utils";
 
 const componentSchemaRef1 = "#/components/schemas/Schema1";
@@ -29,7 +29,7 @@ describe("getTopologicallySortedSchema", () => {
         },
       },
     });
-    const result = getTopologicallySortedSchemas(ctx);
+    const result = getExportedSchemas(ctx);
     expect(result).toHaveLength(2);
 
     expect(result[0].normalizedIdentifier).toBe("Schema2");
@@ -55,7 +55,7 @@ describe("getTopologicallySortedSchema", () => {
         },
       },
     });
-    expect(() => getTopologicallySortedSchemas(ctx)).toThrowError(
+    expect(() => getExportedSchemas(ctx)).toThrowError(
       circularRefDependencyError({
         depsPath: [componentSchemaRef1, componentSchemaRef2, componentSchemaRef1],
       })
@@ -85,7 +85,7 @@ describe("getTopologicallySortedSchema", () => {
         },
       },
     });
-    const result = getTopologicallySortedSchemas(ctx);
+    const result = getExportedSchemas(ctx);
     expect(result).toHaveLength(4);
 
     expect(result[0].normalizedIdentifier).toBe("Schema4");
@@ -96,7 +96,7 @@ describe("getTopologicallySortedSchema", () => {
 
   it("should return empty array if there is no schema", async () => {
     const ctx = createMockContext({});
-    const result = getTopologicallySortedSchemas(ctx);
+    const result = getExportedSchemas(ctx);
     expect(result).toHaveLength(0);
   });
 });
