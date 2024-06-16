@@ -41,13 +41,18 @@ function OpenAPIDocumentInput({
   value: string;
 }): JSX.Element {
   return (
-    <Editor
-      defaultLanguage="yaml"
-      height="100vh"
-      onChange={(v) => onChange(v ?? "")}
-      theme={theme}
-      value={value}
-    />
+    <>
+      <div aria-hidden="true" className="hidden" data-cy="input">
+        {value}
+      </div>
+      <Editor
+        defaultLanguage="yaml"
+        height="100vh"
+        onChange={(v) => onChange(v ?? "")}
+        theme={theme}
+        value={value}
+      />
+    </>
   );
 }
 
@@ -64,12 +69,17 @@ function TsRestContractOutput({
   const language = error ? "json" : "typescript";
 
   return (
-    <Editor
-      height="100vh"
-      language={language}
-      options={{ readOnly: true }}
-      theme={theme}
-      value={value}
-    />
+    <>
+      <div aria-hidden="true" className="hidden" data-cy="output">
+        {value}
+      </div>
+      <Editor
+        height="100vh"
+        language={language}
+        options={{ readOnly: true }}
+        theme={theme}
+        value={value}
+      />
+    </>
   );
 }
