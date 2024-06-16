@@ -4,9 +4,7 @@ import { makeRefObjectResolvers } from "./makeRefObjectResolvers";
 import { processObjectSchemas } from "./processObjectSchemas";
 
 export interface Context {
-  exportedComponentSchemasMap: ReturnType<
-    typeof processObjectSchemas
-  >["exportedComponentSchemasMap"];
+  componentSchemasMap: ReturnType<typeof processObjectSchemas>["componentSchemasMap"];
   openAPIDoc: OpenAPIObject;
   resolveObject: ReturnType<typeof makeRefObjectResolvers>["resolveObject"];
   resolveRef: ReturnType<typeof makeRefObjectResolvers>["resolveRef"];
@@ -14,10 +12,10 @@ export interface Context {
 
 export function createContext(openAPIDoc: OpenAPIObject): Context {
   const { resolveObject, resolveRef } = makeRefObjectResolvers(openAPIDoc);
-  const { exportedComponentSchemasMap } = processObjectSchemas(openAPIDoc, resolveRef);
+  const { componentSchemasMap } = processObjectSchemas(openAPIDoc, resolveRef);
 
   return {
-    exportedComponentSchemasMap,
+    componentSchemasMap,
     openAPIDoc,
     resolveObject,
     resolveRef,

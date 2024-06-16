@@ -20,7 +20,7 @@ export function getExportedSchemas(ctx: Context): ObjectSchemaMeta[] {
   const topologicallySortedRefs = topologicalSort(graph);
 
   return topologicallySortedRefs
-    .map((ref) => ctx.exportedComponentSchemasMap.get(ref))
+    .map((ref) => ctx.componentSchemasMap.get(ref))
     .filter((schema): schema is NonNullable<ObjectSchemaMeta> => schema !== undefined);
 }
 

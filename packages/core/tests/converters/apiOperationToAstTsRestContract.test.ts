@@ -1,4 +1,5 @@
 import merge from "lodash/merge";
+import { describe, expect, it } from "vitest";
 
 import type { APIOperationObject } from "../../src/domain/types";
 
@@ -258,7 +259,7 @@ describe("apiOperationToAstTsRestContract", () => {
             },
           },
         },
-        { ...mockCtx, exportedComponentSchemasMap: new Map() }
+        { ...mockCtx, componentSchemasMap: new Map() }
       )
     ).toContain(`"body": z.object({ "a": z.string().optional(), "b": z.number().optional() })`);
   });

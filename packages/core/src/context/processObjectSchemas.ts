@@ -8,23 +8,26 @@ export function processObjectSchemas(
   openAPIDoc: OpenAPIObject,
   getSchemaByRef: (ref: string) => SchemaObject
 ): {
-  exportedComponentSchemasMap: Map<string, ObjectSchemaMeta>;
+  componentSchemasMap: Map<string, ObjectSchemaMeta>;
 } {
-  const exportedComponentSchemasMap = new Map<string, ObjectSchemaMeta>();
-
-  const componentRefs = Object.keys(openAPIDoc.components?.schemas ?? []).map(
-    (c) => `#/components/schemas/${c}`
-  );
-
-  componentRefs.forEach((ref) => {
-    const { identifier } = parseRefComponents(ref);
-    const schema = getSchemaByRef(ref);
-    const normalizedIdentifier = formatToIdentifierString(identifier);
-    const componentMeta: ObjectSchemaMeta = { identifier, normalizedIdentifier, ref, schema };
-    exportedComponentSchemasMap.set(ref, componentMeta);
-  });
-
   return {
-    exportedComponentSchemasMap,
+    componentSchemasMap: new Map(
+      Object.keys(openAPIDoc.components?.schemas ?? [])
+        .map((c) => `#/components/schemas/${c}`)
+        .map((ref) => {
+          const schema = getSchemaByRef(ref);
+          const { identifier } = parseRefComponents(ref);
+          const normalizedIdentifier = formatToIdentifierString(identifier);
+          return [
+            ref,
+            {
+              identifier,
+              normalizedIdentifier,
+              ref,
+              schema,
+            },
+          ];
+        })
+    ),
   };
 }
