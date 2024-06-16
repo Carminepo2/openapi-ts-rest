@@ -1,4 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { describe, expect, it } from "vitest";
+
 import type { OpenAPIComponentPath } from "../../src/domain/types";
 
 import { makeRefObjectResolvers } from "../../src/context/makeRefObjectResolvers";

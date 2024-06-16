@@ -1,27 +1,45 @@
-import { type ReferenceObject, type SchemaObject, isReferenceObject } from "openapi3-ts";
+import {
+  type OpenAPIObject,
+  type ReferenceObject,
+  type SchemaObject,
+  isReferenceObject,
+} from "openapi3-ts";
 
-import type { Context } from "./context";
-import type { ObjectSchemaMeta } from "./domain/types";
+import type { ObjectSchemaMeta } from "../domain/types";
 
-import { circularRefDependencyError } from "./domain/errors";
+import { circularRefDependencyError } from "../domain/errors";
+import { formatToIdentifierString, parseRefComponents } from "../lib/utils";
 
-/**
- * Returns an array of ObjectSchemaMeta objects sorted in topological order.
- *
- * This function creates a dependency graph of schema components, sorts them topologically.
- * This ensures that if a component depends on another component, the dependent component will be placed after the dependency.
- * So, the components can be generated in the correct order.
- *
- * @param ctx - The context object containing the exportedComponentSchemasMap.
- * @returns  An array of ObjectSchemaMeta objects sorted in topological order.
- */
-export function getTopologicallySortedSchemas(ctx: Context): ObjectSchemaMeta[] {
-  const graph = createSchemaComponentsDependencyGraph(ctx);
+export function processComponentObjectSchemas(
+  openAPIDoc: OpenAPIObject,
+  getSchemaByRef: (ref: string) => SchemaObject
+): {
+  componentSchemasMap: Map<string, ObjectSchemaMeta>;
+  topologicallySortedSchemas: ObjectSchemaMeta[];
+} {
+  const graph = createSchemaComponentsDependencyGraph(openAPIDoc, getSchemaByRef);
   const topologicallySortedRefs = topologicalSort(graph);
 
-  return topologicallySortedRefs
-    .map((ref) => ctx.exportedComponentSchemasMap.get(ref))
-    .filter((schema): schema is NonNullable<ObjectSchemaMeta> => schema !== undefined);
+  const topologicallySortedSchemas = topologicallySortedRefs.map((ref) => {
+    const schema = getSchemaByRef(ref);
+    const { identifier } = parseRefComponents(ref);
+    const normalizedIdentifier = formatToIdentifierString(identifier);
+    return {
+      identifier,
+      normalizedIdentifier,
+      ref,
+      schema,
+    };
+  });
+
+  const componentSchemasMap = new Map(
+    topologicallySortedSchemas.map((schema) => [schema.ref, schema])
+  );
+
+  return {
+    componentSchemasMap,
+    topologicallySortedSchemas,
+  };
 }
 
 /**
@@ -33,12 +51,14 @@ export function getTopologicallySortedSchemas(ctx: Context): ObjectSchemaMeta[] 
  * @param ctx - The context object containing the exportedComponentSchemasMap.
  * @returns A dependency graph of schema components.
  */
-function createSchemaComponentsDependencyGraph(ctx: Context): Record<string, Set<string>> {
+function createSchemaComponentsDependencyGraph(
+  openAPIDoc: OpenAPIObject,
+  getSchemaByRef: (ref: string) => SchemaObject
+): Record<string, Set<string>> {
   const graph: Record<string, Set<string>> = {};
   const visitedRefs: Record<string, boolean> = {};
 
-  const getSchemaByRef = ctx.resolveRef<SchemaObject>;
-  const schemaComponents = ctx.openAPIDoc.components?.schemas;
+  const schemaComponents = openAPIDoc.components?.schemas;
 
   function visit(component: ReferenceObject | SchemaObject, fromRef: string): void {
     if (!(fromRef in graph)) {
@@ -108,7 +128,7 @@ function createSchemaComponentsDependencyGraph(ctx: Context): Record<string, Set
  * const sorted = topologicalSort(graph);
  * console.log(sorted); // Output: ['a', 'c', 'b', 'd']
  */
-export function topologicalSort(graph: Record<string, Set<string>>): string[] {
+function topologicalSort(graph: Record<string, Set<string>>): string[] {
   const sorted = new Set<string>();
   const visited: Record<string, boolean> = {};
 

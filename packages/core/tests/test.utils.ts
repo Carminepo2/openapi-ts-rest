@@ -1,6 +1,6 @@
 import type { OpenAPIObject } from "openapi3-ts";
 
-import { type Context, createContext } from "../src/context";
+import { type Context, createContext } from "../src/context/createContext";
 
 export function createMockOpenApiObject(overrides: Partial<OpenAPIObject> = {}): OpenAPIObject {
   return {

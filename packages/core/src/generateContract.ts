@@ -3,11 +3,9 @@ import type { Options as PrettierOptions } from "prettier";
 
 import SwaggerParser from "@apidevtools/swagger-parser";
 
-import { createContext } from "./context/index.js";
+import { createContext } from "./context/createContext.js";
 import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstTsRestContract.js";
 import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
-import { getApiOperationObjects } from "./getApiOperationObjects.js";
-import { getTopologicallySortedSchemas } from "./getTopologicallySortedSchemas.js";
 import { prettify } from "./lib/prettier.js";
 import {
   tsChainedMethodCall,
@@ -55,27 +53,25 @@ export async function generateContract({
     .add(tsVariableDeclaration("const", "c", { eq: tsFunctionCall("initContract") }))
     .add(tsNewLine());
 
-  const schemasToExport = getTopologicallySortedSchemas(ctx);
+  if (ctx.topologicallySortedSchemas.length > 0) {
+    // Generates the Zod schemas for each component schema.
+    for (const { normalizedIdentifier, schema } of ctx.topologicallySortedSchemas) {
+      // const [identifier] = z.object({ ... }) | z.string() | z.number() | ...
+      ast.add(
+        tsVariableDeclaration("const", normalizedIdentifier, {
+          eq: schemaObjectToAstZodSchema(schema, ctx),
+        })
+      );
+    }
 
-  // Generates the Zod schemas for each component schema.
-  for (const { normalizedIdentifier, schema } of schemasToExport) {
-    // const [identifier] = z.object({ ... }) | z.string() | z.number() | ...
-    ast.add(
-      tsVariableDeclaration("const", normalizedIdentifier, {
-        eq: schemaObjectToAstZodSchema(schema, ctx),
-      })
-    );
-  }
+    ast.add(tsNewLine());
 
-  ast.add(tsNewLine());
-
-  if (schemasToExport.length > 0) {
     // export const schemas = { schema1, schema2, ... };
     ast
       .add(
         tsVariableDeclaration("const", "schemas", {
           eq: tsObject(
-            ...schemasToExport.map(
+            ...ctx.topologicallySortedSchemas.map(
               ({ normalizedIdentifier }) => [normalizedIdentifier] satisfies [string]
             )
           ),
@@ -85,9 +81,7 @@ export async function generateContract({
       .add(tsNewLine());
   }
 
-  const apiOperationObjects = getApiOperationObjects(ctx);
-
-  const tsRestAstContracts = apiOperationObjects.map((operationObject) =>
+  const tsRestAstContracts = ctx.apiOperationObjects.map((operationObject) =>
     apiOperationToAstTsRestContract(operationObject, ctx)
   );
 
