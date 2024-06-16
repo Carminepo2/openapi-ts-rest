@@ -6,7 +6,6 @@ import SwaggerParser from "@apidevtools/swagger-parser";
 import { createContext } from "./context/createContext.js";
 import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstTsRestContract.js";
 import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
-import { getApiOperationObjects } from "./getApiOperationObjects.js";
 import { getExportedSchemas } from "./getTopologicallySortedSchemas.js";
 import { prettify } from "./lib/prettier.js";
 import {
@@ -85,9 +84,7 @@ export async function generateContract({
       .add(tsNewLine());
   }
 
-  const apiOperationObjects = getApiOperationObjects(ctx);
-
-  const tsRestAstContracts = apiOperationObjects.map((operationObject) =>
+  const tsRestAstContracts = ctx.apiOperationObjects.map((operationObject) =>
     apiOperationToAstTsRestContract(operationObject, ctx)
   );
 
