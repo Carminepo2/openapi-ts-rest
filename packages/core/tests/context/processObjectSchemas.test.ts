@@ -3,7 +3,7 @@ import type { OpenAPIObject } from "openapi3-ts";
 import { describe, expect, it } from "vitest";
 
 import { makeRefObjectResolvers } from "../../src/context/makeRefObjectResolvers";
-import { processComponentObjectSchemas } from "../../src/context/processObjectSchemas";
+import { processComponentObjectSchemas } from "../../src/context/processComponentObjectSchemas";
 import { circularRefDependencyError } from "../../src/domain/errors";
 import { createMockOpenApiObject } from "../test.utils";
 

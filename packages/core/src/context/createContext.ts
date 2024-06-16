@@ -2,7 +2,7 @@ import { type OpenAPIObject } from "openapi3-ts";
 
 import { makeRefObjectResolvers } from "./makeRefObjectResolvers";
 import { processApiOperationObjects } from "./processApiOperationObjects";
-import { processComponentObjectSchemas } from "./processObjectSchemas";
+import { processComponentObjectSchemas } from "./processComponentObjectSchemas";
 
 export interface Context {
   apiOperationObjects: ReturnType<typeof processApiOperationObjects>;
