@@ -3,7 +3,7 @@ import type { Expression } from "typescript";
 import { type ReferenceObject, type SchemaObject, isReferenceObject } from "openapi3-ts";
 import { P, match } from "ts-pattern";
 
-import type { Context } from "../context";
+import type { Context } from "../context/createContext";
 
 import { unexpectedError } from "../domain/errors";
 import {
@@ -75,16 +75,13 @@ export function schemaObjectToAstZodSchema(
     );
   }
 
-  /**
-   * If the schema is a reference object, we need to check if it's an "exported" schema.
-   */
   if (isReferenceObject(schemaOrRef)) {
-    const schemaToExport = ctx.exportedComponentSchemasMap.get(schemaOrRef.$ref);
+    const exportedSchema = ctx.componentSchemasMap.get(schemaOrRef.$ref);
     /**
      * If the schema is exported, we build the Zod schema from the identifier.
      */
-    if (schemaToExport) {
-      return buildZodSchema(schemaToExport.normalizedIdentifier, undefined);
+    if (exportedSchema) {
+      return buildZodSchema(exportedSchema.normalizedIdentifier);
     }
   }
 

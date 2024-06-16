@@ -179,7 +179,7 @@ describe("schemaObjectToAstZodSchema", () => {
           items: { $ref: "#/components/schemas/RefSchema" },
           type: "array",
         },
-        { ...ctx, exportedComponentSchemasMap: new Map() }
+        { ...ctx, componentSchemasMap: new Map() }
       )
     ).toMatchInlineSnapshot(`"z.array(z.string())"`);
     expect(
@@ -256,7 +256,7 @@ describe("schemaObjectToAstZodSchema", () => {
           required: ["a"],
           type: "object",
         },
-        { ...ctx, exportedComponentSchemasMap: new Map() }
+        { ...ctx, componentSchemasMap: new Map() }
       )
     ).toMatchInlineSnapshot(
       `"z.object({ "a": z.object({ "a": z.string().optional(), "b": z.number().optional() }), "b": z.number().optional() }).passthrough()"`

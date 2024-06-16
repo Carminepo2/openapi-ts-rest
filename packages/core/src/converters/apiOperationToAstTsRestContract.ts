@@ -9,7 +9,7 @@ import {
 } from "openapi3-ts";
 import { match } from "ts-pattern";
 
-import type { Context } from "../context";
+import type { Context } from "../context/createContext";
 import type { APIOperationObject } from "../domain/types";
 
 import {
