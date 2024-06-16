@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import { schemaObjectToZodValidators } from "../../src/converters/schemaObjectToZodValidators";
 import { tsArray, tsObject } from "../../src/lib/ts";
 
