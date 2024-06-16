@@ -3,7 +3,7 @@ import type { OpenAPIObject } from "openapi3-ts";
 import { describe, expect, it } from "vitest";
 
 import { makeRefObjectResolvers } from "../../src/context/makeRefObjectResolvers";
-import { processObjectSchemas } from "../../src/context/processObjectSchemas";
+import { processComponentObjectSchemas } from "../../src/context/processObjectSchemas";
 import { circularRefDependencyError } from "../../src/domain/errors";
 import { createMockOpenApiObject } from "../test.utils";
 
@@ -14,9 +14,9 @@ const componentSchemaRef4 = "#/components/schemas/Schema4";
 
 function wrappedProcessObjectSchemas(
   openAPIDoc: OpenAPIObject
-): ReturnType<typeof processObjectSchemas> {
+): ReturnType<typeof processComponentObjectSchemas> {
   const { resolveRef } = makeRefObjectResolvers(openAPIDoc);
-  return processObjectSchemas(openAPIDoc, resolveRef);
+  return processComponentObjectSchemas(openAPIDoc, resolveRef);
 }
 
 describe("getTopologicallySortedSchema", () => {

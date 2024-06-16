@@ -10,7 +10,7 @@ import type { ObjectSchemaMeta } from "../domain/types";
 import { circularRefDependencyError } from "../domain/errors";
 import { formatToIdentifierString, parseRefComponents } from "../lib/utils";
 
-export function processObjectSchemas(
+export function processComponentObjectSchemas(
   openAPIDoc: OpenAPIObject,
   getSchemaByRef: (ref: string) => SchemaObject
 ): {
