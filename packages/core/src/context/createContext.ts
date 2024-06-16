@@ -10,11 +10,15 @@ export interface Context {
   openAPIDoc: OpenAPIObject;
   resolveObject: ReturnType<typeof makeRefObjectResolvers>["resolveObject"];
   resolveRef: ReturnType<typeof makeRefObjectResolvers>["resolveRef"];
+  topologicallySortedSchemas: ReturnType<typeof processObjectSchemas>["topologicallySortedSchemas"];
 }
 
 export function createContext(openAPIDoc: OpenAPIObject): Context {
   const { resolveObject, resolveRef } = makeRefObjectResolvers(openAPIDoc);
-  const { componentSchemasMap } = processObjectSchemas(openAPIDoc, resolveRef);
+  const { componentSchemasMap, topologicallySortedSchemas } = processObjectSchemas(
+    openAPIDoc,
+    resolveRef
+  );
   const apiOperationObjects = processApiOperationObjects(openAPIDoc, resolveObject);
 
   return {
@@ -23,5 +27,6 @@ export function createContext(openAPIDoc: OpenAPIObject): Context {
     openAPIDoc,
     resolveObject,
     resolveRef,
+    topologicallySortedSchemas,
   };
 }

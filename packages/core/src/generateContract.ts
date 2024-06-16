@@ -6,7 +6,6 @@ import SwaggerParser from "@apidevtools/swagger-parser";
 import { createContext } from "./context/createContext.js";
 import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstTsRestContract.js";
 import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
-import { getExportedSchemas } from "./getTopologicallySortedSchemas.js";
 import { prettify } from "./lib/prettier.js";
 import {
   tsChainedMethodCall,
@@ -54,11 +53,9 @@ export async function generateContract({
     .add(tsVariableDeclaration("const", "c", { eq: tsFunctionCall("initContract") }))
     .add(tsNewLine());
 
-  const schemasToExport = getExportedSchemas(ctx);
-
-  if (schemasToExport.length > 0) {
+  if (ctx.topologicallySortedSchemas.length > 0) {
     // Generates the Zod schemas for each component schema.
-    for (const { normalizedIdentifier, schema } of schemasToExport) {
+    for (const { normalizedIdentifier, schema } of ctx.topologicallySortedSchemas) {
       // const [identifier] = z.object({ ... }) | z.string() | z.number() | ...
       ast.add(
         tsVariableDeclaration("const", normalizedIdentifier, {
@@ -74,7 +71,7 @@ export async function generateContract({
       .add(
         tsVariableDeclaration("const", "schemas", {
           eq: tsObject(
-            ...schemasToExport.map(
+            ...ctx.topologicallySortedSchemas.map(
               ({ normalizedIdentifier }) => [normalizedIdentifier] satisfies [string]
             )
           ),
