@@ -1,0 +1,1650 @@
+openapi: 3.0.0
+info:
+  title: Developers Italia API
+  version: 1.0.0
+  x-summary: Developers Italia API
+  description: |
+    The API of Developers Italia
+
+    ## Caching
+
+    Cachable responses will contain the `Cache-Control` header that can be used by clients
+    to cache the resources.
+
+    ## <a name="terms-of-service"></a> Terms of service
+    This API is open to use. While we normally rate limit the service, we reserve to block any
+    potential malicious misuse of the API.
+
+    Be nice.
+  license:
+    name: Apache
+    url: 'https://www.apache.org/licenses/LICENSE-2.0'
+  contact:
+    email: contatti@developers.italia.it
+    url: 'https://developers.italia.it/en/contacts'
+    name: Developers Italia
+  x-api-id: 0f9ca6b0-db47-11ec-96f7-d8bbc146d165
+  termsOfService: 'https://developers.italia.it/en/api/developers-italia#terms-of-service'
+servers:
+  - url: 'https://api.developers.italia.it/v1'
+    description: The production server
+  - url: 'https://api-staging.developers.italia.it/v1'
+    description: The staging server
+tags:
+  - name: software
+    description: Operations on software
+  - name: logs
+    description: Operations on logs
+  - name: publishers
+    description: Operations on publishers
+  - name: monitor
+    description: Monitoring operations on the API
+  - name: webhooks
+    description: Operations on webhooks
+security: [{}]
+paths:
+  /status:
+    get:
+      summary: Get the API status
+      description: Get the API status
+      tags:
+        - monitor
+      operationId: show-status
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /software:
+    get:
+      summary: List all software
+      description: This endpoint allows you to list all the active Software
+      tags:
+        - software
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  data:
+                    type: array
+                    minItems: 0
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Software'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: list-software
+      parameters:
+        - schema:
+            type: boolean
+            default: false
+          in: query
+          name: all
+          description: 'Show all software, even the one with "active" set to false'
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: url
+          description: Only software with this URL
+        - schema:
+            type: integer
+            format: int32
+            example: 100
+            minimum: 1
+            maximum: 100
+            default: 25
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only software created after this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only software created before this time (RFC 3339 datetime)
+    post:
+      summary: Create a new Software
+      description: Create a new Software
+      tags:
+        - software
+      security:
+        - bearerAuth: []
+      operationId: create-software
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Software'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Software'
+            examples: {}
+  '/software/{softwareId}':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+        name: softwareId
+        in: path
+        required: true
+    get:
+      summary: Get a Software
+      description: Get a Software from its id
+      tags:
+        - software
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Software'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: show-software-softwareId
+    patch:
+      summary: Update a Software
+      description: Update a Software by its id
+      tags:
+        - software
+      security:
+        - bearerAuth: []
+      operationId: update-software-softwareId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Software'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/Software'
+    delete:
+      summary: Delete a Software
+      description: Delete a Software by its id
+      tags:
+        - software
+      security:
+        - bearerAuth: []
+      operationId: remove-software-softwareId
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  '/software/{softwareId}/logs':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+        name: softwareId
+        in: path
+        required: true
+    get:
+      summary: List all Logs for a Software
+      description: >
+        List all Logs for a Software by its id. The logs are ordered from the most recent
+        to the least recent.
+      tags:
+        - logs
+        - software
+      operationId: list-software-softwareId-logs
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  data:
+                    type: array
+                    minItems: 0
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Log'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+            default: 25
+            example: 100
+            minimum: 1
+            maximum: 100
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only logs after this time (ISO 8601 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only logs before this time (ISO 8601 datetime)
+    post:
+      summary: Create Logs for a Software
+      description: Create Logs for a Software by its id
+      tags:
+        - logs
+        - software
+      security:
+        - bearerAuth: []
+      operationId: create-software-softwareId-logs
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Log'
+  /software/webhooks:
+    get:
+      summary: List all Webhooks for Software
+      description: List all Webhooks
+      tags:
+        - webhooks
+        - software
+      security:
+        - bearerAuth: []
+      operationId: list-software-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  data:
+                    type: array
+                    minItems: 0
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+            default: 25
+            example: 100
+            minimum: 1
+            maximum: 100
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only webhooks created after this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only webhooks created before this time (RFC 3339 datetime)
+    post:
+      summary: Create Webhook for Software
+      description: Create Webhook for Software
+      tags:
+        - webhooks
+        - software
+      security:
+        - bearerAuth: []
+      operationId: create-software-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
+      callbacks:
+        create:
+          $ref: '#/components/callbacks/ResourceCreate'
+        update:
+          $ref: '#/components/callbacks/ResourceUpdate'
+        delete:
+          $ref: '#/components/callbacks/ResourceDelete'
+  '/software/{softwareId}/webhooks':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+        name: softwareId
+        in: path
+        required: true
+    get:
+      summary: List all Webhooks for a Software
+      description: List all Webhooks
+      tags:
+        - webhooks
+        - software
+      security:
+        - bearerAuth: []
+      operationId: list-software-softwareId-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  data:
+                    type: array
+                    minItems: 0
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+            default: 25
+            example: 100
+            minimum: 1
+            maximum: 100
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only webhooks created after this time (ISO 8601 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only webhooks created before this time (ISO 8601 datetime)
+    post:
+      summary: Create Webhook for a Software
+      description: Create Webhook for a Software by its id
+      tags:
+        - webhooks
+        - software
+      security:
+        - bearerAuth: []
+      operationId: create-software-softwareId-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
+      callbacks:
+        create:
+          $ref: '#/components/callbacks/ResourceCreate'
+        update:
+          $ref: '#/components/callbacks/ResourceUpdate'
+        delete:
+          $ref: '#/components/callbacks/ResourceDelete'
+  /logs:
+    get:
+      summary: List all Logs
+      description: >
+        List all Logs. The Logs are ordered from the most recent
+        to the least recent.
+      tags:
+        - logs
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  data:
+                    type: array
+                    minItems: 0
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Log'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: list-logs
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+            example: 100
+            minimum: 1
+            maximum: 100
+            default: 25
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only logs after this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only logs before this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            maxLength: 255
+            example: 'BAD publiccode'
+          in: query
+          name: search
+          description: Only logs matching the search string in their message
+    post:
+      summary: Create Logs
+      description: Create Logs
+      tags:
+        - logs
+      security:
+        - bearerAuth: []
+      operationId: create-logs
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Log'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Log'
+  /publishers:
+    get:
+      summary: List all Publishers
+      description: List all active Publishers
+      tags:
+        - publishers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  data:
+                    type: array
+                    minItems: 0
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Publisher'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: list-publishers
+      parameters:
+        - schema:
+            type: boolean
+            default: false
+          in: query
+          name: all
+          description: 'Show all publishers, even the one with "active" set to false'
+        - schema:
+            type: integer
+            format: int32
+            example: 100
+            minimum: 1
+            maximum: 100
+            default: 25
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only publishers created after this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only publishers created before this time (RFC 3339 datetime)
+    post:
+      summary: Create a new Publisher
+      description: Create a new Publisher
+      tags:
+        - publishers
+      security:
+        - bearerAuth: []
+      operationId: create-publisher
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Publisher'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Publisher'
+            examples: { }
+  '/publishers/{publisherId}':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+        name: publisherId
+        in: path
+        required: true
+    get:
+      summary: Get a Publisher
+      description: Get a Publisher by its id or alternativeId
+      tags:
+        - publishers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Publisher'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: show-publisher-publisherId
+    patch:
+      summary: Update a Publisher
+      description: Update a Publisher by its id or alternativeId
+      tags:
+        - publishers
+      security:
+        - bearerAuth: []
+      operationId: update-publisher-publisherId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Publisher'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/Publisher'
+    delete:
+      summary: Delete a Publisher
+      description: Delete a Publisher by its id or alternativeId
+      tags:
+        - publishers
+      security:
+        - bearerAuth: []
+      operationId: remove-publisher-publisherId
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /publishers/webhooks:
+    get:
+      summary: List all Webhooks for Publishers
+      description: List all Webhooks
+      tags:
+        - webhooks
+        - publishers
+      security:
+        - bearerAuth: []
+      operationId: list-publishers-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  data:
+                    type: array
+                    minItems: 0
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+            default: 25
+            example: 100
+            minimum: 1
+            maximum: 100
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only webhooks created after this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only webhooks created before this time (RFC 3339 datetime)
+    post:
+      summary: Create Webhook for Publishers
+      description: Create Webhook for Publishers
+      tags:
+        - webhooks
+        - publishers
+      security:
+        - bearerAuth: []
+      operationId: create-publishers-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
+      callbacks:
+        create:
+          $ref: '#/components/callbacks/ResourceCreate'
+        update:
+          $ref: '#/components/callbacks/ResourceUpdate'
+        delete:
+          $ref: '#/components/callbacks/ResourceDelete'
+  '/publishers/{publisherId}/webhooks':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+        name: publisherId
+        in: path
+        required: true
+    get:
+      summary: List all Webhooks for a Publisher
+      description: List all Webhooks
+      tags:
+        - webhooks
+        - publishers
+      security:
+        - bearerAuth: []
+      operationId: list-publishers-publisherId-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  data:
+                    type: array
+                    minItems: 0
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+            default: 25
+            example: 100
+            minimum: 1
+            maximum: 100
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only webhooks created after this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only webhooks created before this time (RFC 3339 datetime)
+    post:
+      summary: Create Webhook for a Publisher
+      description: Create Webhook for a Publisher by its id
+      tags:
+        - webhooks
+        - publishers
+      security:
+        - bearerAuth: []
+      operationId: create-publishers-publisherId-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
+      callbacks:
+        create:
+          $ref: '#/components/callbacks/ResourceCreate'
+        update:
+          $ref: '#/components/callbacks/ResourceUpdate'
+        delete:
+          $ref: '#/components/callbacks/ResourceDelete'
+  '/webhooks/{webhookId}':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+        name: webhookId
+        in: path
+        required: true
+    get:
+      summary: Get a Webhook
+      description: Get a Webhook from its id
+      tags:
+        - webhooks
+      security:
+        - bearerAuth: []
+      operationId: show-webhook-webhookId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    patch:
+      summary: Update a Webhook
+      description: Update a Webhook by its id
+      tags:
+        - webhooks
+      security:
+        - bearerAuth: []
+      operationId: update-webhooks-webhookId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
+    delete:
+      summary: Delete a Webhook
+      description: Delete a Webhook by its id
+      tags:
+        - webhooks
+      security:
+        - bearerAuth: []
+      operationId: remove-webhooks-webhookId
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+components:
+  callbacks:
+    ResourceCreate:
+      '{$request.body#/url}':
+        post:
+          description: The webhook called when a new resource is created
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    event:
+                      type: string
+                      description: The type of event that triggered the webhook (always "create")
+                      enum: [create]
+                    subject:
+                      type: string
+                      pattern: '.*'
+                      maxLength: 255
+                      description: The resource the event occurred on
+                      example: "/software/0000-1111-2222-3333"
+                  required:
+                    - event
+                    - subject
+          responses:
+            '204':
+              description: Callback successfully processed
+    ResourceUpdate:
+      '{$request.body#/url}':
+        post:
+          description: The webhook called when a resource is updated
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    event:
+                      type: string
+                      description: The type of event that triggered the webhook (always "update")
+                      enum: [update]
+                    subject:
+                      type: string
+                      pattern: '.*'
+                      maxLength: 255
+                      description: The resource the event occurred on
+                      example: "/software/0000-1111-2222-3333"
+                  required:
+                    - event
+                    - subject
+          responses:
+            '204':
+              description: Callback successfully processed
+    ResourceDelete:
+      '{$request.body#/url}':
+        post:
+          description: The webhook called when a resource is deleted
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    event:
+                      type: string
+                      description: The type of event that triggered the webhook (always "delete")
+                      enum: [delete]
+                    subject:
+                      type: string
+                      pattern: '.*'
+                      maxLength: 255
+                      description: The resource the event occurred on
+                      example: "/software/0000-1111-2222-3333"
+                  required:
+                    - event
+                    - subject
+          responses:
+            '204':
+              description: Callback successfully processed
+
+  responses:
+    NoContent:
+      description: No Content
+    BadRequest:
+      description: Bad Request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+    TooManyRequests:
+      description: Too Many Requests
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Software:
+      title: Software
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          readOnly: true
+        publiccodeYml:
+          type: string
+          minLength: 1
+          maxLength: 99999
+          pattern: '.*'
+        url:
+          type: string
+          format: uri
+          minLength: 1
+          maxLength: 255
+          description: >
+            Repository URL this software is available at.
+            This is the current and canonical one.
+        aliases:
+          type: array
+          description: >
+            List of aliases for the current repository URL.
+            This is useful to keep track, for example, of previous addresses that redirect
+            to the current one.
+          minItems: 1
+          maxItems: 255
+          items:
+            type: string
+            format: uri
+            minLength: 1
+            maxLength: 255
+        active:
+          type: boolean
+          description: >
+            Whether this Software is active or not. This is useful to temporarly disable
+            software (fe. when the repository is empty or there's something malicious going on,
+            but the problem is expected to be fixed in the near future) without removing it.
+          default: true
+        vitality:
+          type: string
+          description: >
+            The vitality of the software repository, indicating
+            health, activity, or metrics relevant to its condition.
+            This is a opaque string, and users of the API can choose their
+            own format.
+
+            The Italian catalog, for example, uses comma-separated values for
+            daily vitality scores (0-100) (see https://github.com/italia/publiccode-crawler/blob/main/vitality-ranges.yml).
+          minLength: 1
+          maxLength: 99999
+          pattern: '.*'
+          default: null
+          example: "90,100,94,12"
+        createdAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the log was created (RFC 3339 datetime)
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the log was updated (RFC 3339 datetime)
+          readOnly: true
+      required:
+        - id
+        - url
+        - publiccodeYml
+        - createdAt
+        - updatedAt
+    Publisher:
+      title: Publisher
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          readOnly: true
+        codeHosting:
+          type: array
+          minItems: 1
+          maxItems: 255
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              url:
+                type: string
+                description: |
+                  The HTTP URL for the repository or the group of repositories.
+                format: uri
+                maxLength: 255
+                example: 'https://gitlab.example.org/my-group/'
+              group:
+                type: boolean
+                description: |
+                  Whether this code hosting URL is a group containing other repositories
+                  (like GitHub's organizations and GitLab's groups) or not.
+                default: true
+              createdAt:
+                type: string
+                format: date-time
+                example: '2022-06-07T14:56:23Z'
+                description: The time the log was created (RFC 3339 datetime)
+                readOnly: true
+              updatedAt:
+                type: string
+                format: date-time
+                example: '2022-06-07T14:56:23Z'
+                description: The time the log was updated (RFC 3339 datetime)
+                readOnly: true
+            required:
+              - url
+              - createdAt
+              - updatedAt
+        description:
+          type: string
+          maxLength: 255
+          pattern: '.*'
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: |
+            A contact email address for this Publisher.
+          example: contact@mypublisher.example.org
+        active:
+          type: boolean
+          description: |
+            Whether this Publisher is active or not. This is useful to temporarly disable
+            publishers (fe. when they are not complying with some rule, but the problem is
+            expected to be fixed in the near future) without removing them.
+          default: true
+        alternativeId:
+          type: string
+          description: |
+            Optional alternative user-provided identifier for this Publisher.
+
+            If present, you can use it in place of the Publisher `id` as path query
+            argument.
+
+            This is useful for example if this Publisher has another id or code in a
+            different database.
+          maxLength: 255
+          example: 'ID-1234'
+          pattern: '.*'
+      required:
+        - id
+        - description
+        - codeHosting
+        - createdAt
+        - updatedAt
+    Log:
+      title: Log
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the log was created (RFC 3339 datetime)
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the log was updated (RFC 3339 datetime)
+          readOnly: true
+        message:
+          type: string
+          maxLength: 2048
+          pattern: '.*'
+        entity:
+          type: string
+          maxLength: 255
+          pattern: '.*'
+          description: >
+            The resource this log is about (fe. a particular Publisher / Software).
+            It might be absent if the log is not about a specific resource or if
+            the resource doesn't exist yet, like in case of the error log caused by
+            failure to create it.
+          example: /software/7589be36-f046-45c6-9223-b7de9dbf06cd
+          readOnly: true
+      required:
+        - id
+        - createdAt
+        - updatedAt
+        - message
+    Links:
+      type: object
+      additionalProperties: false
+      x-examples: {}
+      properties:
+        prev:
+          type: string
+          format: base64
+          minLength: 1
+          maxLength: 255
+          readOnly: true
+          nullable: true
+        next:
+          type: string
+          format: base64
+          minLength: 1
+          maxLength: 255
+          readOnly: true
+          nullable: true
+      required:
+        - prev
+        - next
+      readOnly: true
+    Error:
+      type: object
+      additionalProperties: false
+      x-examples:
+        example-1:
+          title: Can't create Software
+          detail: Invalid JSON
+          status: 400
+      properties:
+        title:
+          type: string
+          pattern: '.*'
+          maxLength: 255
+          description: 'Short, human-readable summary of the problem'
+        detail:
+          type: string
+          pattern: '.*'
+          maxLength: 2048
+          description: Human-readable explanation of the problem
+        status:
+          type: integer
+          format: int32
+          minimum: 400
+          maximum: 499
+          description: The HTTP status code for this problem
+      required:
+        - title
+        - detail
+    ValidationError:
+      type: object
+      additionalProperties: false
+      x-examples:
+        example-1:
+          title: Can't create Log
+          detail: Validation error
+          status: 422
+          validationErrors:
+            - field: message
+              rule: required
+              value: ''
+      properties:
+        title:
+          type: string
+          pattern: '.*'
+          maxLength: 255
+          description: 'Short, human-readable summary of the problem'
+        detail:
+          type: string
+          pattern: '.*'
+          maxLength: 2048
+          description: Human-readable explanation of the problem
+        status:
+          type: integer
+          format: int32
+          # TODO: use enum
+          minimum: 422
+          maximum: 422
+          description: The HTTP status code for this problem
+        validationErrors:
+          type: array
+          description: 'List of validation errors, returned by endpoints that validate input data (eg. POST, PATCH, etc.)'
+          minItems: 1
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            description: Details of the occurred validation error
+            properties:
+              field:
+                type: string
+                maxLength: 64
+                pattern: '[A-Za-z]{1,64}'
+                description: Field name with a validation error
+                example: name
+              rule:
+                type: string
+                maxLength: 64
+                pattern: '[A-Za-z]{1,64}'
+                description: Rule that makes the provided field invalid
+                example: required
+              value:
+                type: string
+                maxLength: 255
+                pattern: '.*'
+                description: |
+                  The invalid value provided
+                example: '""'
+            required:
+              - field
+              - rule
+              - value
+      required:
+        - title
+        - detail
+    Webhook:
+      title: Webhook
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          writeOnly: true
+        url:
+          type: string
+          format: uri
+          maxLength: 255
+          example: 'https://example.org/my-webhook-endpoint'
+          description: URL where the webhook payload will be delivered to
+        secret:
+          type: string
+          maxLength: 255
+          pattern: '.*'
+          description: |
+            Secret used to authenticate to the webhook endpoint
+        createdAt:
+          type: string
+          description: The time the webhook was created (RFC 3339 datetime)
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the webhook was updated (RFC 3339 datetime)
+          readOnly: true
+      required:
+        - id
+        - url
+        - createdAt
+        - updatedAt
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: PASETO

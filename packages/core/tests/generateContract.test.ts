@@ -1,19 +1,19 @@
+import * as fs from "fs";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 import { generateContract } from "../src/generateContract";
 
-const OPENAPI_DOCS = [
-  "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/examples/v3.0/petstore.yaml",
-  "https://raw.githubusercontent.com/teamdigitale/api-openapi-samples/master/openapi-v3/defibrillatori-example.yaml",
-];
+const OPENAPI_DOCS = fs.readdirSync("./tests/examples");
+
+const getPath = (name: string): string => `./tests/examples/${name}`;
 
 describe("generateContract", () => {
   it.each(OPENAPI_DOCS)(
     "should successfully transpile module without ts errors",
     async (openApi) => {
       const module = await generateContract({
-        openApi,
+        openApi: getPath(openApi),
       });
 
       const output = ts.transpileModule(module, {
@@ -32,7 +32,7 @@ describe("generateContract", () => {
 
   it.each(OPENAPI_DOCS)("should match snapshot for %s", async (openApi) => {
     const module = await generateContract({
-      openApi,
+      openApi: getPath(openApi),
     });
 
     expect(module).toMatchSnapshot();

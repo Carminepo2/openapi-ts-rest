@@ -1,0 +1,365 @@
+openapi: 3.0.2
+info:
+  version: "0.0.1"
+  title: Defibrillatori
+  x-summary: Individua i defibrillatori sul territorio
+  description: |
+    ## Defibrillatori
+
+    Questa API permette a tutti di elencare
+    e localizzare i defibrillatori presenti in un'area.
+    Inoltre permette al personale autorizzato di gestire
+    le informazioni in elenco.
+
+    E' utile perché...
+  termsOfService: 'https://tos.example.it'
+  contact:
+    email: roberto@teamdigitale.governo.it
+    name: Dipartimento Trasformazione Digitale
+    url: 'https://innovazione.gov.it'
+tags:
+-  name: publish
+   description: >-
+    Pubblica le informazioni sui defibrillatori
+-  name: manage
+   description: >-
+    Permetti agli enti di gestire i defibrillatori
+-  name: monitor
+   description: >-
+    Monitoraggio dello stato dell'API.
+servers:
+- url: https://api.example/defibrillatori/v0
+  description: production
+- url: /defibrillatori/v0
+  description: development
+  x-sandbox: true
+components:
+  schemas:
+    Problem:
+      $ref: "https://teamdigitale.github.io/openapi/master/definitions.yaml#/components/schemas/Problem"
+    DefibrillatoreId:
+      type: string
+      format: uuid
+      maxLength: 36
+      minLength: 36
+      pattern: '[a-z0-9-]{36}'
+      description: >-
+        L'identificativo univoco del defibrillatore.
+      example: 7411c337-2f9a-4f6b-911d-d1b814ea4c57
+    Defibrillatore:
+      type: object
+      additionalProperties: false
+      required: [id, status, gestore]
+      properties:
+        id:
+          $ref: "#/components/schemas/DefibrillatoreId"
+        status:
+          type: string
+          enum: [attivo, non-attivo]
+          example: attivo
+        gestore:
+          type: string
+          maxLength: 32
+          pattern: '[a-zA-Z0-9\-_]+'
+          description: |-
+            codice IPA dell'ente che gestisce il defibrillatore.
+            Gli utenti autenticati devono essere riferibili all'ente.
+          example: "C_E472"
+    GeoJSONFeature:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - geometry
+      properties:  &GeoJSONFeatureProperties
+        type:
+          type: string
+          enum: [Feature]
+        geometry:
+          type: object
+          required: [type, coordinates]
+          additionalProperties: false
+          properties:
+            type:
+              type: string
+              enum: [Point]
+            coordinates:
+              type: array
+              maxItems: 2
+              minItems: 2
+              items:
+                type: number
+                format: double
+                minimum: -180
+                maximum: 180
+    DefibrillatoreGeo:
+      description: |-
+        Questo schema usa la sintassi YAML per comporre
+        sintatticamente le proprietà di un oggetto senza
+        usare meccanismi di ereditarietà.
+      type: object
+      additionalProperties: false
+      required:
+      - type
+      - geometry
+      - properties
+      properties:
+        <<: *GeoJSONFeatureProperties
+        properties:
+          $ref: '#/components/schemas/Defibrillatore'
+      example:
+        type: Feature
+        geometry:
+          type: Point
+          coordinates: [ 40.123, 14.123]
+        properties:
+          id: 7411c337-2f9a-4f6b-911d-d1b814ea4c57
+          status: attivo
+          gestore: C_E472
+    DefibrillatoriGeo:
+      type: object
+      description: Un oggetto GeoJSon FeatureCollection
+      additionalProperties: false
+      required:
+      - type
+      - features
+      properties:
+        type:
+          type: string
+          enum: [FeatureCollection]
+          example: FeatureCollection
+        features:
+          type: array
+          maxItems: 1000
+          minItems: 0
+          items:
+            $ref: "#/components/schemas/DefibrillatoreGeo"
+    AreaAmministrativa:
+      type: string
+      minLength: 2
+      maxLength: 6
+      pattern: '[0-9]{2,6}'
+      description: |-
+        Codice Istat dell'area amministrativa:
+        * 2 caratteri per regioni
+        * 3 caratteri per province
+        * 6 caratteri per comuni
+      example: '059001'
+    Latitude:
+      $ref: https://teamdigitale.github.io/openapi/master/definitions.yaml#/components/schemas/Latitude
+    Longitude:
+      $ref: https://teamdigitale.github.io/openapi/master/definitions.yaml#/components/schemas/Longitude
+  parameters:
+    AreaAmministrativa:
+      name: codice_istat
+      in: query
+      description: Identificativo dell'area amministrativa da interrogare.
+      schema:
+        $ref: "#/components/schemas/AreaAmministrativa"
+    Latitudine:
+      name: lat
+      in: query
+      description: Latitudine dell'area da interrogare.
+      schema:
+        $ref: "#/components/schemas/Latitude"
+    Longitudine:
+      name: lon
+      in: query
+      description: Longitudine dell'area da interrogare.
+      schema:
+        $ref: "#/components/schemas/Longitude"
+    Radius:
+      name: radius
+      in: query
+      description: Raggio di ricerca in metri.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 500
+        maximum: 2000
+        example: 500
+    DefibrillatoreId:
+      name: id
+      in: path
+      description: L'identificativo univoco del defibrillatore.
+      schema:
+        $ref: "#/components/schemas/DefibrillatoreId"
+      required: true
+  securitySchemes:
+    OAuthToken:
+      type: oauth2
+      description: >-
+        A bearer token in the format of a JWS and conformato
+        to the specifications included in [RFC8725](https://tools.ietf.org/html/RFC8725).
+
+      flows:
+        clientCredentials:
+          tokenUrl: https://as.example/token
+          scopes:
+            "operatore": Gestisci i defibrillatori.
+            "sistema-IoT": Cambia lo stato di un defibrillatore.
+  responses:
+    default:
+      $ref: https://teamdigitale.github.io/openapi/master/definitions.yaml#/components/responses/default
+
+paths:
+  /status:
+    get:
+      summary: Get status
+      operationId: mostra_status
+      tags:
+      - monitor
+      - publish
+      security:
+        - {}
+      description: Returns OK if the service works.
+      responses:
+        "200":
+          description: The API works
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        default:
+          $ref: "#/components/responses/default"
+  /defibrillatori:
+    get:
+      summary: Elenca defibrillatori
+      operationId: lista_defibrillatori
+      security:
+        - {}
+      tags:
+      - publish
+      description: |-
+        Elenca i defibrillatori presenti in un'area definita alternativamente
+        dai parametri:
+         * codice_istat
+         * lat, long, radius
+      parameters:
+      - $ref: "#/components/parameters/AreaAmministrativa"
+      - $ref: "#/components/parameters/Latitudine"
+      - $ref: "#/components/parameters/Longitudine"
+      - $ref: "#/components/parameters/Radius"
+      responses:
+        "200":
+          description: Elenco dei defibrillatori
+          content:
+            application/geo+json:
+              schema:
+                $ref: "#/components/schemas/DefibrillatoriGeo"
+        default:
+          $ref: "#/components/responses/default"
+    post:
+      summary: Aggiungi defibrillatore
+      operationId: crea_defibrillatore
+      tags:
+      - manage
+      security:
+        - OAuthToken: [operatore]
+      description: |-
+        Aggiungi un defibrillatore.
+      requestBody:
+        required: true
+        content:
+          application/geo+json:
+            schema:
+              $ref: "#/components/schemas/DefibrillatoreGeo"
+      responses:
+        "201":
+          description: Il defibrillatore è stato creato.
+          headers:
+            Cache-Control:
+              description: no-store
+              schema:
+                type: string
+                enum: [no-store]
+            Location:
+              description: L'URL del nuovo defibrillatore.
+              schema:
+                type: string
+                format: url
+                maxLength: 4096
+          content:
+            application/geo+json:
+              schema:
+                $ref: "#/components/schemas/DefibrillatoreGeo"
+        default:
+          $ref: "#/components/responses/default"
+  /defibrillatori/{id}:
+    parameters:
+    - $ref: "#/components/parameters/DefibrillatoreId"
+    get:
+      summary: Elenca un defibrillatore
+      operationId: mostra_defibrillatore
+      tags:
+      - publish
+      - manage
+      security:
+        - {}
+      description: |-
+        Elenca un defibrillatore specifico
+      responses:
+        "200":
+          description: >-
+            Defibrillatore recuperato correttamente e
+            ritornato integralmente nel content.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefibrillatoreGeo"
+        default:
+          $ref: "#/components/responses/default"
+    patch:
+      summary: Aggiorna un defibrillatore
+      operationId: modifica_defibrillatore
+      tags:
+      - manage
+      security:
+        - OAuthToken: [operatore, sistema-IoT]
+      description: |-
+        Aggiorna un defibrillatore specifico con i dati forniti
+        * da un operatore (utente autenticato) dell'ente che gestisce il
+          defibrillatore;
+        * da un automa che può aggiornare il solo stato del defibrillatore.
+      requestBody:
+        description: |-
+          I campi del defibrillatore da modificare.
+          Un utente di tipo "automa" può modificare solo il campo "stato".
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: "#/components/schemas/DefibrillatoreGeo"
+      responses:
+        "200":
+          description: |-
+            Defibrillatore aggiornato correttamente
+            viene ritornato integralmente nel content.
+          content:
+            application/geo+json:
+              schema:
+                $ref: "#/components/schemas/DefibrillatoreGeo"
+        "403":
+          description: |- 
+            Non si hanno i permessi per modificare l'oggetto indicato.
+            E' gestito da un'altro ente.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        default:
+          $ref: "#/components/responses/default"
+    delete:
+      summary: Elimina un defibrillatore.
+      operationId: elimina_defibrillatore
+      description: Elimina un defibrillatore.
+      security:
+        - OAuthToken: [operatore]
+      tags:
+      - manage
+      responses:
+        "204":
+          description: "Eliminato con successo."
+        default:
+          $ref: "#/components/responses/default"
