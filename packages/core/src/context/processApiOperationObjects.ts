@@ -1,4 +1,5 @@
 import type {
+  OpenAPIObject,
   OperationObject,
   ParameterObject,
   PathItemObject,
@@ -8,10 +9,9 @@ import type {
 
 import isEqual from "lodash/isEqual.js";
 
-import type { Context } from "./context";
-import type { APIOperationObject } from "./domain/types";
+import type { APIOperationObject, OpenAPIObjectComponent } from "../domain/types";
 
-import { validateOpenAPIHttpMethod, validateOpenAPIStatusCode } from "./domain/validators";
+import { validateOpenAPIHttpMethod, validateOpenAPIStatusCode } from "../domain/validators";
 
 /**
  * Parses and extracts the API operation objects from the OpenAPI document, resolving all the references.
@@ -21,8 +21,13 @@ import { validateOpenAPIHttpMethod, validateOpenAPIStatusCode } from "./domain/v
  * @param ctx - The context object.
  * @returns The API operation objects.
  */
-export function getApiOperationObjects(ctx: Context): APIOperationObject[] {
-  const pathsObject = ctx.openAPIDoc.paths;
+export function processApiOperationObjects(
+  openAPIDoc: OpenAPIObject,
+  resolveObject: <TObjectComponent extends OpenAPIObjectComponent>(
+    pathItemRefOrObj: ReferenceObject | TObjectComponent
+  ) => TObjectComponent
+): APIOperationObject[] {
+  const pathsObject = openAPIDoc.paths;
   const operationObjects: APIOperationObject[] = [];
 
   if (!pathsObject) return [];
@@ -31,7 +36,7 @@ export function getApiOperationObjects(ctx: Context): APIOperationObject[] {
   for (const [path, pathItemOrRef] of Object.entries(pathsObject)) {
     if (!pathItemOrRef) continue;
 
-    const pathItem = ctx.resolveObject<PathItemObject>(pathItemOrRef);
+    const pathItem = resolveObject<PathItemObject>(pathItemOrRef);
 
     // Filter out the non-operation properties
     const pathOperations = Object.entries(pathItem).filter(
@@ -52,10 +57,10 @@ export function getApiOperationObjects(ctx: Context): APIOperationObject[] {
           if (acc.some((p) => isEqual(p, param))) return acc;
           return [...acc, param];
         }, [])
-        .map((param) => ctx.resolveObject(param));
+        .map(resolveObject);
 
       const requestBody = pathOperation.requestBody
-        ? ctx.resolveObject(pathOperation.requestBody)
+        ? resolveObject(pathOperation.requestBody)
         : undefined;
 
       const responsesEntries = Object.entries(pathOperation.responses) as Array<
@@ -64,7 +69,7 @@ export function getApiOperationObjects(ctx: Context): APIOperationObject[] {
 
       const responses = responsesEntries.reduce<APIOperationObject["responses"]>(
         (acc, [statusCode, response]) => {
-          const resolvedResponse = ctx.resolveObject(response);
+          const resolvedResponse = resolveObject(response);
           validateOpenAPIStatusCode({ method, path, statusCode });
 
           return { ...acc, [statusCode]: resolvedResponse };

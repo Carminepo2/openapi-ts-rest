@@ -1,14 +1,26 @@
-import { invalidHttpMethodError, invalidStatusCodeError } from "../src/domain/errors";
-import { getApiOperationObjects } from "../src/getApiOperationObjects";
-import { createMockContext } from "./test.utils";
+import type { OpenAPIObject } from "openapi3-ts";
 
-describe("getApiOperationObjects", () => {
+import { describe, expect, it } from "vitest";
+
+import { makeRefObjectResolvers } from "../../src/context/makeRefObjectResolvers";
+import { processApiOperationObjects } from "../../src/context/processApiOperationObjects";
+import { invalidHttpMethodError, invalidStatusCodeError } from "../../src/domain/errors";
+import { createMockOpenApiObject } from "../test.utils";
+
+const wrappedProcessApiOperationObjects = (
+  openAPIDoc: OpenAPIObject
+): ReturnType<typeof processApiOperationObjects> => {
+  const { resolveObject } = makeRefObjectResolvers(openAPIDoc);
+  return processApiOperationObjects(openAPIDoc, resolveObject);
+};
+
+describe("processApiOperationObjects", () => {
   it("should return an array of APIOperationObject", () => {
-    const ctx = createMockContext({
+    const openApiDoc = createMockOpenApiObject({
       paths: { "/hello": { get: { responses: { 200: { description: "200" } } } } },
     });
 
-    const result = getApiOperationObjects(ctx);
+    const result = wrappedProcessApiOperationObjects(openApiDoc);
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       method: "get",
@@ -20,16 +32,16 @@ describe("getApiOperationObjects", () => {
   });
 
   it("should return an empty array if the paths object is falsy", () => {
-    const ctx = createMockContext({
+    const openApiDoc = createMockOpenApiObject({
       paths: undefined,
     });
 
-    const result = getApiOperationObjects(ctx);
+    const result = wrappedProcessApiOperationObjects(openApiDoc);
     expect(result).toHaveLength(0);
   });
 
   it("should correctly resolve the api item ref", () => {
-    const ctx = createMockContext({
+    const openApiDoc = createMockOpenApiObject({
       components: {
         // @ts-expect-error @typescript-eslint/ban-ts-comment
         pathItems: {
@@ -45,7 +57,7 @@ describe("getApiOperationObjects", () => {
       },
     });
 
-    const result = getApiOperationObjects(ctx);
+    const result = wrappedProcessApiOperationObjects(openApiDoc);
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       method: "get",
@@ -57,35 +69,35 @@ describe("getApiOperationObjects", () => {
   });
 
   it("should ignore a path without operations", () => {
-    const ctx = createMockContext({
+    const openApiDoc = createMockOpenApiObject({
       paths: { "/hello": {} },
     });
 
-    const result = getApiOperationObjects(ctx);
+    const result = wrappedProcessApiOperationObjects(openApiDoc);
     expect(result).toHaveLength(0);
   });
 
   it("should ignore a path operation without responses", () => {
-    const ctx = createMockContext({
+    const openApiDoc = createMockOpenApiObject({
       paths: { "/hello": { get: {} } },
     });
 
-    const result = getApiOperationObjects(ctx);
+    const result = wrappedProcessApiOperationObjects(openApiDoc);
     expect(result).toHaveLength(0);
   });
 
   it("should throw an error if the HTTP method is invalid", () => {
-    const ctx = createMockContext({
+    const openApiDoc = createMockOpenApiObject({
       paths: { "/hello": { invalid: { responses: { 200: { description: "200" } } } } },
     });
 
-    expect(() => getApiOperationObjects(ctx)).toThrowError(
+    expect(() => wrappedProcessApiOperationObjects(openApiDoc)).toThrowError(
       invalidHttpMethodError({ method: "invalid", path: "/hello" })
     );
   });
 
   it("should merge parameters from path and operation", () => {
-    const ctx = createMockContext({
+    const openApiDoc = createMockOpenApiObject({
       paths: {
         "/hello": {
           get: {
@@ -97,13 +109,13 @@ describe("getApiOperationObjects", () => {
       },
     });
 
-    const result = getApiOperationObjects(ctx);
+    const result = wrappedProcessApiOperationObjects(openApiDoc);
     expect(result).toHaveLength(1);
     expect(result[0].parameters).toHaveLength(2);
   });
 
   it("should remove duplicate parameters", () => {
-    const ctx = createMockContext({
+    const openApiDoc = createMockOpenApiObject({
       paths: {
         "/hello": {
           get: {
@@ -115,13 +127,13 @@ describe("getApiOperationObjects", () => {
       },
     });
 
-    const result = getApiOperationObjects(ctx);
+    const result = wrappedProcessApiOperationObjects(openApiDoc);
     expect(result).toHaveLength(1);
     expect(result[0].parameters).toHaveLength(1);
   });
 
   it("should correctly resolve the request body", () => {
-    const ctx = createMockContext({
+    const openApiDoc = createMockOpenApiObject({
       paths: {
         "/hello": {
           get: {
@@ -135,7 +147,7 @@ describe("getApiOperationObjects", () => {
       },
     });
 
-    const result = getApiOperationObjects(ctx);
+    const result = wrappedProcessApiOperationObjects(openApiDoc);
     expect(result).toHaveLength(2);
     expect(result[1].requestBody).toMatchObject({
       content: { "application/json": { schema: { type: "object" } } },
@@ -143,7 +155,7 @@ describe("getApiOperationObjects", () => {
   });
 
   it("should throw an error if the status code is invalid", () => {
-    const ctx = createMockContext({
+    const openApiDoc = createMockOpenApiObject({
       paths: {
         "/hello": {
           get: {
@@ -153,27 +165,27 @@ describe("getApiOperationObjects", () => {
       },
     });
 
-    expect(() => getApiOperationObjects(ctx)).toThrowError(
+    expect(() => wrappedProcessApiOperationObjects(openApiDoc)).toThrowError(
       invalidStatusCodeError({ method: "get", path: "/hello", statusCode: "invalid" })
     );
   });
 
   it("should return an empty array if there are no paths", () => {
-    const ctx = createMockContext({});
+    const openApiDoc = createMockOpenApiObject({});
 
-    const result = getApiOperationObjects(ctx);
+    const result = wrappedProcessApiOperationObjects(openApiDoc);
     expect(result).toHaveLength(0);
   });
 
   it("should skip the path if it is empty", () => {
-    const ctx = createMockContext({
+    const openAPIDoc = createMockOpenApiObject({
       paths: {
         "/hello": undefined,
         "/world": { get: { responses: { 200: { description: "200" } } } },
       },
     });
 
-    const result = getApiOperationObjects(ctx);
+    const result = wrappedProcessApiOperationObjects(openAPIDoc);
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       method: "get",
