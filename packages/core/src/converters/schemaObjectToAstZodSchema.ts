@@ -3,7 +3,7 @@ import type { Expression } from "typescript";
 import { type ReferenceObject, type SchemaObject, isReferenceObject } from "openapi3-ts";
 import { P, match } from "ts-pattern";
 
-import type { Context } from "../context";
+import type { Context } from "../context/createContext";
 
 import { unexpectedError } from "../domain/errors";
 import {

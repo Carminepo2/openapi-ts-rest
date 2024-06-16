@@ -1,6 +1,6 @@
 import { type ReferenceObject, type SchemaObject, isReferenceObject } from "openapi3-ts";
 
-import type { Context } from "./context";
+import type { Context } from "./context/createContext";
 import type { ObjectSchemaMeta } from "./domain/types";
 
 import { circularRefDependencyError } from "./domain/errors";

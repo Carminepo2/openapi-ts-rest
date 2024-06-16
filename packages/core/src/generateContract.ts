@@ -3,7 +3,7 @@ import type { Options as PrettierOptions } from "prettier";
 
 import SwaggerParser from "@apidevtools/swagger-parser";
 
-import { createContext } from "./context/index.js";
+import { createContext } from "./context/createContext.js";
 import { apiOperationToAstTsRestContract } from "./converters/apiOperationToAstTsRestContract.js";
 import { schemaObjectToAstZodSchema } from "./converters/schemaObjectToAstZodSchema.js";
 import { getApiOperationObjects } from "./getApiOperationObjects.js";

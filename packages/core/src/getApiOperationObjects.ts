@@ -8,7 +8,7 @@ import type {
 
 import isEqual from "lodash/isEqual.js";
 
-import type { Context } from "./context";
+import type { Context } from "./context/createContext";
 import type { APIOperationObject } from "./domain/types";
 
 import { validateOpenAPIHttpMethod, validateOpenAPIStatusCode } from "./domain/validators";
