@@ -7,7 +7,7 @@
     "dev": "vite",
     "test": "start-server-and-test dev http://localhost:5173 cy:run",
     "cy:run": "cypress run",
-    "build": "echo \"Not yet implemented\"",
+    "build": "rm -rf dist && node ./scripts/build.js",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -38,6 +38,8 @@
     "@vitejs/plugin-react": "^4.3.0",
     "autoprefixer": "^10.4.19",
     "cypress": "^13.11.0",
+    "esbuild": "0.21.5",
+    "esbuild-style-plugin": "^1.6.3",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
     "postcss": "^8.4.38",
