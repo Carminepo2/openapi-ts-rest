@@ -1,5 +1,13 @@
 # @openapi-ts-rest/core
 
+## 0.1.1
+
+### Patch Changes
+
+- [#42](https://github.com/Carminepo2/openapi-ts-rest/pull/42) [`743b0a1`](https://github.com/Carminepo2/openapi-ts-rest/commit/743b0a13c7c13122affc1d1621a0b1f46bb45b94) Thanks [@Carminepo2](https://github.com/Carminepo2)! - Updated dependencies
+
+- [#42](https://github.com/Carminepo2/openapi-ts-rest/pull/42) [`743b0a1`](https://github.com/Carminepo2/openapi-ts-rest/commit/743b0a13c7c13122affc1d1621a0b1f46bb45b94) Thanks [@Carminepo2](https://github.com/Carminepo2)! - Added npm keywords in package.json
+
 ## 0.1.0
 
 ### Minor Changes
