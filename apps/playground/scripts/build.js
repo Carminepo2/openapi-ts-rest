@@ -6,8 +6,10 @@
 import * as esbuild from "esbuild";
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
-import { tailwindPlugin } from "esbuild-plugin-tailwindcss";
+import postCssPlugin from "esbuild-style-plugin";
 import * as fs from "fs";
+import tailwindcss from "tailwindcss";
+import autoprefixer from "autoprefixer";
 
 const ourdir = "dist";
 const outputName = `${Math.random().toString(36).substring(7)}-out`;
@@ -27,7 +29,11 @@ await esbuild.build({
       process: true,
     }),
     NodeModulesPolyfillPlugin(),
-    tailwindPlugin(),
+    postCssPlugin({
+      postcss: {
+        plugins: [tailwindcss, autoprefixer],
+      },
+    }),
   ],
 });
 

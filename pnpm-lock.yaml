@@ -17,7 +17,7 @@ importers:
         version: 0.5.0
       '@vitest/coverage-istanbul':
         specifier: ^1.6.0
-        version: 1.6.0(vitest@1.6.0(@types/node@20.14.4)(jsdom@17.0.0))
+        version: 1.6.0(vitest@1.6.0(@types/node@20.14.4)(jsdom@17.0.0)(sass@1.77.6))
       eslint:
         specifier: ^8.57.0
         version: 8.57.0
@@ -117,7 +117,7 @@ importers:
         version: 18.3.0
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.3.1(vite@5.3.1(@types/node@20.14.4))
+        version: 4.3.1(vite@5.3.1(@types/node@20.14.4)(sass@1.77.6))
       autoprefixer:
         specifier: ^10.4.19
         version: 10.4.19(postcss@8.4.38)
@@ -127,9 +127,9 @@ importers:
       esbuild:
         specifier: 0.21.5
         version: 0.21.5
-      esbuild-plugin-tailwindcss:
-        specifier: ^1.2.0
-        version: 1.2.0
+      esbuild-style-plugin:
+        specifier: ^1.6.3
+        version: 1.6.3
       eslint-plugin-react-hooks:
         specifier: ^4.6.2
         version: 4.6.2(eslint@8.57.0)
@@ -150,7 +150,7 @@ importers:
         version: 3.4.4
       vite:
         specifier: ^5.2.11
-        version: 5.3.1(@types/node@20.14.4)
+        version: 5.3.1(@types/node@20.14.4)(sass@1.77.6)
 
   packages/cli:
     dependencies:
@@ -221,7 +221,7 @@ importers:
         version: 8.1.0(postcss@8.4.38)(typescript@5.4.5)
       vitest:
         specifier: ^1.6.0
-        version: 1.6.0(@types/node@20.14.4)(jsdom@17.0.0)
+        version: 1.6.0(@types/node@20.14.4)(jsdom@17.0.0)(sass@1.77.6)
 
 packages:
 
@@ -1096,6 +1096,9 @@ packages:
   '@types/js-yaml@4.0.9':
     resolution: {integrity: sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==}
 
+  '@types/less@3.0.6':
+    resolution: {integrity: sha512-PecSzorDGdabF57OBeQO/xFbAkYWo88g4Xvnsx7LRwqLC17I7OoKtA3bQB9uXkY6UkMWCOsA8HSVpaoitscdXw==}
+
   '@types/lodash@4.17.5':
     resolution: {integrity: sha512-MBIOHVZqVqgfro1euRDWX7OO0fBVUUMrN6Pwm8LQsz8cWhEpihlvR70ENj3f40j58TNxZaWv2ndSkInykNBBJw==}
 
@@ -1123,6 +1126,10 @@ packages:
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
 
+  '@types/sass@1.45.0':
+    resolution: {integrity: sha512-jn7qwGFmJHwUSphV8zZneO3GmtlgLsmhs/LQyVvQbIIa+fzGMUiHI4HXJZL3FT8MJmgXWbLGiVVY7ElvHq6vDA==}
+    deprecated: This is a stub types definition. sass provides its own type definitions, so you do not need this installed.
+
   '@types/semver@7.5.8':
     resolution: {integrity: sha512-I8EUhyrgfLrcTkzV3TSsGyl1tSuPrEDzr0yd5m90UgNxQkyDXULk3b6MlQqTCpZpNtWe1K0hzclnZkTcLBe2UQ==}
 
@@ -1131,6 +1138,9 @@ packages:
 
   '@types/sizzle@2.3.8':
     resolution: {integrity: sha512-0vWLNK2D5MT9dg0iOo8GlKguPAU02QjmZitPEsXRuJXU/OGIOt9vT9Fc26wtYuavLxtO45v9PGleoL9Z0k1LHg==}
+
+  '@types/stylus@0.48.42':
+    resolution: {integrity: sha512-CPGlr5teL4sqdap+EOowMifLuNGeIoLwc0VQ7u/BPxo+ocqiNa5jeVt0H0IVBblEh6ZwX1sGpIQIFnSSr8NBQA==}
 
   '@types/yauzl@2.10.3':
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
@@ -1920,8 +1930,8 @@ packages:
     resolution: {integrity: sha512-QCOllgZJtaUo9miYBcLChTUaHNjJF3PYs1VidD7AwiEj1kYxKeQTctLAezAOH5ZKRH0g2IgPn6KwB4IT8iRpvA==}
     engines: {node: '>= 0.4'}
 
-  esbuild-plugin-tailwindcss@1.2.0:
-    resolution: {integrity: sha512-MEDG/GOMIirUwACyzn7aSp7LoSPb8MsaGdZXaLPOPowilAE/knHkqoTM9vNxITfg8ZkpsETwdHY+RpZykaVz7A==}
+  esbuild-style-plugin@1.6.3:
+    resolution: {integrity: sha512-XPEKf4FjLjEVLv/dJH4UxDzXCrFHYpD93DBO8B+izdZARW5b7nNKQbnKv3J+7VDWJbgCU+hzfgIh2AuIZzlmXQ==}
 
   esbuild@0.21.5:
     resolution: {integrity: sha512-mg3OPMV4hXywwpoDxu3Qda5xCKQi+vCTZq8S9J/EpkhB2HzKXq4SNFZE3+NK93JYxc8VMSep+lOUSC/RVKaBqw==}
@@ -2376,6 +2386,9 @@ packages:
   ignore@5.3.1:
     resolution: {integrity: sha512-5Fytz/IraMjqpwfd34ke28PTVMjZjJG2MPn5t7OE4eUCUNf8BAa7b5WUS9/Qvr6mwOQS7Mk6vdsMno5he+T8Xw==}
     engines: {node: '>= 4'}
+
+  immutable@4.3.6:
+    resolution: {integrity: sha512-Ju0+lEMyzMVZarkTn/gqRpdqd5dOPaz1mCZ0SH3JV6iFw81PldE/PEB1hWVEA288HPt4WXW8O7AWxB10M+03QQ==}
 
   import-fresh@3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
@@ -3446,6 +3459,11 @@ packages:
 
   safer-buffer@2.1.2:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
+
+  sass@1.77.6:
+    resolution: {integrity: sha512-ByXE1oLD79GVq9Ht1PeHWCPMPB8XHpBuz1r85oByKHjZY6qV6rWnQovQzXJXuQ/XyE1Oj3iPk3lo28uzaRA2/Q==}
+    engines: {node: '>=14.0.0'}
+    hasBin: true
 
   saxes@5.0.1:
     resolution: {integrity: sha512-5LBh1Tls8c9xgGjw3QrMwETmTMVk0oFgvrFSvWx62llR2hcEInrKNZ2GZCCuuy2lvWrdl5jhbpeqc5hRYKFOcw==}
@@ -5190,6 +5208,8 @@ snapshots:
 
   '@types/js-yaml@4.0.9': {}
 
+  '@types/less@3.0.6': {}
+
   '@types/lodash@4.17.5': {}
 
   '@types/minimist@1.2.5': {}
@@ -5215,11 +5235,19 @@ snapshots:
 
   '@types/resolve@1.20.2': {}
 
+  '@types/sass@1.45.0':
+    dependencies:
+      sass: 1.77.6
+
   '@types/semver@7.5.8': {}
 
   '@types/sinonjs__fake-timers@8.1.1': {}
 
   '@types/sizzle@2.3.8': {}
+
+  '@types/stylus@0.48.42':
+    dependencies:
+      '@types/node': 20.14.4
 
   '@types/yauzl@2.10.3':
     dependencies:
@@ -5397,18 +5425,18 @@ snapshots:
 
   '@ungap/structured-clone@1.2.0': {}
 
-  '@vitejs/plugin-react@4.3.1(vite@5.3.1(@types/node@20.14.4))':
+  '@vitejs/plugin-react@4.3.1(vite@5.3.1(@types/node@20.14.4)(sass@1.77.6))':
     dependencies:
       '@babel/core': 7.24.7
       '@babel/plugin-transform-react-jsx-self': 7.24.7(@babel/core@7.24.7)
       '@babel/plugin-transform-react-jsx-source': 7.24.7(@babel/core@7.24.7)
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.2
-      vite: 5.3.1(@types/node@20.14.4)
+      vite: 5.3.1(@types/node@20.14.4)(sass@1.77.6)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-istanbul@1.6.0(vitest@1.6.0(@types/node@20.14.4)(jsdom@17.0.0))':
+  '@vitest/coverage-istanbul@1.6.0(vitest@1.6.0(@types/node@20.14.4)(jsdom@17.0.0)(sass@1.77.6))':
     dependencies:
       debug: 4.3.5(supports-color@8.1.1)
       istanbul-lib-coverage: 3.2.2
@@ -5419,7 +5447,7 @@ snapshots:
       magicast: 0.3.4
       picocolors: 1.0.1
       test-exclude: 6.0.0
-      vitest: 1.6.0(@types/node@20.14.4)(jsdom@17.0.0)
+      vitest: 1.6.0(@types/node@20.14.4)(jsdom@17.0.0)(sass@1.77.6)
     transitivePeerDependencies:
       - supports-color
 
@@ -6183,14 +6211,14 @@ snapshots:
       is-date-object: 1.0.5
       is-symbol: 1.0.4
 
-  esbuild-plugin-tailwindcss@1.2.0:
+  esbuild-style-plugin@1.6.3:
     dependencies:
-      autoprefixer: 10.4.19(postcss@8.4.38)
+      '@types/less': 3.0.6
+      '@types/sass': 1.45.0
+      '@types/stylus': 0.48.42
+      glob: 10.4.1
       postcss: 8.4.38
       postcss-modules: 6.0.0(postcss@8.4.38)
-      tailwindcss: 3.4.4
-    transitivePeerDependencies:
-      - ts-node
 
   esbuild@0.21.5:
     optionalDependencies:
@@ -6742,6 +6770,8 @@ snapshots:
   ieee754@1.2.1: {}
 
   ignore@5.3.1: {}
+
+  immutable@4.3.6: {}
 
   import-fresh@3.3.0:
     dependencies:
@@ -7819,6 +7849,12 @@ snapshots:
 
   safer-buffer@2.1.2: {}
 
+  sass@1.77.6:
+    dependencies:
+      chokidar: 3.6.0
+      immutable: 4.3.6
+      source-map-js: 1.2.0
+
   saxes@5.0.1:
     dependencies:
       xmlchars: 2.2.0
@@ -8394,13 +8430,13 @@ snapshots:
       core-util-is: 1.0.2
       extsprintf: 1.3.0
 
-  vite-node@1.6.0(@types/node@20.14.4):
+  vite-node@1.6.0(@types/node@20.14.4)(sass@1.77.6):
     dependencies:
       cac: 6.7.14
       debug: 4.3.5(supports-color@8.1.1)
       pathe: 1.1.2
       picocolors: 1.0.1
-      vite: 5.3.1(@types/node@20.14.4)
+      vite: 5.3.1(@types/node@20.14.4)(sass@1.77.6)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -8411,7 +8447,7 @@ snapshots:
       - supports-color
       - terser
 
-  vite@5.3.1(@types/node@20.14.4):
+  vite@5.3.1(@types/node@20.14.4)(sass@1.77.6):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.4.38
@@ -8419,8 +8455,9 @@ snapshots:
     optionalDependencies:
       '@types/node': 20.14.4
       fsevents: 2.3.3
+      sass: 1.77.6
 
-  vitest@1.6.0(@types/node@20.14.4)(jsdom@17.0.0):
+  vitest@1.6.0(@types/node@20.14.4)(jsdom@17.0.0)(sass@1.77.6):
     dependencies:
       '@vitest/expect': 1.6.0
       '@vitest/runner': 1.6.0
@@ -8439,8 +8476,8 @@ snapshots:
       strip-literal: 2.1.0
       tinybench: 2.8.0
       tinypool: 0.8.4
-      vite: 5.3.1(@types/node@20.14.4)
-      vite-node: 1.6.0(@types/node@20.14.4)
+      vite: 5.3.1(@types/node@20.14.4)(sass@1.77.6)
+      vite-node: 1.6.0(@types/node@20.14.4)(sass@1.77.6)
       why-is-node-running: 2.2.2
     optionalDependencies:
       '@types/node': 20.14.4
