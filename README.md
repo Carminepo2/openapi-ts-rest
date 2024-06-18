@@ -13,6 +13,10 @@
 
 A simple tool to generate a [ts-rest](https://github.com/ts-rest/ts-rest) contract (with zod validation) from an OpenAPI 3.0/3.1 specification.
 
+<p align="center">
+  ---> <a href="https://openapi-ts-rest.pages.dev/">Try it in the online playground!</a> <---
+</p>
+    
 ## Installation 📦
 
 You can use `openapi-ts-rest` in two ways: as a CLI tool or as a core library within your code.
