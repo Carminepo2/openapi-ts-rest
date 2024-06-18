@@ -12,6 +12,18 @@
   "bin": {
     "openapi-ts-rest": "./dist/index.js"
   },
+  "keywords": [
+    "cli",
+    "openapi",
+    "rest",
+    "typescript",
+    "ts-rest",
+    "api",
+    "generator",
+    "openapi3",
+    "openapi3-ts",
+    "contract"
+  ],
   "author": "Carminepo2",
   "dependencies": {
     "@commander-js/extra-typings": "^12.1.0",

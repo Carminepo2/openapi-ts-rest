@@ -12,6 +12,17 @@
     "lint": "eslint ."
   },
   "author": "Carminepo2",
+  "keywords": [
+    "openapi",
+    "rest",
+    "typescript",
+    "ts-rest",
+    "api",
+    "generator",
+    "openapi3",
+    "openapi3-ts",
+    "contract"
+  ],
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.0",
     "camelcase": "^8.0.0",
