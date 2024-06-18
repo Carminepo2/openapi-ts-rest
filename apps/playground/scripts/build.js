@@ -3,26 +3,25 @@
  * So I'm using esbuild to build the project until I can figure out how to get vite to work.
  */
 
-import * as esbuild from "esbuild";
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import autoprefixer from "autoprefixer";
+import * as esbuild from "esbuild";
 import postCssPlugin from "esbuild-style-plugin";
 import * as fs from "fs";
 import tailwindcss from "tailwindcss";
-import autoprefixer from "autoprefixer";
 
 const ourdir = "dist";
 const outputName = `${Math.random().toString(36).substring(7)}-out`;
 
 await esbuild.build({
-  entryPoints: ["src/main.tsx"],
   bundle: true,
-  outfile: `${ourdir}/${outputName}.js`,
-  minify: true,
-  sourcemap: true,
   define: {
     global: "globalThis",
   },
+  entryPoints: ["src/main.tsx"],
+  minify: true,
+  outfile: `${ourdir}/${outputName}.js`,
   plugins: [
     NodeGlobalsPolyfillPlugin({
       buffer: true,
@@ -35,6 +34,7 @@ await esbuild.build({
       },
     }),
   ],
+  sourcemap: true,
 });
 
 // create index.html file
