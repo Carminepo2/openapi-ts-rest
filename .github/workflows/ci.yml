@@ -69,8 +69,8 @@ jobs:
 
       - name: Lint
         run: pnpm lint
-  sonarcloud:
-    name: SonarCloud
+  sonarcloud-core:
+    name: SonarCloudCore
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,5 +79,20 @@ jobs:
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: packages/core/
+
+  sonarcloud-cli:
+    name: SonarCloudCli
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: packages/cli/
