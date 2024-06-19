@@ -2,6 +2,7 @@
 
 ![NPM Version](https://img.shields.io/npm/v/%40openapi-ts-rest%2Fcore)
 [![CI](https://github.com/Carminepo2/openapi-ts-rest/actions/workflows/ci.yml/badge.svg)](https://github.com/Carminepo2/openapi-ts-rest/actions/workflows/ci.yml)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=openapi-ts-rest-core&metric=coverage)](https://sonarcloud.io/summary/new_code?id=openapi-ts-rest-core)
 
 > [!WARNING]  
 > This project is still in development and is not ready for production use, there may be bugs, missing features and breaking changes.
