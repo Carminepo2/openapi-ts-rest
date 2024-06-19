@@ -8,7 +8,7 @@
     "dev": "pnpm build -- --watch",
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "test": "vitest run",
-    "coverage": "vitest --coverage",
+    "coverage": "vitest run --coverage",
     "lint": "eslint ."
   },
   "author": "Carminepo2",

@@ -6,8 +6,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm",
     "test": "echo \"Not yet implemented\"",
-    "lint": "eslint .",
-    "coverage": "vitest --coverage"
+    "lint": "eslint ."
   },
   "bin": {
     "openapi-ts-rest": "./dist/index.js"

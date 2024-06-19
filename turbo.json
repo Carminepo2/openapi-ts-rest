@@ -14,6 +14,9 @@
     "test": {
       "dependsOn": ["^build"]
     },
+    "coverage": {
+      "dependsOn": ["^build"]
+    },
     "lint": {
       "cache": false,
       "persistent": true

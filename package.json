@@ -20,6 +20,7 @@
     "dev": "turbo dev --parallel",
     "lint": "turbo lint",
     "test": "turbo test",
+    "coverage": "turbo coverage",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "clean": "turbo clean && rm -rf node_modules",
     "changeset": "changeset",
