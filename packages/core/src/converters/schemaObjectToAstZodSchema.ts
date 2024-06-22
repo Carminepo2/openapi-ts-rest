@@ -181,9 +181,8 @@ function fromEnumSchemaObject(
     customValidatorOptions?: SchemaObjectToZodValidatorsOptions | undefined
   ) => Expression
 ): Expression {
-  if (!schema.enum) {
-    throw unexpectedError({ detail: "The schema does not have an enum property" });
-  }
+  // The check for `schema.enum` is done outside
+  const schemaEnum = schema.enum as NonNullable<SchemaObject["enum"]>;
 
   function resolveEnumValue(value: unknown): string {
     if (value === null) return "null";
@@ -191,28 +190,28 @@ function fromEnumSchemaObject(
   }
 
   if (schema.type === "string") {
-    if (schema.enum.length === 1) {
-      return buildZodSchemaWithValidators("z", ["literal", resolveEnumValue(schema.enum[0])]);
+    if (schemaEnum.length === 1) {
+      return buildZodSchemaWithValidators("z", ["literal", resolveEnumValue(schemaEnum[0])]);
     }
 
     return buildZodSchemaWithValidators("z", [
       "enum",
-      tsArray(...schema.enum.map(resolveEnumValue)),
+      tsArray(...schemaEnum.map(resolveEnumValue)),
     ]);
   }
 
-  if (schema.enum.some((e) => typeof e === "string")) {
+  if (schemaEnum.some((e) => typeof e === "string")) {
     return buildZodSchemaWithValidators("z", ["never"]);
   }
 
-  if (schema.enum.length === 1) {
-    return buildZodSchemaWithValidators("z", ["literal", schema.enum[0]]);
+  if (schemaEnum.length === 1) {
+    return buildZodSchemaWithValidators("z", ["literal", schemaEnum[0]]);
   }
 
   return buildZodSchemaWithValidators("z", [
     "enum",
     tsArray(
-      ...schema.enum.map((value) =>
+      ...schemaEnum.map((value) =>
         buildZodSchemaWithValidators("z", ["literal", resolveEnumValue(value)])
       )
     ),
