@@ -39,6 +39,17 @@ type ZodType =
 type ZodTypeMethodCall = [zodType: ZodType, ...args: TsLiteralOrExpression[]] | [zodType: ZodType];
 
 /**
+ * Builds the ast expression for a Zod schema.
+ */
+function toZodSchema(
+  identifier: Expression | string,
+  zodMethod?: ZodTypeMethodCall,
+  ...chainedMethods: TsFunctionCall[]
+): Expression {
+  return tsChainedMethodCall(identifier, ...(zodMethod ? [zodMethod] : []), ...chainedMethods);
+}
+
+/**
  * Converts a SchemaObject or ReferenceObject to a Zod schema AST expression.
  *
  * @param schemaOrRef The schema object or reference object to convert.
@@ -60,17 +71,14 @@ export function schemaObjectToAstZodSchema(
   ctx: Context,
   validatorOptions?: SchemaObjectToZodValidatorsOptions
 ): Expression {
-  /**
-   * Builds the ast expression for a Zod schema.
-   */
-  function buildZodSchema(
+  function toZodSchemaWithValidators(
     identifier: string,
     zodMethod?: ZodTypeMethodCall,
     customValidatorOptions = validatorOptions
   ): Expression {
-    return tsChainedMethodCall(
+    return toZodSchema(
       identifier,
-      ...(zodMethod ? [zodMethod] : []),
+      zodMethod,
       ...schemaObjectToZodValidators(schemaOrRef, customValidatorOptions)
     );
   }
@@ -79,112 +87,135 @@ export function schemaObjectToAstZodSchema(
     const exportedSchema = ctx.componentSchemasMap.get(schemaOrRef.$ref);
     /**
      * If the schema is exported, we build the Zod schema from the identifier.
+     * Example: `#components/schemas/MySchema` -> `MySchema`
      */
     if (exportedSchema) {
-      return buildZodSchema(exportedSchema.normalizedIdentifier);
+      return toZodSchemaWithValidators(exportedSchema.normalizedIdentifier);
     }
   }
 
   const schema = ctx.resolveObject(schemaOrRef);
 
-  if (schema.oneOf) {
-    return buildZodSchemaFromOneOfSchemaObject(schema.oneOf, ctx);
-  }
-
-  if (schema.allOf) {
-    return buildZodSchemaFromAllOfSchemaObject(schema.allOf, ctx);
-  }
-
-  if (schema.anyOf) {
-    return buildZodSchemaFromAnyOfSchemaObject(schema.anyOf, ctx);
-  }
-
-  if (schema.enum) {
-    function resolveEnumValue(value: unknown): string {
-      if (value === null) return "null";
-      return value as string;
-    }
-
-    if (schema.type === "string") {
-      if (schema.enum.length === 1) {
-        return buildZodSchema("z", ["literal", resolveEnumValue(schema.enum[0])]);
-      }
-
-      return buildZodSchema("z", ["enum", tsArray(...schema.enum.map(resolveEnumValue))]);
-    }
-
-    if (schema.enum.some((e) => typeof e === "string")) {
-      return buildZodSchema("z", ["never"]);
-    }
-
-    if (schema.enum.length === 1) {
-      return buildZodSchema("z", ["literal", schema.enum[0]]);
-    }
-
-    return buildZodSchema("z", [
-      "enum",
-      tsArray(
-        ...schema.enum.map((value) => buildZodSchema("z", ["literal", resolveEnumValue(value)]))
-      ),
-    ]);
-  }
-
-  return match(schema.type)
+  return match(schema)
+    .with({ oneOf: P.nonNullable }, (s) => fromOneOfSchemaObject(s.oneOf, ctx))
+    .with({ allOf: P.nonNullable }, (s) => fromAllOfSchemaObject(s.allOf, ctx))
+    .with({ anyOf: P.nonNullable }, (s) => fromAnyOfSchemaObject(s.anyOf, ctx))
+    .with({ enum: P.nonNullable }, (s) => fromEnumSchemaObject(s, toZodSchemaWithValidators))
     .with(
-      P.array(P.any),
-      (t) => t.length === 1,
-      (t) => schemaObjectToAstZodSchema({ ...schema, type: t[0] }, ctx)
+      { type: P.array(P.any) },
+      (s) => s.type.length === 1,
+      (s) => schemaObjectToAstZodSchema({ ...schema, type: s.type[0] }, ctx)
     )
     .with(
-      P.array(P.any),
-      (t) => t.length > 1,
-      (t) =>
-        buildZodSchema("z", [
+      { type: P.array(P.any) },
+      (s) => s.type.length > 1,
+      (s) =>
+        toZodSchemaWithValidators("z", [
           "union",
-          tsArray(...t.map((type) => schemaObjectToAstZodSchema({ ...schema, type }, ctx))),
+          tsArray(...s.type.map((type) => schemaObjectToAstZodSchema({ ...schema, type }, ctx))),
         ])
     )
     .with(
-      "string",
+      { type: "string" },
       () => schema.format === "binary",
-      () => buildZodSchema("z", ["instanceof", tsIdentifier("File")])
+      () => toZodSchemaWithValidators("z", ["instanceof", tsIdentifier("File")])
     )
-    .with("string", () => buildZodSchema("z", ["string"]))
-    .with("number", "integer", () => buildZodSchema("z", ["number"]))
-    .with("boolean", () => buildZodSchema("z", ["boolean"]))
-    .with("null", () => buildZodSchema("z", ["null"]))
-    .with("array", () => {
-      if (!schema.items) return buildZodSchema("z", ["array", tsChainedMethodCall("z", ["any"])]);
-      return buildZodSchema("z", ["array", schemaObjectToAstZodSchema(schema.items, ctx)]);
-    })
+    .with({ type: "string" }, () => toZodSchemaWithValidators("z", ["string"]))
+    .with({ type: "number" }, { type: "integer" }, () => toZodSchemaWithValidators("z", ["number"]))
+    .with({ type: "boolean" }, () => toZodSchemaWithValidators("z", ["boolean"]))
+    .with({ type: "null" }, () => toZodSchemaWithValidators("z", ["null"]))
+    .with({ type: "array" }, () =>
+      toZodSchemaWithValidators("z", [
+        "array",
+        !schema.items ? toZodSchema("z", ["any"]) : schemaObjectToAstZodSchema(schema.items, ctx),
+      ])
+    )
     .when(
-      (t) => Boolean(t === "object" || schema.properties),
+      (s) => Boolean(s.type === "object" || s.properties),
       () => {
         if (!schema.properties || Object.keys(schema.properties).length === 0) {
           if (schema.additionalProperties === true) {
-            return buildZodSchema("z", ["record", tsChainedMethodCall("z", ["any"])], {
+            return toZodSchemaWithValidators("z", ["record", toZodSchema("z", ["any"])], {
               strict: true,
             });
           }
 
           if (typeof schema.additionalProperties === "object") {
-            return buildZodSchema(
+            return toZodSchemaWithValidators(
               "z",
               ["record", schemaObjectToAstZodSchema(schema.additionalProperties, ctx)],
               { strict: true }
             );
           }
         }
-        return buildZodSchema("z", [
+        return toZodSchemaWithValidators("z", [
           "object",
           tsObject(...buildSchemaObjectProperties(schema, ctx)),
         ]);
       }
     )
-    .with(P.nullish, () => buildZodSchema("z", ["unknown"]))
-    .otherwise((t) => {
-      throw unexpectedError({ detail: `Unsupported schema type ${t as unknown as string}` });
+    .with({ type: P.nullish }, () => toZodSchemaWithValidators("z", ["unknown"]))
+    .otherwise((s) => {
+      throw unexpectedError({ detail: `Unsupported schema type ${s.type as unknown as string}` });
     });
+}
+
+/**
+ * Builds the Zod schema for an enum schema object.
+ * @example
+ * ```ts
+ * const schema = {
+ *   type: "string",
+ *   enum: ["value1", "value2", "value3"]
+ * }
+ *
+ * const result = fromEnumSchemaObject(schema);
+ * console.log(astToString(result)); // Output: z.enum(["value1", "value2", "value3"]);
+ * ```
+ */
+function fromEnumSchemaObject(
+  schema: SchemaObject,
+  buildZodSchemaWithValidators: (
+    identifier: string,
+    zodMethod?: ZodTypeMethodCall,
+    customValidatorOptions?: SchemaObjectToZodValidatorsOptions | undefined
+  ) => Expression
+): Expression {
+  // The check for `schema.enum` is done outside
+  const schemaEnum = schema.enum as NonNullable<SchemaObject["enum"]>;
+
+  function resolveEnumValue(value: unknown): string {
+    if (value === null) return "null";
+    return value as string;
+  }
+
+  if (schema.type === "string") {
+    if (schemaEnum.length === 1) {
+      return buildZodSchemaWithValidators("z", ["literal", resolveEnumValue(schemaEnum[0])]);
+    }
+
+    return buildZodSchemaWithValidators("z", [
+      "enum",
+      tsArray(...schemaEnum.map(resolveEnumValue)),
+    ]);
+  }
+
+  if (schemaEnum.some((e) => typeof e === "string")) {
+    return buildZodSchemaWithValidators("z", ["never"]);
+  }
+
+  if (schemaEnum.length === 1) {
+    return buildZodSchemaWithValidators("z", ["literal", schemaEnum[0]]);
+  }
+
+  return buildZodSchemaWithValidators("z", [
+    "enum",
+    tsArray(
+      ...schemaEnum.map((value) =>
+        buildZodSchemaWithValidators("z", ["literal", resolveEnumValue(value)])
+      )
+    ),
+  ]);
 }
 
 /**
@@ -203,7 +234,7 @@ export function schemaObjectToAstZodSchema(
  * console.log(astToString(result)); // Output: z.union(z.string(), z.number(), z.boolean())
  * ```
  */
-function buildZodSchemaFromOneOfSchemaObject(
+function fromOneOfSchemaObject(
   oneOf: NonNullable<SchemaObject["oneOf"]>,
   ctx: Context
 ): Expression {
@@ -211,7 +242,7 @@ function buildZodSchemaFromOneOfSchemaObject(
     return schemaObjectToAstZodSchema(oneOf[0], ctx);
   }
 
-  return tsChainedMethodCall("z", [
+  return toZodSchema("z", [
     "union",
     tsArray(...oneOf.map((schema) => schemaObjectToAstZodSchema(schema, ctx))),
   ]);
@@ -235,7 +266,7 @@ function buildZodSchemaFromOneOfSchemaObject(
  * console.log(astToString(result)); // Output: Schema1.and(Schema2).and(Schema3).and(z.string()).and(z.boolean())
  * ```
  */
-function buildZodSchemaFromAllOfSchemaObject(
+function fromAllOfSchemaObject(
   allOf: NonNullable<SchemaObject["allOf"]>,
   ctx: Context
 ): Expression {
@@ -245,8 +276,9 @@ function buildZodSchemaFromAllOfSchemaObject(
 
   const schemas = allOf.map((s) => schemaObjectToAstZodSchema(s, ctx));
 
-  return tsChainedMethodCall(
+  return toZodSchema(
     schemas[0], // Schema1
+    undefined,
     ...schemas.slice(1).map((s) => ["and", s] satisfies TsFunctionCall) // .and(Schema2).and(Schema3) ...
   );
 }
@@ -269,7 +301,7 @@ function buildZodSchemaFromAllOfSchemaObject(
  * @see {@link generatePowerset}
  * @see {@link https://stackblitz.com/edit/typescript-bcarya}
  */
-function buildZodSchemaFromAnyOfSchemaObject(
+function fromAnyOfSchemaObject(
   anyOf: NonNullable<SchemaObject["anyOf"]>,
   ctx: Context
 ): Expression {
@@ -282,13 +314,14 @@ function buildZodSchemaFromAnyOfSchemaObject(
   const schemasPowerSet = generatePowerset(schemas).slice(1).reverse();
   const subsets = schemasPowerSet.map((set) => {
     if (set.length === 1) return set[0];
-    return tsChainedMethodCall(
+    return toZodSchema(
       set[0], // Schema1
+      undefined,
       ...set.slice(1).map((s) => ["merge", s] satisfies TsFunctionCall) // .merge(Schema2).merge(Schema3) ...
     );
   });
 
-  return tsChainedMethodCall("z", ["union", tsArray(...subsets)]);
+  return toZodSchema("z", ["union", tsArray(...subsets)]);
 }
 
 /**

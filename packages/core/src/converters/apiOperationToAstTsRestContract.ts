@@ -113,7 +113,7 @@ function toContractResponses(
     match(statusCode.toLowerCase())
       // If the status code is a valid HTTP status code...
       .when(
-        (statusCode) => /^[1-5][0-9][0-9]$/.test(statusCode),
+        (statusCode) => /^[1-5]\d\d$/.test(statusCode),
         () => {
           const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(
             contentObject,

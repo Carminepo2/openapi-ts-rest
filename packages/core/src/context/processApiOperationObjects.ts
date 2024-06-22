@@ -47,7 +47,7 @@ export function processApiOperationObjects(
     for (const [method, pathOperation] of pathOperations as Array<[string, OperationObject]>) {
       validateOpenAPIHttpMethod({ method, path });
 
-      if (!pathOperation || !pathOperation?.responses) continue;
+      if (!pathOperation?.responses) continue;
 
       // Merge parameters from path and operation
       const parameters = (pathItem.parameters ?? [])
