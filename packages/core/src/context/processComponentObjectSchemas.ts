@@ -136,11 +136,11 @@ function topologicalSort(graph: Record<string, Set<string>>): string[] {
     ancestors.add(name);
     visited[name] = true;
 
-    const node = graph[name] as Set<string>;
+    const node = graph[name];
 
     node.forEach((dep) => {
       if (ancestors.has(dep)) {
-        // TODO: Handle circular dependencies, for now just throw an error.
+        // Should we handle circular dependencies? for now just throw an error.
         const depsPath = [...Array.from(ancestors), dep];
         throw circularRefDependencyError({ depsPath });
       }
