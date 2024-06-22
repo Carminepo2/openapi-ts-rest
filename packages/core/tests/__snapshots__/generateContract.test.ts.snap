@@ -1498,3 +1498,36 @@ export const contract = c.router({
 });
 "
 `;
+
+exports[`generateContract > should match snapshot for without-exported-schemas.yaml 1`] = `
+"import { initContract } from "@ts-rest/core";
+import { z } from "zod";
+
+const c = initContract();
+
+export const contract = c.router({
+  pushSignal: {
+    method: "POST",
+    path: "/push-signal",
+    summary: "Push Signal",
+    headers: z.object({ authorization: z.string() }),
+    body: z
+      .object({
+        signalType: z.enum(["CREATE", "UPDATE", "DELETE", "SEEDUPDATE"]),
+        objectId: z.string(),
+        eserviceId: z.string(),
+        signalId: z.number(),
+      })
+      .passthrough(),
+    contentType: "application/json",
+    responses: {
+      "200": z.object({ signalId: z.number() }).passthrough(),
+      "400": z.void(),
+      "401": z.void(),
+      "403": z.void(),
+      "429": z.void(),
+    },
+  },
+});
+"
+`;
