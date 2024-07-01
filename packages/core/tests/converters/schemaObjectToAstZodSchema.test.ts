@@ -24,7 +24,11 @@ describe("schemaObjectToAstZodSchema", () => {
     expect(() =>
       // @ts-expect-error @typescript-eslint/ban-ts-comment
       wrappedSchemaObjectToAstZodSchema({ type: "unsupported" })
-    ).toThrowError(notImplementedError({ detail: "Unsupported schema type unsupported" }));
+    ).toThrowError(
+      notImplementedError({
+        detail: `Unsupported schema type:\n${JSON.stringify({ type: "unsupported" }, null, 2)}`,
+      })
+    );
   });
 
   test("snapshot testing schema type string", () => {
