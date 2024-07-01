@@ -124,14 +124,16 @@ export function schemaObjectToAstZodSchema(
     .with({ type: "number" }, { type: "integer" }, () => toZodSchemaWithValidators("z", ["number"]))
     .with({ type: "boolean" }, () => toZodSchemaWithValidators("z", ["boolean"]))
     .with({ type: "null" }, () => toZodSchemaWithValidators("z", ["null"]))
-    .with({ type: "array" }, () =>
+    .with({ type: "array" }, { items: P.nonNullable }, () =>
       toZodSchemaWithValidators("z", [
         "array",
         !schema.items ? toZodSchema("z", ["any"]) : schemaObjectToAstZodSchema(schema.items, ctx),
       ])
     )
-    .when(
-      (s) => Boolean(s.type === "object" || s.properties),
+    .with(
+      { type: "object" },
+      { properties: P.nonNullable },
+      { additionalProperties: P.nonNullable },
       () => {
         if (!schema.properties || Object.keys(schema.properties).length === 0) {
           if (schema.additionalProperties === true) {
@@ -156,7 +158,9 @@ export function schemaObjectToAstZodSchema(
     )
     .with({ type: P.nullish }, () => toZodSchemaWithValidators("z", ["unknown"]))
     .otherwise((s) => {
-      throw unexpectedError({ detail: `Unsupported schema type ${s.type as unknown as string}` });
+      throw unexpectedError({
+        detail: `Unsupported schema type:\n${JSON.stringify(s, null, 2)}`,
+      });
     });
 }
 
