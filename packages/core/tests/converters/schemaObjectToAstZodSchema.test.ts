@@ -104,6 +104,9 @@ describe("schemaObjectToAstZodSchema", () => {
     expect(
       wrappedSchemaObjectToAstZodSchema({ items: { type: "string" }, type: "array" })
     ).toMatchInlineSnapshot(`"z.array(z.string())"`);
+    expect(wrappedSchemaObjectToAstZodSchema({ items: { type: "string" } })).toMatchInlineSnapshot(
+      `"z.array(z.string())"`
+    );
     expect(
       wrappedSchemaObjectToAstZodSchema({ items: { type: "number" }, type: "array" })
     ).toMatchInlineSnapshot(`"z.array(z.number())"`);
@@ -288,6 +291,13 @@ describe("schemaObjectToAstZodSchema", () => {
         },
         properties: {},
         type: "object",
+      })
+    ).toMatchInlineSnapshot(`"z.record(z.string())"`);
+    expect(
+      wrappedSchemaObjectToAstZodSchema({
+        additionalProperties: {
+          type: "string",
+        },
       })
     ).toMatchInlineSnapshot(`"z.record(z.string())"`);
   });
