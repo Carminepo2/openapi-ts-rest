@@ -18,6 +18,7 @@ export function processComponentObjectSchemas(
   topologicallySortedSchemas: ObjectSchemaMeta[];
 } {
   const graph = createSchemaComponentsDependencyGraph(openAPIDoc, getSchemaByRef);
+
   const topologicallySortedRefs = topologicalSort(graph);
 
   const topologicallySortedSchemas = topologicallySortedRefs.map((ref) => {
@@ -128,32 +129,29 @@ function createSchemaComponentsDependencyGraph(
  * const sorted = topologicalSort(graph);
  * console.log(sorted); // Output: ['a', 'c', 'b', 'd']
  */
+
 function topologicalSort(graph: Record<string, Set<string>>): string[] {
-  const sorted = new Set<string>();
+  const sorted: string[] = [];
   const visited: Record<string, boolean> = {};
 
-  function visit(name: string, ancestors: Set<string>): void {
-    ancestors.add(name);
+  function visit(name: string, ancestors: string[] = []): void {
+    ancestors.push(name);
     visited[name] = true;
 
-    const node = graph[name];
-
-    node.forEach((dep) => {
-      if (ancestors.has(dep)) {
+    graph[name]?.forEach((dep) => {
+      if (ancestors.includes(dep)) {
         // Should we handle circular dependencies? for now just throw an error.
-        const depsPath = [...Array.from(ancestors), dep];
+        const depsPath = [...ancestors, dep];
         throw circularRefDependencyError({ depsPath });
       }
+
       if (visited[dep]) return;
-      visit(dep, ancestors);
+      visit(dep, ancestors.slice(0));
     });
 
-    sorted.add(name);
+    if (!sorted.includes(name)) sorted.push(name);
   }
 
-  Object.keys(graph).forEach((name) => {
-    visit(name, new Set());
-  });
-
-  return Array.from(sorted);
+  Object.keys(graph).forEach((name) => visit(name));
+  return sorted;
 }
