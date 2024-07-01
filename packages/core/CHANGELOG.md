@@ -1,5 +1,13 @@
 # @openapi-ts-rest/core
 
+## 0.1.2
+
+### Patch Changes
+
+- [#75](https://github.com/Carminepo2/openapi-ts-rest/pull/75) [`15e93a8`](https://github.com/Carminepo2/openapi-ts-rest/commit/15e93a836aa37b0a8287fb8d76be344fd3b8c8a5) Thanks [@Carminepo2](https://github.com/Carminepo2)! - Fix topological sort alghoritm circular dependencies detection
+
+- [#74](https://github.com/Carminepo2/openapi-ts-rest/pull/74) [`3053af0`](https://github.com/Carminepo2/openapi-ts-rest/commit/3053af0026ace4ef0f727173cd838a676965c4d7) Thanks [@Carminepo2](https://github.com/Carminepo2)! - Added handling schemaObjectToAstZodSchema edge cases
+
 ## 0.1.1
 
 ### Patch Changes
