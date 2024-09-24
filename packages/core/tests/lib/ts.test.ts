@@ -175,6 +175,16 @@ describe("ts", () => {
       const result = tsObject(["foo"]);
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"{ foo }"`);
     });
+
+    it("should create an object when passing the key as a number", () => {
+      const result = tsObject([200, "foo"]);
+      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"{ 200: "foo" }"`);
+    });
+
+    it("should throw an error if the passed key of value are of an unexpected type", () => {
+      // @ts-expect-error to test
+      expect(() => tsObject([Symbol(), "foo"])).toThrow();
+    });
   });
 
   describe("tsArray", () => {

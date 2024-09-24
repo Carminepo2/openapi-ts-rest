@@ -87,8 +87,8 @@ function toContractResponses(
   responses: Record<string, ResponseObject>,
   apiOperation: APIOperationObject,
   ctx: Context
-): Array<[string, TsLiteralOrExpression]> {
-  const responsesResult: Array<[string, TsLiteralOrExpression | undefined]> = [];
+): Array<[number, TsLiteralOrExpression]> {
+  const responsesResult: Array<[number, TsLiteralOrExpression | undefined]> = [];
 
   for (const [statusCode, response] of Object.entries(responses)) {
     const contentObject = response.content;
@@ -97,12 +97,14 @@ function toContractResponses(
       statusCode: string,
       contentType: string,
       zodSchema: Expression
-    ): [string, TsLiteralOrExpression] {
+    ): [number, TsLiteralOrExpression] {
+      const statusCodeNum = Number(statusCode);
+
       if (contentType === APPLICATION_JSON) {
-        return [statusCode, zodSchema];
+        return [statusCodeNum, zodSchema];
       }
       return [
-        statusCode,
+        statusCodeNum,
         tsChainedMethodCall("c", [
           "otherResponse",
           tsObject(["contentType", contentType], ["body", zodSchema]),
@@ -127,7 +129,8 @@ function toContractResponses(
         (statusCode) => /^[1-5]xx$/.test(statusCode),
         () => {
           // If there is already a 2XX status code, we don't need to add the other success status codes
-          if (statusCode === "2xx" && responsesResult.some(([r]) => r.startsWith("2"))) return;
+          if (statusCode === "2xx" && responsesResult.some(([r]) => r.toString().startsWith("2")))
+            return;
 
           const statusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter(
             (c) => c.startsWith(statusCode[0]) && !Object.keys(responses).includes(c)
@@ -145,9 +148,12 @@ function toContractResponses(
       .with("default", () => {
         const statusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT
           // Filter out the status codes that are already handled
-          .filter((c) => !responsesResult.find(([r]) => r === c))
+          .filter((c) => !responsesResult.find(([r]) => r.toString() === c))
           // Filter out all the success status codes (2XX) if there is already a 2XX status code
-          .filter((c) => !(responsesResult.some(([r]) => r.startsWith("2")) && c.startsWith("2")));
+          .filter(
+            (c) =>
+              !(responsesResult.some(([r]) => r.toString().startsWith("2")) && c.startsWith("2"))
+          );
 
         const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(
           contentObject,
@@ -165,7 +171,7 @@ function toContractResponses(
   }
 
   return responsesResult.filter(([, value]) => value !== undefined) as Array<
-    [string, TsLiteralOrExpression]
+    [number, TsLiteralOrExpression]
   >;
 }
 

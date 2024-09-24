@@ -6,6 +6,8 @@
 import { P, match } from "ts-pattern";
 import ts from "typescript";
 
+import { unexpectedError } from "../domain/errors";
+
 export type TsKeyword = "const" | "let" | "var";
 export type TsLiteral = boolean | null | number | string;
 export type TsLiteralOrExpression = TsLiteral | ts.Expression;
@@ -235,22 +237,37 @@ export function tsFunctionCall(...fn: TsFunctionCall): ts.CallExpression {
  * ```
  */
 export function tsObject(
-  ...properties: Array<[key: string | ts.Identifier] | [key: string, value: TsLiteralOrExpression]>
+  ...properties: Array<
+    [key: number | string, value: TsLiteralOrExpression] | [key: string | ts.Identifier]
+  >
 ): ts.ObjectLiteralExpression {
   return ts.factory.createObjectLiteralExpression(
-    properties.map(([key, value]) => {
-      if (value && typeof key === "string") {
-        return ts.factory.createPropertyAssignment(
-          ts.factory.createStringLiteral(key),
-          tsLiteralOrExpression(value)
-        );
-      }
-      // If the value is undefined, create a shorthand property assignment
-      return ts.factory.createShorthandPropertyAssignment(
-        typeof key === "string" ? ts.factory.createIdentifier(key) : key,
-        undefined
-      );
-    })
+    properties.map(([key, value]) =>
+      match([key, value])
+        .with([P.string, P.nonNullable], ([key, value]) =>
+          ts.factory.createPropertyAssignment(
+            ts.factory.createStringLiteral(key),
+            tsLiteralOrExpression(value)
+          )
+        )
+        .with([P.number, P.nonNullable], ([key, value]) =>
+          ts.factory.createPropertyAssignment(
+            ts.factory.createNumericLiteral(key),
+            tsLiteralOrExpression(value)
+          )
+        )
+        .with([P.string, P.nullish], ([key]) =>
+          ts.factory.createShorthandPropertyAssignment(ts.factory.createIdentifier(key), undefined)
+        )
+        .with([P.when(ts.isIdentifier), P.nullish], ([key]) =>
+          ts.factory.createShorthandPropertyAssignment(key, undefined)
+        )
+        .otherwise(([key, value]) => {
+          throw unexpectedError({
+            detail: `Unexpected key of value type creating ast ts object. key: ${key}, value: ${value}`,
+          });
+        })
+    )
   );
 }
 

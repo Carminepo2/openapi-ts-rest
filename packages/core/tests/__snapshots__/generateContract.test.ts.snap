@@ -80,39 +80,39 @@ export const contract = c.router({
     path: "/status",
     summary: "Get status",
     responses: {
-      "200": c.otherResponse({
+      200: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "400": c.otherResponse({
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "403": c.otherResponse({
+      403: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "405": c.otherResponse({
+      405: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "409": c.otherResponse({
+      409: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "415": c.otherResponse({
+      415: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "500": c.otherResponse({
+      500: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
@@ -134,39 +134,39 @@ export const contract = c.router({
       radius: z.number().int().gte(0).lte(2000).optional().default(500),
     }),
     responses: {
-      "200": c.otherResponse({
+      200: c.otherResponse({
         contentType: "application/geo+json",
         body: DefibrillatoriGeo,
       }),
-      "400": c.otherResponse({
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "403": c.otherResponse({
+      403: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "405": c.otherResponse({
+      405: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "409": c.otherResponse({
+      409: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "415": c.otherResponse({
+      415: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "500": c.otherResponse({
+      500: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
@@ -179,39 +179,39 @@ export const contract = c.router({
     body: DefibrillatoreGeo,
     contentType: "application/json",
     responses: {
-      "201": c.otherResponse({
+      201: c.otherResponse({
         contentType: "application/geo+json",
         body: DefibrillatoreGeo,
       }),
-      "400": c.otherResponse({
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "403": c.otherResponse({
+      403: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "405": c.otherResponse({
+      405: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "409": c.otherResponse({
+      409: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "415": c.otherResponse({
+      415: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "500": c.otherResponse({
+      500: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
@@ -230,36 +230,36 @@ export const contract = c.router({
         .uuid(),
     }),
     responses: {
-      "200": DefibrillatoreGeo,
-      "400": c.otherResponse({
+      200: DefibrillatoreGeo,
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "403": c.otherResponse({
+      403: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "405": c.otherResponse({
+      405: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "409": c.otherResponse({
+      409: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "415": c.otherResponse({
+      415: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "500": c.otherResponse({
+      500: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
@@ -280,39 +280,39 @@ export const contract = c.router({
     body: DefibrillatoreGeo,
     contentType: "application/json",
     responses: {
-      "200": c.otherResponse({
+      200: c.otherResponse({
         contentType: "application/geo+json",
         body: DefibrillatoreGeo,
       }),
-      "403": c.otherResponse({
+      403: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "400": c.otherResponse({
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "405": c.otherResponse({
+      405: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "409": c.otherResponse({
+      409: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "415": c.otherResponse({
+      415: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "500": c.otherResponse({
+      500: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
@@ -332,36 +332,36 @@ export const contract = c.router({
     }),
     body: z.void(),
     responses: {
-      "204": z.void(),
-      "400": c.otherResponse({
+      204: z.void(),
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "403": c.otherResponse({
+      403: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "405": c.otherResponse({
+      405: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "409": c.otherResponse({
+      409: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "415": c.otherResponse({
+      415: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
-      "500": c.otherResponse({
+      500: c.otherResponse({
         contentType: "application/problem+json",
         body: Problem,
       }),
@@ -487,16 +487,16 @@ export const contract = c.router({
     path: "/status",
     summary: "Get the API status",
     responses: {
-      "204": z.void(),
-      "400": c.otherResponse({
+      204: z.void(),
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "422": c.otherResponse({
+      422: c.otherResponse({
         contentType: "application/problem+json",
         body: ValidationError,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -516,11 +516,11 @@ export const contract = c.router({
       to: z.string().datetime({ offset: true }).optional(),
     }),
     responses: {
-      "200": z.object({
+      200: z.object({
         data: z.array(Software).min(0).max(100).optional(),
         links: Links.optional(),
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -533,20 +533,20 @@ export const contract = c.router({
     body: Software,
     contentType: "application/json",
     responses: {
-      "200": Software,
-      "400": c.otherResponse({
+      200: Software,
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "422": c.otherResponse({
+      422: c.otherResponse({
         contentType: "application/problem+json",
         body: ValidationError,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -565,12 +565,12 @@ export const contract = c.router({
         ),
     }),
     responses: {
-      "200": Software,
-      "404": c.otherResponse({
+      200: Software,
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -591,24 +591,24 @@ export const contract = c.router({
     body: Software,
     contentType: "application/json",
     responses: {
-      "200": Software,
-      "400": c.otherResponse({
+      200: Software,
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "422": c.otherResponse({
+      422: c.otherResponse({
         contentType: "application/problem+json",
         body: ValidationError,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -628,16 +628,16 @@ export const contract = c.router({
     }),
     body: z.void(),
     responses: {
-      "204": z.void(),
-      "401": c.otherResponse({
+      204: z.void(),
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -663,15 +663,15 @@ export const contract = c.router({
         ),
     }),
     responses: {
-      "200": z.object({
+      200: z.object({
         data: z.array(Log).min(0).max(100).optional(),
         links: Links.optional(),
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -692,24 +692,24 @@ export const contract = c.router({
     body: Log,
     contentType: "application/json",
     responses: {
-      "204": z.void(),
-      "400": c.otherResponse({
+      204: z.void(),
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "422": c.otherResponse({
+      422: c.otherResponse({
         contentType: "application/problem+json",
         body: ValidationError,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -727,15 +727,15 @@ export const contract = c.router({
       to: z.string().datetime({ offset: true }).optional(),
     }),
     responses: {
-      "200": z.object({
+      200: z.object({
         data: z.array(Webhook).min(0).max(100).optional(),
         links: Links.optional(),
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -748,24 +748,24 @@ export const contract = c.router({
     body: Webhook,
     contentType: "application/json",
     responses: {
-      "200": Webhook,
-      "400": c.otherResponse({
+      200: Webhook,
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "422": c.otherResponse({
+      422: c.otherResponse({
         contentType: "application/problem+json",
         body: ValidationError,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -791,15 +791,15 @@ export const contract = c.router({
         ),
     }),
     responses: {
-      "200": z.object({
+      200: z.object({
         data: z.array(Webhook).min(0).max(100).optional(),
         links: Links.optional(),
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -820,24 +820,24 @@ export const contract = c.router({
     body: Webhook,
     contentType: "application/json",
     responses: {
-      "200": Webhook,
-      "400": c.otherResponse({
+      200: Webhook,
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "422": c.otherResponse({
+      422: c.otherResponse({
         contentType: "application/problem+json",
         body: ValidationError,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -856,11 +856,11 @@ export const contract = c.router({
       search: z.string().max(255).optional(),
     }),
     responses: {
-      "200": z.object({
+      200: z.object({
         data: z.array(Log).min(0).max(100).optional(),
         links: Links.optional(),
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -873,20 +873,20 @@ export const contract = c.router({
     body: Log,
     contentType: "application/json",
     responses: {
-      "200": Log,
-      "400": c.otherResponse({
+      200: Log,
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "422": c.otherResponse({
+      422: c.otherResponse({
         contentType: "application/problem+json",
         body: ValidationError,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -905,11 +905,11 @@ export const contract = c.router({
       to: z.string().datetime({ offset: true }).optional(),
     }),
     responses: {
-      "200": z.object({
+      200: z.object({
         data: z.array(Publisher).min(0).max(100).optional(),
         links: Links.optional(),
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -922,24 +922,24 @@ export const contract = c.router({
     body: Publisher,
     contentType: "application/json",
     responses: {
-      "200": Publisher,
-      "400": c.otherResponse({
+      200: Publisher,
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "409": c.otherResponse({
+      409: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "422": c.otherResponse({
+      422: c.otherResponse({
         contentType: "application/problem+json",
         body: ValidationError,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -958,12 +958,12 @@ export const contract = c.router({
         ),
     }),
     responses: {
-      "200": Publisher,
-      "404": c.otherResponse({
+      200: Publisher,
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -984,24 +984,24 @@ export const contract = c.router({
     body: Publisher,
     contentType: "application/json",
     responses: {
-      "200": Publisher,
-      "400": c.otherResponse({
+      200: Publisher,
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "422": c.otherResponse({
+      422: c.otherResponse({
         contentType: "application/problem+json",
         body: ValidationError,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -1021,16 +1021,16 @@ export const contract = c.router({
     }),
     body: z.void(),
     responses: {
-      "204": z.void(),
-      "401": c.otherResponse({
+      204: z.void(),
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -1048,15 +1048,15 @@ export const contract = c.router({
       to: z.string().datetime({ offset: true }).optional(),
     }),
     responses: {
-      "200": z.object({
+      200: z.object({
         data: z.array(Webhook).min(0).max(100).optional(),
         links: Links.optional(),
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -1069,24 +1069,24 @@ export const contract = c.router({
     body: Webhook,
     contentType: "application/json",
     responses: {
-      "200": Webhook,
-      "400": c.otherResponse({
+      200: Webhook,
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "422": c.otherResponse({
+      422: c.otherResponse({
         contentType: "application/problem+json",
         body: ValidationError,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -1112,15 +1112,15 @@ export const contract = c.router({
         ),
     }),
     responses: {
-      "200": z.object({
+      200: z.object({
         data: z.array(Webhook).min(0).max(100).optional(),
         links: Links.optional(),
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -1141,24 +1141,24 @@ export const contract = c.router({
     body: Webhook,
     contentType: "application/json",
     responses: {
-      "200": Webhook,
-      "400": c.otherResponse({
+      200: Webhook,
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "422": c.otherResponse({
+      422: c.otherResponse({
         contentType: "application/problem+json",
         body: ValidationError,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -1177,12 +1177,12 @@ export const contract = c.router({
         ),
     }),
     responses: {
-      "200": Webhook,
-      "404": c.otherResponse({
+      200: Webhook,
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -1203,24 +1203,24 @@ export const contract = c.router({
     body: Webhook,
     contentType: "application/json",
     responses: {
-      "200": Webhook,
-      "400": c.otherResponse({
+      200: Webhook,
+      400: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "401": c.otherResponse({
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "422": c.otherResponse({
+      422: c.otherResponse({
         contentType: "application/problem+json",
         body: ValidationError,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -1240,16 +1240,16 @@ export const contract = c.router({
     }),
     body: z.void(),
     responses: {
-      "204": z.void(),
-      "401": c.otherResponse({
+      204: z.void(),
+      401: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "404": c.otherResponse({
+      404: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
-      "429": c.otherResponse({
+      429: c.otherResponse({
         contentType: "application/problem+json",
         body: Error,
       }),
@@ -1286,15 +1286,15 @@ export const contract = c.router({
     summary: "List all pets",
     query: z.object({ limit: z.number().int().lte(100).optional() }),
     responses: {
-      "200": Pets,
-      "400": Error,
-      "401": Error,
-      "403": Error,
-      "404": Error,
-      "405": Error,
-      "409": Error,
-      "415": Error,
-      "500": Error,
+      200: Pets,
+      400: Error,
+      401: Error,
+      403: Error,
+      404: Error,
+      405: Error,
+      409: Error,
+      415: Error,
+      500: Error,
     },
   },
   createPets: {
@@ -1304,15 +1304,15 @@ export const contract = c.router({
     body: Pet,
     contentType: "application/json",
     responses: {
-      "201": z.void(),
-      "400": Error,
-      "401": Error,
-      "403": Error,
-      "404": Error,
-      "405": Error,
-      "409": Error,
-      "415": Error,
-      "500": Error,
+      201: z.void(),
+      400: Error,
+      401: Error,
+      403: Error,
+      404: Error,
+      405: Error,
+      409: Error,
+      415: Error,
+      500: Error,
     },
   },
   showPetById: {
@@ -1321,15 +1321,15 @@ export const contract = c.router({
     summary: "Info for a specific pet",
     pathParams: z.object({ petId: z.string() }),
     responses: {
-      "200": Pet,
-      "400": Error,
-      "401": Error,
-      "403": Error,
-      "404": Error,
-      "405": Error,
-      "409": Error,
-      "415": Error,
-      "500": Error,
+      200: Pet,
+      400: Error,
+      401: Error,
+      403: Error,
+      404: Error,
+      405: Error,
+      409: Error,
+      415: Error,
+      500: Error,
     },
   },
 });
@@ -1363,15 +1363,15 @@ export const contract = c.router({
       limit: z.number().int().optional(),
     }),
     responses: {
-      "200": z.array(Pet),
-      "400": Error,
-      "401": Error,
-      "403": Error,
-      "404": Error,
-      "405": Error,
-      "409": Error,
-      "415": Error,
-      "500": Error,
+      200: z.array(Pet),
+      400: Error,
+      401: Error,
+      403: Error,
+      404: Error,
+      405: Error,
+      409: Error,
+      415: Error,
+      500: Error,
     },
   },
   addPet: {
@@ -1381,15 +1381,15 @@ export const contract = c.router({
     body: NewPet,
     contentType: "application/json",
     responses: {
-      "200": Pet,
-      "400": Error,
-      "401": Error,
-      "403": Error,
-      "404": Error,
-      "405": Error,
-      "409": Error,
-      "415": Error,
-      "500": Error,
+      200: Pet,
+      400: Error,
+      401: Error,
+      403: Error,
+      404: Error,
+      405: Error,
+      409: Error,
+      415: Error,
+      500: Error,
     },
   },
   findPetById: {
@@ -1399,15 +1399,15 @@ export const contract = c.router({
       "Returns a user based on a single ID, if the user does not have access to the pet",
     pathParams: z.object({ id: z.number().int() }),
     responses: {
-      "200": Pet,
-      "400": Error,
-      "401": Error,
-      "403": Error,
-      "404": Error,
-      "405": Error,
-      "409": Error,
-      "415": Error,
-      "500": Error,
+      200: Pet,
+      400: Error,
+      401: Error,
+      403: Error,
+      404: Error,
+      405: Error,
+      409: Error,
+      415: Error,
+      500: Error,
     },
   },
   deletePet: {
@@ -1417,15 +1417,15 @@ export const contract = c.router({
     pathParams: z.object({ id: z.number().int() }),
     body: z.void(),
     responses: {
-      "204": z.void(),
-      "400": Error,
-      "401": Error,
-      "403": Error,
-      "404": Error,
-      "405": Error,
-      "409": Error,
-      "415": Error,
-      "500": Error,
+      204: z.void(),
+      400: Error,
+      401: Error,
+      403: Error,
+      404: Error,
+      405: Error,
+      409: Error,
+      415: Error,
+      500: Error,
     },
   },
 });
@@ -1463,7 +1463,7 @@ export const contract = c.router({
     method: "GET",
     path: "/",
     summary: "List available data sets",
-    responses: { "200": dataSetList },
+    responses: { 200: dataSetList },
   },
   listSearchableFields: {
     method: "GET",
@@ -1471,7 +1471,7 @@ export const contract = c.router({
     summary:
       "Provides the general information about the API and the list of fields that can be used to query the dataset.",
     pathParams: z.object({ dataset: z.string(), version: z.string() }),
-    responses: { "200": z.string(), "404": z.string() },
+    responses: { 200: z.string(), 404: z.string() },
   },
   performSearch: {
     method: "POST",
@@ -1491,8 +1491,8 @@ export const contract = c.router({
       .passthrough(),
     contentType: "application/x-www-form-urlencoded",
     responses: {
-      "200": z.array(z.record(z.object({}).passthrough())),
-      "404": z.void(),
+      200: z.array(z.record(z.object({}).passthrough())),
+      404: z.void(),
     },
   },
 });
@@ -1521,11 +1521,11 @@ export const contract = c.router({
       .passthrough(),
     contentType: "application/json",
     responses: {
-      "200": z.object({ signalId: z.number() }).passthrough(),
-      "400": z.void(),
-      "401": z.void(),
-      "403": z.void(),
-      "429": z.void(),
+      200: z.object({ signalId: z.number() }).passthrough(),
+      400: z.void(),
+      401: z.void(),
+      403: z.void(),
+      429: z.void(),
     },
   },
 });
