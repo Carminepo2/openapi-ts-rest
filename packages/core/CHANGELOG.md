@@ -1,5 +1,11 @@
 # @openapi-ts-rest/core
 
+## 0.1.3
+
+### Patch Changes
+
+- [#90](https://github.com/Carminepo2/openapi-ts-rest/pull/90) [`ed283be`](https://github.com/Carminepo2/openapi-ts-rest/commit/ed283be91945d8aca1553b82916467c558c524c7) Thanks [@Carminepo2](https://github.com/Carminepo2)! - Fix output contract status code type
+
 ## 0.1.2
 
 ### Patch Changes
