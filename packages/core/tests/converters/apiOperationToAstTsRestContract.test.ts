@@ -287,7 +287,7 @@ describe("apiOperationToAstTsRestContract", () => {
           },
         })
       ).toContain(
-        `"${statusCode}": z.object({ "a": z.string().optional(), "b": z.number().optional() })`
+        `${statusCode}: z.object({ "a": z.string().optional(), "b": z.number().optional() })`
       );
     }
   );
@@ -301,7 +301,7 @@ describe("apiOperationToAstTsRestContract", () => {
       },
     });
 
-    expect(result).contain('"204": z.void()');
+    expect(result).contain("204: z.void()");
   });
 
   it.each(["2xx", "4xx", "5XX"])(
@@ -327,7 +327,7 @@ describe("apiOperationToAstTsRestContract", () => {
       );
 
       possibleStatusCodes.forEach((statusCode) => {
-        expect(result).toContain(`"${statusCode}": z.boolean()`);
+        expect(result).toContain(`${statusCode}: z.boolean()`);
       });
     }
   );
@@ -358,11 +358,11 @@ describe("apiOperationToAstTsRestContract", () => {
       },
     });
 
-    expect(result).toContain(`"200": z.string()`);
+    expect(result).toContain("200: z.string()");
     POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter(
       (statusCode) => statusCode.startsWith("2") && statusCode !== "200"
     ).forEach((statusCode) => {
-      expect(result).not.toContain(`"${statusCode}": z.string()`);
+      expect(result).not.toContain(`${statusCode}: z.string()`);
     });
   });
 
@@ -383,7 +383,7 @@ describe("apiOperationToAstTsRestContract", () => {
     });
 
     POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.forEach((statusCode) => {
-      expect(result).toContain(`"${statusCode}": z.boolean()`);
+      expect(result).toContain(`${statusCode}: z.boolean()`);
     });
   });
 
@@ -413,10 +413,10 @@ describe("apiOperationToAstTsRestContract", () => {
       },
     });
 
-    expect(result).toContain(`"200": z.boolean()`);
+    expect(result).toContain("200: z.boolean()");
     POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter((statusCode) => statusCode.startsWith("2")).forEach(
       (statusCode) => {
-        expect(result).not.toContain(`"${statusCode}": z.string()`);
+        expect(result).not.toContain(`${statusCode}: z.string()`);
       }
     );
   });
@@ -457,8 +457,8 @@ describe("apiOperationToAstTsRestContract", () => {
       },
     });
 
-    expect(result).toContain(`"404": z.string()`);
-    expect(result).toContain(`"403": z.string()`);
+    expect(result).toContain("404: z.string()");
+    expect(result).toContain("403: z.string()");
   });
 
   it("range status code should not override existing status codes", () => {
@@ -497,8 +497,8 @@ describe("apiOperationToAstTsRestContract", () => {
       },
     });
 
-    expect(result).toContain(`"404": z.string()`);
-    expect(result).toContain(`"403": z.string()`);
+    expect(result).toContain("404: z.string()");
+    expect(result).toContain("403: z.string()");
   });
 
   it("should override correctly status code in responses objects correctly", () => {
@@ -537,18 +537,18 @@ describe("apiOperationToAstTsRestContract", () => {
       },
     });
 
-    expect(result).toContain(`"400": z.boolean()`);
+    expect(result).toContain("400: z.boolean()");
     const possible4xxStatusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter(
       (statusCode) => statusCode.startsWith("4") && statusCode !== "400"
     );
     possible4xxStatusCodes.forEach((statusCode) => {
-      expect(result).toContain(`"${statusCode}": z.string()`);
+      expect(result).toContain(`${statusCode}: z.string()`);
     });
     const restOfStatusCodes = POSSIBLE_STATUS_CODES_TS_REST_OUTPUT.filter(
       (statusCode) => !statusCode.startsWith("4") && statusCode !== "200"
     );
     restOfStatusCodes.forEach((statusCode) => {
-      expect(result).toContain(`"${statusCode}": z.null()`);
+      expect(result).toContain(`${statusCode}: z.null()`);
     });
   });
 
@@ -569,7 +569,7 @@ describe("apiOperationToAstTsRestContract", () => {
     });
 
     expect(result).toContain(
-      `"204": c.otherResponse({ "contentType": "application/pdf", "body": z.string() })`
+      `204: c.otherResponse({ "contentType": "application/pdf", "body": z.string() })`
     );
   });
 
@@ -607,7 +607,7 @@ describe("apiOperationToAstTsRestContract", () => {
         },
       },
     });
-    expect(result).toContain(`"204": z.void()`);
+    expect(result).toContain("204: z.void()");
   });
 
   it("should use the operationId as the contract operation name if given", () => {
