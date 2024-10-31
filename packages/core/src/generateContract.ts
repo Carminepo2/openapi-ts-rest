@@ -91,8 +91,8 @@ export async function generateContract({
   ast.add(
     tsVariableDeclaration("const", "contract", {
       eq: tsChainedMethodCall("c", {
-        identifier: "router",
         args: [tsObject(...tsRestAstContracts)],
+        identifier: "router",
       }),
       export_: true,
     })

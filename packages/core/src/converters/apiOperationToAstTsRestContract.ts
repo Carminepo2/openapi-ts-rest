@@ -106,8 +106,8 @@ function toContractResponses(
       return [
         statusCodeNum,
         tsChainedMethodCall("c", {
-          identifier: "otherResponse",
           args: [tsObject(["contentType", contentType], ["body", zodSchema])],
+          identifier: "otherResponse",
         }),
       ];
     }
@@ -222,7 +222,7 @@ function toContractParameters(
     return [param.name, schemaObjectToAstZodSchema(objectSchema, ctx, { isRequired })];
   });
 
-  return tsChainedMethodCall("z", { identifier: "object", args: [tsObject(...pathParams)] });
+  return tsChainedMethodCall("z", { args: [tsObject(...pathParams)], identifier: "object" });
 }
 
 function getZodSchemaAndContentTypeFromContentObject(

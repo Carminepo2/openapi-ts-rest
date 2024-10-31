@@ -33,7 +33,7 @@ type ZodValidatorMethod =
   | "url"
   | "uuid";
 
-type ZodValidatorCall = TsFunctionCall & { identifier: ZodValidatorMethod };
+type ZodValidatorCall = { identifier: ZodValidatorMethod } & TsFunctionCall;
 
 export interface SchemaObjectToZodValidatorsOptions {
   /**
@@ -113,7 +113,7 @@ function buildDefaultValidator(schema: SchemaObject): ZodValidatorCall[] {
       .with(P._, noop)
       .exhaustive();
 
-    if (value !== undefined) zodValidators.push({ identifier: "default", args: [value] });
+    if (value !== undefined) zodValidators.push({ args: [value], identifier: "default" });
   }
 
   return zodValidators;
@@ -124,18 +124,18 @@ function buildZodStringValidators(schema: SchemaObject): ZodValidatorCall[] {
 
   if (!schema.enum) {
     if (schema.minLength) {
-      zodValidators.push({ identifier: "min", args: [schema.minLength] });
+      zodValidators.push({ args: [schema.minLength], identifier: "min" });
     }
 
     if (schema.maxLength) {
-      zodValidators.push({ identifier: "max", args: [schema.maxLength] });
+      zodValidators.push({ args: [schema.maxLength], identifier: "max" });
     }
   }
 
   if (schema.pattern) {
     zodValidators.push({
-      identifier: "regex",
       args: [tsRegex(sanitizeAndFormatRegex(schema.pattern))],
+      identifier: "regex",
     });
   }
 
@@ -143,9 +143,9 @@ function buildZodStringValidators(schema: SchemaObject): ZodValidatorCall[] {
     .with("uuid", () => ({ identifier: "uuid" }))
     .with("hostname", "uri", () => ({ identifier: "url" }))
     .with("email", () => ({ identifier: "email" }))
-    .with("date-time", () => ({ identifier: "datetime", args: [tsObject(["offset", true])] }))
-    .with("ipv4", () => ({ identifier: "ip", args: [tsObject(["version", "v4"])] }))
-    .with("ipv6", () => ({ identifier: "ip", args: [tsObject(["version", "v6"])] }))
+    .with("date-time", () => ({ args: [tsObject(["offset", true])], identifier: "datetime" }))
+    .with("ipv4", () => ({ args: [tsObject(["version", "v4"])], identifier: "ip" }))
+    .with("ipv6", () => ({ args: [tsObject(["version", "v6"])], identifier: "ip" }))
     .otherwise(noop);
 
   if (format) {
@@ -166,24 +166,24 @@ function buildZodNumberValidators(schema: SchemaObject): ZodValidatorCall[] {
 
   if (schema.minimum !== undefined) {
     zodValidators.push({
-      identifier: schema.exclusiveMinimum ? "gt" : "gte",
       args: [schema.minimum],
+      identifier: schema.exclusiveMinimum ? "gt" : "gte",
     });
   } else if (typeof schema.exclusiveMinimum === "number") {
-    zodValidators.push({ identifier: "gt", args: [schema.exclusiveMinimum] });
+    zodValidators.push({ args: [schema.exclusiveMinimum], identifier: "gt" });
   }
 
   if (schema.maximum !== undefined) {
     zodValidators.push({
-      identifier: schema.exclusiveMaximum ? "lt" : "lte",
       args: [schema.maximum],
+      identifier: schema.exclusiveMaximum ? "lt" : "lte",
     });
   } else if (typeof schema.exclusiveMaximum === "number") {
-    zodValidators.push({ identifier: "lt", args: [schema.exclusiveMaximum] });
+    zodValidators.push({ args: [schema.exclusiveMaximum], identifier: "lt" });
   }
 
   if (schema.multipleOf !== undefined) {
-    zodValidators.push({ identifier: "multipleOf", args: [schema.multipleOf] });
+    zodValidators.push({ args: [schema.multipleOf], identifier: "multipleOf" });
   }
 
   return zodValidators;
@@ -193,11 +193,11 @@ function buildZodArrayValidators(schema: SchemaObject): ZodValidatorCall[] {
   const zodValidators: ZodValidatorCall[] = [];
 
   if (schema.minItems !== undefined) {
-    zodValidators.push({ identifier: "min", args: [schema.minItems] });
+    zodValidators.push({ args: [schema.minItems], identifier: "min" });
   }
 
   if (schema.maxItems !== undefined) {
-    zodValidators.push({ identifier: "max", args: [schema.maxItems] });
+    zodValidators.push({ args: [schema.maxItems], identifier: "max" });
   }
 
   return zodValidators;

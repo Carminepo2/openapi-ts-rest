@@ -12,9 +12,9 @@ export type TsKeyword = "const" | "let" | "var";
 export type TsLiteral = boolean | null | number | string;
 export type TsLiteralOrExpression = TsLiteral | ts.Expression;
 export type TsFunctionCall = {
+  args?: TsLiteralOrExpression[];
   identifier: string;
   typeGenerics?: [string, ...string[]];
-  args?: TsLiteralOrExpression[];
 };
 
 /**
@@ -227,8 +227,8 @@ export function tsVariableDeclaration(
  * ```
  */
 export function tsFunctionCall({
-  identifier,
   args,
+  identifier,
   typeGenerics,
 }: TsFunctionCall): ts.CallExpression {
   return ts.factory.createCallExpression(
@@ -331,7 +331,7 @@ export function tsChainedMethodCall(
   if (chain.length === 0) return first;
 
   return chain.reduce(
-    (expression, { identifier, args, typeGenerics }) =>
+    (expression, { args, identifier, typeGenerics }) =>
       ts.factory.createCallExpression(
         ts.factory.createPropertyAccessExpression(
           expression,
