@@ -209,7 +209,7 @@ importers:
     devDependencies:
       '@ts-rest/core':
         specifier: ^3.45.2
-        version: 3.45.2(zod@3.23.8)
+        version: 3.51.0(@types/node@20.17.4)(zod@3.23.8)
       '@types/lodash':
         specifier: ^4.17.4
         version: 4.17.13
@@ -1323,11 +1323,14 @@ packages:
     resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}
     engines: {node: '>= 6'}
 
-  '@ts-rest/core@3.45.2':
-    resolution: {integrity: sha512-Eiv+Sa23MbsAd1Gx9vNJ+IFCDyLZNdJ+UuGMKbFvb+/NmgcBR1VL1UIVtEkd5DJxpYMMd8SLvW91RgB2TS8iPw==}
+  '@ts-rest/core@3.51.0':
+    resolution: {integrity: sha512-v6lnWEcpZj1UgN9wb84XQ+EORP1QEtncFumoXMJjno5ZUV6vdjKze3MYcQN0C6vjBpIJPQEaI/gab2jr4/0KzQ==}
     peerDependencies:
+      '@types/node': ^18.18.7 || >=20.8.4
       zod: ^3.22.3
     peerDependenciesMeta:
+      '@types/node':
+        optional: true
       zod:
         optional: true
 
@@ -5392,8 +5395,9 @@ snapshots:
   '@tootallnate/once@1.1.2':
     optional: true
 
-  '@ts-rest/core@3.45.2(zod@3.23.8)':
+  '@ts-rest/core@3.51.0(@types/node@20.17.4)(zod@3.23.8)':
     optionalDependencies:
+      '@types/node': 20.17.4
       zod: 3.23.8
 
   '@types/babel__core@7.20.5':
