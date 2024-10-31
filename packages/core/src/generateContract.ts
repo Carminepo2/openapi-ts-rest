@@ -50,7 +50,9 @@ export async function generateContract({
     .add(tsNamedImport({ from: "zod", import_: ["z"] }))
     .add(tsNewLine())
     // const c = initContract();
-    .add(tsVariableDeclaration("const", "c", { eq: tsFunctionCall("initContract") }))
+    .add(
+      tsVariableDeclaration("const", "c", { eq: tsFunctionCall({ identifier: "initContract" }) })
+    )
     .add(tsNewLine());
 
   if (ctx.topologicallySortedSchemas.length > 0) {
@@ -88,7 +90,10 @@ export async function generateContract({
   // export const contract = c.router({ ... });
   ast.add(
     tsVariableDeclaration("const", "contract", {
-      eq: tsChainedMethodCall("c", ["router", tsObject(...tsRestAstContracts)]),
+      eq: tsChainedMethodCall("c", {
+        identifier: "router",
+        args: [tsObject(...tsRestAstContracts)],
+      }),
       export_: true,
     })
   );

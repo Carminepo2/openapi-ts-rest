@@ -11,7 +11,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["min", 2]);
+    expect(result[0]).toEqual({ identifier: "min", args: [2] });
   });
 
   it("should correctly get zod validations methods with string schema with maxLenght validation", () => {
@@ -21,7 +21,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["max", 2]);
+    expect(result[0]).toEqual({ identifier: "max", args: [2] });
   });
 
   it("should not set maxLenght nor minLenght validation is the string schema is an enum", () => {
@@ -42,7 +42,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0][0]).toEqual("regex");
+    expect(result[0].identifier).toEqual("regex");
   });
 
   it("should correctly get zod validations methods with string schema with regex validation", () => {
@@ -52,17 +52,17 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0][0]).toEqual("regex");
+    expect(result[0].identifier).toEqual("regex");
   });
 
   it.each([
-    ["uuid", ["uuid"]],
-    ["hostname", ["url"]],
-    ["uri", ["url"]],
-    ["email", ["email"]],
-    ["date-time", ["datetime", tsObject(["offset", true])]],
-    ["ipv4", ["ip", tsObject(["version", "v4"])]],
-    ["ipv6", ["ip", tsObject(["version", "v6"])]],
+    ["uuid", { identifier: "uuid" }],
+    ["hostname", { identifier: "url" }],
+    ["uri", { identifier: "url" }],
+    ["email", { identifier: "email" }],
+    ["date-time", { identifier: "datetime", args: [tsObject(["offset", true])] }],
+    ["ipv4", { identifier: "ip", args: [tsObject(["version", "v4"])] }],
+    ["ipv6", { identifier: "ip", args: [tsObject(["version", "v6"])] }],
   ])(
     "should correctly transform a schema with %s formatting validation",
     (formatOption, expectedResult) => {
@@ -92,7 +92,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["default", "default"]);
+    expect(result[0]).toEqual({ identifier: "default", args: ["default"] });
   });
 
   it("should correctly get zod validations methods with a integer schema", () => {
@@ -101,7 +101,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["int"]);
+    expect(result[0]).toEqual({ identifier: "int" });
   });
 
   it("should correctly get zod validations methods with a integer schema and a minimum value validation", () => {
@@ -111,8 +111,8 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(2);
-    expect(result[0]).toEqual(["int"]);
-    expect(result[1]).toEqual(["gte", 2]);
+    expect(result[0]).toEqual({ identifier: "int" });
+    expect(result[1]).toEqual({ identifier: "gte", args: [2] });
   });
 
   it("should correctly get zod validations methods with a number schema and a minimum value validation", () => {
@@ -122,7 +122,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["gte", 2]);
+    expect(result[0]).toEqual({ identifier: "gte", args: [2] });
   });
 
   it("should correctly get zod validations methods with a number schema and a minimum value validation", () => {
@@ -132,7 +132,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["gte", 2]);
+    expect(result[0]).toEqual({ identifier: "gte", args: [2] });
   });
 
   it("should correctly get zod validations methods with a number schema and a exclusiveMinimum with a number value validation", () => {
@@ -142,7 +142,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["gt", 2]);
+    expect(result[0]).toEqual({ identifier: "gt", args: [2] });
   });
 
   it("should correctly get zod validations methods with a number schema and a exclusiveMinimum with a boolean value validation", () => {
@@ -153,7 +153,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["gt", 2]);
+    expect(result[0]).toEqual({ identifier: "gt", args: [2] });
   });
 
   it("should correctly get zod validations methods with a number schema and a maximum value validation", () => {
@@ -163,7 +163,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["lte", 2]);
+    expect(result[0]).toEqual({ identifier: "lte", args: [2] });
   });
 
   it("should correctly get zod validations methods with a number schema and a exclusiveMaximum with a number value validation", () => {
@@ -173,7 +173,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["lt", 2]);
+    expect(result[0]).toEqual({ identifier: "lt", args: [2] });
   });
 
   it("should correctly get zod validations methods with a number schema and a exclusiveMaximum with a boolean value validation", () => {
@@ -184,7 +184,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["lt", 2]);
+    expect(result[0]).toEqual({ identifier: "lt", args: [2] });
   });
 
   it("should correctly get zod validations methods with a number schema and a multipleOf validation", () => {
@@ -194,7 +194,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["multipleOf", 2]);
+    expect(result[0]).toEqual({ identifier: "multipleOf", args: [2] });
   });
 
   it.each(["integer", "number"])(
@@ -220,7 +220,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["default", 1]);
+    expect(result[0]).toEqual({ identifier: "default", args: [1] });
   });
 
   it("should correctly set default value for integer schema", () => {
@@ -230,7 +230,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(2);
-    expect(result[1]).toEqual(["default", 1]);
+    expect(result[1]).toEqual({ identifier: "default", args: [1] });
   });
 
   it("should correctly set default value for boolean schema", () => {
@@ -240,7 +240,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["default", true]);
+    expect(result[0]).toEqual({ identifier: "default", args: [true] });
   });
 
   it("should not set any default values for null or object schemas", () => {
@@ -265,7 +265,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["min", 2]);
+    expect(result[0]).toEqual({ identifier: "min", args: [2] });
   });
 
   it("should correctly get zod validations methods with an array schema and a maxItems validation", () => {
@@ -275,7 +275,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["max", 2]);
+    expect(result[0]).toEqual({ identifier: "max", args: [2] });
   });
 
   it("should correctly set default value for array schema", () => {
@@ -285,7 +285,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["default", tsArray(1, 2, 3)]);
+    expect(result[0]).toEqual({ identifier: "default", args: [tsArray(1, 2, 3)] });
   });
 
   it("should not add any validation if the schema is not a string, number or array", () => {
@@ -303,7 +303,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["nullish"]);
+    expect(result[0]).toEqual({ identifier: "nullish" });
   });
 
   it("should correctly add nullish validation if the schema is nullable but is required", () => {
@@ -316,7 +316,7 @@ describe("schemaObjectToZodValidators", () => {
     );
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["nullable"]);
+    expect(result[0]).toEqual({ identifier: "nullable" });
   });
 
   it("should correctly add the correct validation if the schema is expressely not required", () => {
@@ -328,7 +328,7 @@ describe("schemaObjectToZodValidators", () => {
     );
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["optional"]);
+    expect(result[0]).toEqual({ identifier: "optional" });
   });
 
   it("should add the passthrough validation if the schema is of type object and the `additionalProperties` is not set", () => {
@@ -337,7 +337,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["passthrough"]);
+    expect(result[0]).toEqual({ identifier: "passthrough" });
   });
 
   it("should add the passthrough validation if the schema is of type object and the `additionalProperties` is set to true", () => {
@@ -347,7 +347,7 @@ describe("schemaObjectToZodValidators", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["passthrough"]);
+    expect(result[0]).toEqual({ identifier: "passthrough" });
   });
 
   it("should not add the passthrough validation if the schema is of type object and the `additionalProperties` is set to false", () => {
@@ -368,7 +368,7 @@ describe("schemaObjectToZodValidators", () => {
     );
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(["optional"]);
+    expect(result[0]).toEqual({ identifier: "optional" });
   });
 
   it("shoud not return optional validators if the schema passed is a reference object and is required", () => {
