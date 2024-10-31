@@ -180,7 +180,7 @@ function toContractBodyAndContentType(
   apiOperation: APIOperationObject,
   ctx: Context
 ): [["body", TsLiteralOrExpression], ["contentType", string]] | [["body", TsLiteralOrExpression]] {
-  if (!body) return [["body", tsChainedMethodCall("z", ["void"])]];
+  if (!body) return [["body", tsChainedMethodCall("c", ["noBody"])]];
 
   const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(body.content, ctx);
 
@@ -234,7 +234,7 @@ function getZodSchemaAndContentTypeFromContentObject(
 } {
   const defaultReturn = {
     contentType: APPLICATION_JSON,
-    zodSchema: tsChainedMethodCall("z", ["void"]),
+    zodSchema: tsChainedMethodCall("c", ["noBody"]),
   };
 
   if (!content) {

@@ -131,20 +131,20 @@ describe("apiOperationToAstTsRestContract", () => {
     );
   });
 
-  it("should add z.void() body if the operation method is different from get and has no request body", () => {
+  it("should add c.noBody() body if the operation method is different from get and has no request body", () => {
     expect(
       wrappedApiOperationToAstTsRestContract({
         method: "post",
       })
-    ).toContain(`"body": z.void()`);
+    ).toContain(`"body": c.noBody()`);
   });
 
-  it("should not add z.void() body if the operation method GET and has no request body", () => {
+  it("should not add c.noBody() body if the operation method GET and has no request body", () => {
     expect(
       wrappedApiOperationToAstTsRestContract({
         method: "get",
       })
-    ).not.toContain(`"body": z.void()`);
+    ).not.toContain(`"body": c.noBody()`);
   });
 
   it("should throw an error if a body has an unsupported content type", () => {
@@ -177,7 +177,7 @@ describe("apiOperationToAstTsRestContract", () => {
         },
       },
     });
-    expect(result).toContain('"body": z.void()');
+    expect(result).toContain('"body": c.noBody()');
   });
 
   it("should correctly convert a body with a schema", () => {
@@ -301,7 +301,7 @@ describe("apiOperationToAstTsRestContract", () => {
       },
     });
 
-    expect(result).contain("204: z.void()");
+    expect(result).contain("204: c.noBody()");
   });
 
   it.each(["2xx", "4xx", "5XX"])(
@@ -607,7 +607,7 @@ describe("apiOperationToAstTsRestContract", () => {
         },
       },
     });
-    expect(result).toContain("204: z.void()");
+    expect(result).toContain("204: c.noBody()");
   });
 
   it("should use the operationId as the contract operation name if given", () => {
