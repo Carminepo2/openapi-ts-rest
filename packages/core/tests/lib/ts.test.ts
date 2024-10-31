@@ -123,7 +123,7 @@ describe("ts", () => {
 
     it("should create a variable declaration statement with a function call and an export", () => {
       const result = tsVariableDeclaration("var", "foo", {
-        eq: tsFunctionCall("fn", "arg"),
+        eq: tsFunctionCall({ args: ["arg"], identifier: "fn" }),
         export_: true,
       });
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"export var foo = fn("arg");"`);
@@ -132,13 +132,18 @@ describe("ts", () => {
 
   describe("tsFunctionCall", () => {
     it("should create a function call expression", () => {
-      const result = tsFunctionCall("foo", "bar", "baz");
+      const result = tsFunctionCall({ args: ["bar", "baz"], identifier: "foo" });
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"foo("bar", "baz")"`);
     });
 
     it("should create a function call expression with no arguments", () => {
-      const result = tsFunctionCall("foo");
+      const result = tsFunctionCall({ identifier: "foo" });
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"foo()"`);
+    });
+
+    it("should create a function call expression with a type generic", () => {
+      const result = tsFunctionCall({ identifier: "foo", typeGenerics: ["T"] });
+      expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"foo<T>()"`);
     });
   });
 
@@ -155,10 +160,18 @@ describe("ts", () => {
 
     it("should create a complex object with nested objects and arrays", () => {
       const result = tsObject(
-        ["foo", tsObject(["bar", tsArray("baz", tsFunctionCall("fn", "arg"))])],
+        [
+          "foo",
+          tsObject(["bar", tsArray("baz", tsFunctionCall({ args: ["arg"], identifier: "fn" }))]),
+        ],
         [
           "qux",
-          tsArray(tsObject(["quux", "quuz"], ["corge", tsFunctionCall("fn", "arg", tsObject())])),
+          tsArray(
+            tsObject(
+              ["quux", "quuz"],
+              ["corge", tsFunctionCall({ args: ["arg", tsObject()], identifier: "fn" })]
+            )
+          ),
         ]
       );
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(
@@ -203,9 +216,9 @@ describe("ts", () => {
     it("should create a chained method call expression", () => {
       const result = tsChainedMethodCall(
         "foo",
-        ["bar", 1],
-        ["baz", tsObject()],
-        ["qux", tsArray("quux")]
+        { args: [1], identifier: "bar" },
+        { args: [tsObject()], identifier: "baz" },
+        { args: [tsArray("quux")], identifier: "qux" }
       );
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(
         `"foo.bar(1).baz({}).qux(["quux"])"`
@@ -218,7 +231,7 @@ describe("ts", () => {
     });
 
     it("should create a chained method call with an Expression as the first argument", () => {
-      const result = tsChainedMethodCall(tsObject(), ["foo", 1]);
+      const result = tsChainedMethodCall(tsObject(), { args: [1], identifier: "foo" });
       expect(prepareForSnapshot(result)).toMatchInlineSnapshot(`"{}.foo(1)"`);
     });
   });

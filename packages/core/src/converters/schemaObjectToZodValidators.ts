@@ -1,7 +1,13 @@
 import { type ReferenceObject, type SchemaObject, isReferenceObject } from "openapi3-ts";
 import { P, match } from "ts-pattern";
 
-import { type TsLiteralOrExpression, tsArray, tsObject, tsRegex } from "../lib/ts";
+import {
+  type TsFunctionCall,
+  type TsLiteralOrExpression,
+  tsArray,
+  tsObject,
+  tsRegex,
+} from "../lib/ts";
 import { noop } from "../lib/utils";
 
 type ZodValidatorMethod =
@@ -27,7 +33,7 @@ type ZodValidatorMethod =
   | "url"
   | "uuid";
 
-type ZodValidatorCall = [zodValidatorMethod: ZodValidatorMethod, ...args: TsLiteralOrExpression[]];
+type ZodValidatorCall = { identifier: ZodValidatorMethod } & TsFunctionCall;
 
 export interface SchemaObjectToZodValidatorsOptions {
   /**
@@ -87,10 +93,10 @@ function buildOptionalNullableValidators(
   const zodValidators: ZodValidatorCall[] = [];
 
   if ("nullable" in schema && schema.nullable && !options?.isRequired)
-    zodValidators.push(["nullish"]);
-  else if ("nullable" in schema && schema.nullable) zodValidators.push(["nullable"]);
+    zodValidators.push({ identifier: "nullish" });
+  else if ("nullable" in schema && schema.nullable) zodValidators.push({ identifier: "nullable" });
   else if (typeof options?.isRequired !== "undefined" && !options.isRequired)
-    zodValidators.push(["optional"]);
+    zodValidators.push({ identifier: "optional" });
 
   return zodValidators;
 }
@@ -107,7 +113,7 @@ function buildDefaultValidator(schema: SchemaObject): ZodValidatorCall[] {
       .with(P._, noop)
       .exhaustive();
 
-    if (value !== undefined) zodValidators.push(["default", value]);
+    if (value !== undefined) zodValidators.push({ args: [value], identifier: "default" });
   }
 
   return zodValidators;
@@ -118,25 +124,28 @@ function buildZodStringValidators(schema: SchemaObject): ZodValidatorCall[] {
 
   if (!schema.enum) {
     if (schema.minLength) {
-      zodValidators.push(["min", schema.minLength]);
+      zodValidators.push({ args: [schema.minLength], identifier: "min" });
     }
 
     if (schema.maxLength) {
-      zodValidators.push(["max", schema.maxLength]);
+      zodValidators.push({ args: [schema.maxLength], identifier: "max" });
     }
   }
 
   if (schema.pattern) {
-    zodValidators.push(["regex", tsRegex(sanitizeAndFormatRegex(schema.pattern))]);
+    zodValidators.push({
+      args: [tsRegex(sanitizeAndFormatRegex(schema.pattern))],
+      identifier: "regex",
+    });
   }
 
   const format = match<typeof schema.format, ZodValidatorCall | undefined>(schema.format)
-    .with("uuid", () => ["uuid"])
-    .with("hostname", "uri", () => ["url"])
-    .with("email", () => ["email"])
-    .with("date-time", () => ["datetime", tsObject(["offset", true])])
-    .with("ipv4", () => ["ip", tsObject(["version", "v4"])])
-    .with("ipv6", () => ["ip", tsObject(["version", "v6"])])
+    .with("uuid", () => ({ identifier: "uuid" }))
+    .with("hostname", "uri", () => ({ identifier: "url" }))
+    .with("email", () => ({ identifier: "email" }))
+    .with("date-time", () => ({ args: [tsObject(["offset", true])], identifier: "datetime" }))
+    .with("ipv4", () => ({ args: [tsObject(["version", "v4"])], identifier: "ip" }))
+    .with("ipv6", () => ({ args: [tsObject(["version", "v6"])], identifier: "ip" }))
     .otherwise(noop);
 
   if (format) {
@@ -152,23 +161,29 @@ function buildZodNumberValidators(schema: SchemaObject): ZodValidatorCall[] {
   if (schema.enum) return zodValidators;
 
   if (schema.type === "integer") {
-    zodValidators.push(["int"]);
+    zodValidators.push({ identifier: "int" });
   }
 
   if (schema.minimum !== undefined) {
-    zodValidators.push([schema.exclusiveMinimum ? "gt" : "gte", schema.minimum]);
+    zodValidators.push({
+      args: [schema.minimum],
+      identifier: schema.exclusiveMinimum ? "gt" : "gte",
+    });
   } else if (typeof schema.exclusiveMinimum === "number") {
-    zodValidators.push(["gt", schema.exclusiveMinimum]);
+    zodValidators.push({ args: [schema.exclusiveMinimum], identifier: "gt" });
   }
 
   if (schema.maximum !== undefined) {
-    zodValidators.push([schema.exclusiveMaximum ? "lt" : "lte", schema.maximum]);
+    zodValidators.push({
+      args: [schema.maximum],
+      identifier: schema.exclusiveMaximum ? "lt" : "lte",
+    });
   } else if (typeof schema.exclusiveMaximum === "number") {
-    zodValidators.push(["lt", schema.exclusiveMaximum]);
+    zodValidators.push({ args: [schema.exclusiveMaximum], identifier: "lt" });
   }
 
   if (schema.multipleOf !== undefined) {
-    zodValidators.push(["multipleOf", schema.multipleOf]);
+    zodValidators.push({ args: [schema.multipleOf], identifier: "multipleOf" });
   }
 
   return zodValidators;
@@ -178,11 +193,11 @@ function buildZodArrayValidators(schema: SchemaObject): ZodValidatorCall[] {
   const zodValidators: ZodValidatorCall[] = [];
 
   if (schema.minItems !== undefined) {
-    zodValidators.push(["min", schema.minItems]);
+    zodValidators.push({ args: [schema.minItems], identifier: "min" });
   }
 
   if (schema.maxItems !== undefined) {
-    zodValidators.push(["max", schema.maxItems]);
+    zodValidators.push({ args: [schema.maxItems], identifier: "max" });
   }
 
   return zodValidators;
@@ -197,7 +212,7 @@ function buildZodObjectValidators(
   match(schema.additionalProperties)
     .with(false, noop)
     .when(() => options?.strict === true, noop)
-    .otherwise(() => zodValidators.push(["passthrough"]));
+    .otherwise(() => zodValidators.push({ identifier: "passthrough" }));
 
   return zodValidators;
 }

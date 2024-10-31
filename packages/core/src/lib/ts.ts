@@ -11,7 +11,11 @@ import { unexpectedError } from "../domain/errors";
 export type TsKeyword = "const" | "let" | "var";
 export type TsLiteral = boolean | null | number | string;
 export type TsLiteralOrExpression = TsLiteral | ts.Expression;
-export type TsFunctionCall = [identifier: string, ...args: TsLiteralOrExpression[]];
+export type TsFunctionCall = {
+  args?: TsLiteralOrExpression[];
+  identifier: string;
+  typeGenerics?: [string, ...string[]];
+};
 
 /**
  * Creates an AST TypeScript named import statement.
@@ -207,21 +211,32 @@ export function tsVariableDeclaration(
 /**
  * Creates an AST TypeScript function call expression.
  *
- * @param fn - The first argument is the identifier (name) of the function. The remaining arguments are the parameters to pass to the function.
- * @returns  An AST TypeScript function call expression.
+ * @param identifier - The name of the function to be called.
+ * @param args - An array of arguments to pass to the function, each of which should be a valid TypeScript expression.
+ * @param typeGenerics - An optional array of generic type parameters for the function call, each represented as a string.
+ * @returns A `ts.CallExpression` representing a TypeScript function call.
  *
  * @example
  * ```ts
- * tsFunctionCall("fn", "arg1", "arg2");
- * // fn("arg1", "arg2");
+ * tsFunctionCall({
+ *   identifier: "myFunction",
+ *   args: ["arg1", "arg2"],
+ *   typeGenerics: ["T"]
+ * });
+ * // Resulting code: myFunction<T>("arg1", "arg2");
  * ```
  */
-export function tsFunctionCall(...fn: TsFunctionCall): ts.CallExpression {
-  const [identifier, ...fnCallArgs] = fn;
+export function tsFunctionCall({
+  args,
+  identifier,
+  typeGenerics,
+}: TsFunctionCall): ts.CallExpression {
   return ts.factory.createCallExpression(
     ts.factory.createIdentifier(identifier),
-    undefined,
-    fnCallArgs.map(tsLiteralOrExpression)
+    typeGenerics?.map((t) =>
+      ts.factory.createTypeReferenceNode(ts.factory.createIdentifier(t), undefined)
+    ),
+    args?.map(tsLiteralOrExpression)
   );
 }
 
@@ -288,17 +303,22 @@ export function tsArray(...elements: TsLiteralOrExpression[]): ts.ArrayLiteralEx
 
 /**
  * Creates an AST TypeScript method call expression.
- * Method calls are chained together.
+ * Chains multiple method calls on an initial identifier or expression.
  *
- * @param identifier the identifier of the object to call the method on
- * @param param1 the method to call
- * @param chain the rest of the method calls
- * @returns the AST TypeScript property call expression
+ * @param identifier - The base identifier or expression to call methods on (e.g., an object or function name).
+ * @param chain - An array of method call configurations to chain onto the base identifier. Each method call can specify:
+ *   - `identifier`: The method name to call.
+ *   - `args`: Arguments to pass to the method.
+ *   - `typeGenerics`: Optional generic type arguments for the method.
+ * @returns A `ts.Expression` representing a chain of method calls.
  *
  * @example
  * ```ts
- * tsPropertyCall("foo", ["bar", "baz"], ["qux", "quux"]);
- * // foo.bar("baz").qux("quux")
+ * tsChainedMethodCall("foo",
+ *   { identifier: "bar", args: ["baz"] },
+ *   { identifier: "qux", args: ["quux"], typeGenerics: ["T"] }
+ * );
+ * // Resulting code: foo.bar("baz").qux<T>("quux")
  * ```
  */
 export function tsChainedMethodCall(
@@ -311,11 +331,16 @@ export function tsChainedMethodCall(
   if (chain.length === 0) return first;
 
   return chain.reduce(
-    (expression, [method, ...args]) =>
+    (expression, { args, identifier, typeGenerics }) =>
       ts.factory.createCallExpression(
-        ts.factory.createPropertyAccessExpression(expression, ts.factory.createIdentifier(method)),
-        undefined,
-        args.map(tsLiteralOrExpression)
+        ts.factory.createPropertyAccessExpression(
+          expression,
+          ts.factory.createIdentifier(identifier)
+        ),
+        typeGenerics?.map((t) =>
+          ts.factory.createTypeReferenceNode(ts.factory.createIdentifier(t), undefined)
+        ),
+        args?.map(tsLiteralOrExpression)
       ),
     first
   );

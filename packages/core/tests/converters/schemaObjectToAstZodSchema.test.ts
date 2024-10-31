@@ -52,7 +52,7 @@ describe("schemaObjectToAstZodSchema", () => {
     ).toMatchInlineSnapshot(`"z.string().regex(/.*/)"`);
     expect(
       wrappedSchemaObjectToAstZodSchema({ format: "binary", type: "string" })
-    ).toMatchInlineSnapshot(`"z.instanceof(File)"`);
+    ).toMatchInlineSnapshot(`"z.custom<File>()"`);
   });
 
   test("snapshot testing schema type number", () => {

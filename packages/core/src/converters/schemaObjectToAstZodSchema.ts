@@ -11,7 +11,6 @@ import {
   type TsLiteralOrExpression,
   tsArray,
   tsChainedMethodCall,
-  tsIdentifier,
   tsObject,
 } from "../lib/ts";
 import { generatePowerset } from "../lib/utils";
@@ -24,6 +23,7 @@ type ZodType =
   | "any"
   | "array"
   | "boolean"
+  | "custom"
   | "enum"
   | "instanceof"
   | "literal"
@@ -36,7 +36,7 @@ type ZodType =
   | "union"
   | "unknown";
 
-type ZodTypeMethodCall = [zodType: ZodType, ...args: TsLiteralOrExpression[]] | [zodType: ZodType];
+type ZodTypeMethodCall = { identifier: ZodType } & TsFunctionCall;
 
 /**
  * Builds the ast expression for a Zod schema.
@@ -110,25 +110,33 @@ export function schemaObjectToAstZodSchema(
       { type: P.array(P.any) },
       (s) => s.type.length > 1,
       (s) =>
-        toZodSchemaWithValidators("z", [
-          "union",
-          tsArray(...s.type.map((type) => schemaObjectToAstZodSchema({ ...schema, type }, ctx))),
-        ])
+        toZodSchemaWithValidators("z", {
+          args: [
+            tsArray(...s.type.map((type) => schemaObjectToAstZodSchema({ ...schema, type }, ctx))),
+          ],
+          identifier: "union",
+        })
     )
     .with(
       { type: "string" },
       () => schema.format === "binary",
-      () => toZodSchemaWithValidators("z", ["instanceof", tsIdentifier("File")])
+      () => toZodSchemaWithValidators("z", { identifier: "custom", typeGenerics: ["File"] })
     )
-    .with({ type: "string" }, () => toZodSchemaWithValidators("z", ["string"]))
-    .with({ type: "number" }, { type: "integer" }, () => toZodSchemaWithValidators("z", ["number"]))
-    .with({ type: "boolean" }, () => toZodSchemaWithValidators("z", ["boolean"]))
-    .with({ type: "null" }, () => toZodSchemaWithValidators("z", ["null"]))
+    .with({ type: "string" }, () => toZodSchemaWithValidators("z", { identifier: "string" }))
+    .with({ type: "number" }, { type: "integer" }, () =>
+      toZodSchemaWithValidators("z", { identifier: "number" })
+    )
+    .with({ type: "boolean" }, () => toZodSchemaWithValidators("z", { identifier: "boolean" }))
+    .with({ type: "null" }, () => toZodSchemaWithValidators("z", { identifier: "null" }))
     .with({ type: "array" }, { items: P.nonNullable }, () =>
-      toZodSchemaWithValidators("z", [
-        "array",
-        !schema.items ? toZodSchema("z", ["any"]) : schemaObjectToAstZodSchema(schema.items, ctx),
-      ])
+      toZodSchemaWithValidators("z", {
+        args: [
+          !schema.items
+            ? toZodSchema("z", { identifier: "any" })
+            : schemaObjectToAstZodSchema(schema.items, ctx),
+        ],
+        identifier: "array",
+      })
     )
     .with(
       { type: "object" },
@@ -137,26 +145,33 @@ export function schemaObjectToAstZodSchema(
       () => {
         if (!schema.properties || Object.keys(schema.properties).length === 0) {
           if (schema.additionalProperties === true) {
-            return toZodSchemaWithValidators("z", ["record", toZodSchema("z", ["any"])], {
-              strict: true,
-            });
+            return toZodSchemaWithValidators(
+              "z",
+              { args: [toZodSchema("z", { identifier: "any" })], identifier: "record" },
+              {
+                strict: true,
+              }
+            );
           }
 
           if (typeof schema.additionalProperties === "object") {
             return toZodSchemaWithValidators(
               "z",
-              ["record", schemaObjectToAstZodSchema(schema.additionalProperties, ctx)],
+              {
+                args: [schemaObjectToAstZodSchema(schema.additionalProperties, ctx)],
+                identifier: "record",
+              },
               { strict: true }
             );
           }
         }
-        return toZodSchemaWithValidators("z", [
-          "object",
-          tsObject(...buildSchemaObjectProperties(schema, ctx)),
-        ]);
+        return toZodSchemaWithValidators("z", {
+          args: [tsObject(...buildSchemaObjectProperties(schema, ctx))],
+          identifier: "object",
+        });
       }
     )
-    .with({ type: P.nullish }, () => toZodSchemaWithValidators("z", ["unknown"]))
+    .with({ type: P.nullish }, () => toZodSchemaWithValidators("z", { identifier: "unknown" }))
     .otherwise((s) => {
       throw unexpectedError({
         detail: `Unsupported schema type:\n${JSON.stringify(s, null, 2)}`,
@@ -195,31 +210,39 @@ function fromEnumSchemaObject(
 
   if (schema.type === "string") {
     if (schemaEnum.length === 1) {
-      return buildZodSchemaWithValidators("z", ["literal", resolveEnumValue(schemaEnum[0])]);
+      return buildZodSchemaWithValidators("z", {
+        args: [resolveEnumValue(schemaEnum[0])],
+        identifier: "literal",
+      });
     }
 
-    return buildZodSchemaWithValidators("z", [
-      "enum",
-      tsArray(...schemaEnum.map(resolveEnumValue)),
-    ]);
+    return buildZodSchemaWithValidators("z", {
+      args: [tsArray(...schemaEnum.map(resolveEnumValue))],
+      identifier: "enum",
+    });
   }
 
   if (schemaEnum.some((e) => typeof e === "string")) {
-    return buildZodSchemaWithValidators("z", ["never"]);
+    return buildZodSchemaWithValidators("z", { identifier: "never" });
   }
 
   if (schemaEnum.length === 1) {
-    return buildZodSchemaWithValidators("z", ["literal", schemaEnum[0]]);
+    return buildZodSchemaWithValidators("z", { args: [schemaEnum[0]], identifier: "literal" });
   }
 
-  return buildZodSchemaWithValidators("z", [
-    "enum",
-    tsArray(
-      ...schemaEnum.map((value) =>
-        buildZodSchemaWithValidators("z", ["literal", resolveEnumValue(value)])
-      )
-    ),
-  ]);
+  return buildZodSchemaWithValidators("z", {
+    args: [
+      tsArray(
+        ...schemaEnum.map((value) =>
+          buildZodSchemaWithValidators("z", {
+            args: [resolveEnumValue(value)],
+            identifier: "literal",
+          })
+        )
+      ),
+    ],
+    identifier: "enum",
+  });
 }
 
 /**
@@ -247,12 +270,14 @@ function fromOneOfSchemaObject(
     return schemaObjectToAstZodSchema(schema.oneOf[0], ctx, validatorOptions);
   }
 
-  return toZodSchema("z", [
-    "union",
-    tsArray(
-      ...schema.oneOf.map((schema) => schemaObjectToAstZodSchema(schema, ctx, validatorOptions))
-    ),
-  ]);
+  return toZodSchema("z", {
+    args: [
+      tsArray(
+        ...schema.oneOf.map((schema) => schemaObjectToAstZodSchema(schema, ctx, validatorOptions))
+      ),
+    ],
+    identifier: "union",
+  });
 }
 
 /**
@@ -286,7 +311,7 @@ function fromAllOfSchemaObject(
   return toZodSchema(
     schemas[0], // Schema1
     undefined,
-    ...schemas.slice(1).map((s) => ["and", s] satisfies TsFunctionCall) // .and(Schema2).and(Schema3) ...
+    ...schemas.slice(1).map((s) => ({ args: [s], identifier: "and" }) satisfies TsFunctionCall) // .and(Schema2).and(Schema3) ...
   );
 }
 
@@ -324,11 +349,11 @@ function fromAnyOfSchemaObject(
     return toZodSchema(
       set[0], // Schema1
       undefined,
-      ...set.slice(1).map((s) => ["merge", s] satisfies TsFunctionCall) // .merge(Schema2).merge(Schema3) ...
+      ...set.slice(1).map((s) => ({ args: [s], identifier: "merge" }) satisfies TsFunctionCall) // .merge(Schema2).merge(Schema3) ...
     );
   });
 
-  return toZodSchema("z", ["union", tsArray(...subsets)]);
+  return toZodSchema("z", { args: [tsArray(...subsets)], identifier: "union" });
 }
 
 /**

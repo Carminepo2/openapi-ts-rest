@@ -105,10 +105,10 @@ function toContractResponses(
       }
       return [
         statusCodeNum,
-        tsChainedMethodCall("c", [
-          "otherResponse",
-          tsObject(["contentType", contentType], ["body", zodSchema]),
-        ]),
+        tsChainedMethodCall("c", {
+          args: [tsObject(["contentType", contentType], ["body", zodSchema])],
+          identifier: "otherResponse",
+        }),
       ];
     }
 
@@ -180,7 +180,7 @@ function toContractBodyAndContentType(
   apiOperation: APIOperationObject,
   ctx: Context
 ): [["body", TsLiteralOrExpression], ["contentType", string]] | [["body", TsLiteralOrExpression]] {
-  if (!body) return [["body", tsChainedMethodCall("c", ["noBody"])]];
+  if (!body) return [["body", tsChainedMethodCall("c", { identifier: "noBody" })]];
 
   const { contentType, zodSchema } = getZodSchemaAndContentTypeFromContentObject(body.content, ctx);
 
@@ -222,7 +222,7 @@ function toContractParameters(
     return [param.name, schemaObjectToAstZodSchema(objectSchema, ctx, { isRequired })];
   });
 
-  return tsChainedMethodCall("z", ["object", tsObject(...pathParams)]);
+  return tsChainedMethodCall("z", { args: [tsObject(...pathParams)], identifier: "object" });
 }
 
 function getZodSchemaAndContentTypeFromContentObject(
@@ -234,7 +234,7 @@ function getZodSchemaAndContentTypeFromContentObject(
 } {
   const defaultReturn = {
     contentType: APPLICATION_JSON,
-    zodSchema: tsChainedMethodCall("c", ["noBody"]),
+    zodSchema: tsChainedMethodCall("c", { identifier: "noBody" }),
   };
 
   if (!content) {
