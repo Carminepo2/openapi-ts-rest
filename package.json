@@ -8,7 +8,7 @@
     "eslint-plugin-functional": "^6.5.1",
     "eslint-plugin-perfectionist": "^2.10.0",
     "eslint-plugin-react": "^7.34.1",
-    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-sonarjs": "^1.0.3",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "turbo": "^2.0.3",
