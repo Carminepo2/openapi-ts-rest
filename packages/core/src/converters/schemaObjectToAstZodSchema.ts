@@ -72,7 +72,7 @@ export function schemaObjectToAstZodSchema(
   validatorOptions?: SchemaObjectToZodValidatorsOptions
 ): Expression {
   function toZodSchemaWithValidators(
-    identifier: string,
+    identifier: Expression | string,
     zodMethod?: ZodTypeMethodCall,
     customValidatorOptions = validatorOptions
   ): Expression {
@@ -97,9 +97,9 @@ export function schemaObjectToAstZodSchema(
   const schema = ctx.resolveObject(schemaOrRef);
 
   return match(schema)
-    .with({ oneOf: P.nonNullable }, (s) => fromOneOfSchemaObject(s.oneOf, ctx))
-    .with({ allOf: P.nonNullable }, (s) => fromAllOfSchemaObject(s.allOf, ctx))
-    .with({ anyOf: P.nonNullable }, (s) => fromAnyOfSchemaObject(s.anyOf, ctx))
+    .with({ oneOf: P.nonNullable }, (s) => toZodSchemaWithValidators(fromOneOfSchemaObject(s, ctx)))
+    .with({ allOf: P.nonNullable }, (s) => toZodSchemaWithValidators(fromAllOfSchemaObject(s, ctx)))
+    .with({ anyOf: P.nonNullable }, (s) => toZodSchemaWithValidators(fromAnyOfSchemaObject(s, ctx)))
     .with({ enum: P.nonNullable }, (s) => fromEnumSchemaObject(s, toZodSchemaWithValidators))
     .with(
       { type: P.array(P.any) },
@@ -239,16 +239,19 @@ function fromEnumSchemaObject(
  * ```
  */
 function fromOneOfSchemaObject(
-  oneOf: NonNullable<SchemaObject["oneOf"]>,
-  ctx: Context
+  schema: { oneOf: NonNullable<SchemaObject["oneOf"]> } & SchemaObject,
+  ctx: Context,
+  validatorOptions?: SchemaObjectToZodValidatorsOptions
 ): Expression {
-  if (oneOf.length === 1) {
-    return schemaObjectToAstZodSchema(oneOf[0], ctx);
+  if (schema.oneOf.length === 1) {
+    return schemaObjectToAstZodSchema(schema.oneOf[0], ctx, validatorOptions);
   }
 
   return toZodSchema("z", [
     "union",
-    tsArray(...oneOf.map((schema) => schemaObjectToAstZodSchema(schema, ctx))),
+    tsArray(
+      ...schema.oneOf.map((schema) => schemaObjectToAstZodSchema(schema, ctx, validatorOptions))
+    ),
   ]);
 }
 
@@ -271,14 +274,14 @@ function fromOneOfSchemaObject(
  * ```
  */
 function fromAllOfSchemaObject(
-  allOf: NonNullable<SchemaObject["allOf"]>,
+  schema: { allOf: NonNullable<SchemaObject["allOf"]> } & SchemaObject,
   ctx: Context
 ): Expression {
-  if (allOf.length === 1) {
-    return schemaObjectToAstZodSchema(allOf[0], ctx);
+  if (schema.allOf.length === 1) {
+    return schemaObjectToAstZodSchema(schema.allOf[0], ctx);
   }
 
-  const schemas = allOf.map((s) => schemaObjectToAstZodSchema(s, ctx));
+  const schemas = schema.allOf.map((s) => schemaObjectToAstZodSchema(s, ctx));
 
   return toZodSchema(
     schemas[0], // Schema1
@@ -306,14 +309,14 @@ function fromAllOfSchemaObject(
  * @see {@link https://stackblitz.com/edit/typescript-bcarya}
  */
 function fromAnyOfSchemaObject(
-  anyOf: NonNullable<SchemaObject["anyOf"]>,
+  schema: { anyOf: NonNullable<SchemaObject["anyOf"]> } & SchemaObject,
   ctx: Context
 ): Expression {
-  if (anyOf.length === 1) {
-    return schemaObjectToAstZodSchema(anyOf[0], ctx);
+  if (schema.anyOf.length === 1) {
+    return schemaObjectToAstZodSchema(schema.anyOf[0], ctx);
   }
 
-  const schemas = anyOf.map((s) => schemaObjectToAstZodSchema(s, ctx));
+  const schemas = schema.anyOf.map((s) => schemaObjectToAstZodSchema(s, ctx));
   // drop empty set, sort largest to smallest
   const schemasPowerSet = generatePowerset(schemas).slice(1).reverse();
   const subsets = schemasPowerSet.map((set) => {
