@@ -1,5 +1,18 @@
 # @openapi-ts-rest/cli
 
+## 0.1.4
+
+### Patch Changes
+
+- [#95](https://github.com/Carminepo2/openapi-ts-rest/pull/95) [`7629fdb`](https://github.com/Carminepo2/openapi-ts-rest/commit/7629fdbae586537595c3592bafa8b6d12e5f58d0) Thanks [@Carminepo2](https://github.com/Carminepo2)! - Fix: Parse empty bodies as c.noBody()
+
+- [#102](https://github.com/Carminepo2/openapi-ts-rest/pull/102) [`85b794a`](https://github.com/Carminepo2/openapi-ts-rest/commit/85b794aaa71cc1298a4ae2704f91e3c1b74c468f) Thanks [@Carminepo2](https://github.com/Carminepo2)! - Fix: binary generated type
+
+- [#96](https://github.com/Carminepo2/openapi-ts-rest/pull/96) [`85ff67a`](https://github.com/Carminepo2/openapi-ts-rest/commit/85ff67a66068e5462ed93b722f986981776f7f53) Thanks [@Carminepo2](https://github.com/Carminepo2)! - Fix: `allOf`, `anyOf` and `oneOf` missing property validators
+
+- Updated dependencies [[`7629fdb`](https://github.com/Carminepo2/openapi-ts-rest/commit/7629fdbae586537595c3592bafa8b6d12e5f58d0), [`85b794a`](https://github.com/Carminepo2/openapi-ts-rest/commit/85b794aaa71cc1298a4ae2704f91e3c1b74c468f), [`85ff67a`](https://github.com/Carminepo2/openapi-ts-rest/commit/85ff67a66068e5462ed93b722f986981776f7f53)]:
+  - @openapi-ts-rest/core@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes
