@@ -1,6 +1,11 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ]
+  "extends": ["config:base"],
+  "prConcurrentLimit": 5,
+  "packageRules": [
+    {
+      "groupName": "all minor and patch updates",
+      "matchUpdateTypes": ["minor", "patch"]
+    }
+  ],
+  "rangeStrategy": "auto"
 }
