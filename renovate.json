@@ -5,6 +5,11 @@
     {
       "groupName": "all minor and patch updates",
       "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "groupName": "playground dependencies",
+      "matchPaths": ["apps/playground/**"],
+      "labels": ["playground", "dependencies"]
     }
   ],
   "rangeStrategy": "auto"
