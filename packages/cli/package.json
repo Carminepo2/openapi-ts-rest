@@ -25,7 +25,7 @@
   ],
   "author": "Carminepo2",
   "dependencies": {
-    "@commander-js/extra-typings": "^12.1.0",
+    "@commander-js/extra-typings": "^13.0.0",
     "commander": "^12.1.0",
     "@openapi-ts-rest/core": "workspace:*",
     "prettier": "^3.2.5"
