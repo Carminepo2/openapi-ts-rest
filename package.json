@@ -30,7 +30,7 @@
     "packages/*",
     "apps/*"
   ],
-  "packageManager": "pnpm@9.14.2",
+  "packageManager": "pnpm@9.15.5",
   "engines": {
     "node": ">=16"
   },
