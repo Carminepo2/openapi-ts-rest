@@ -61,6 +61,7 @@ describe("schemaObjectToZodValidators", () => {
     ["uri", { identifier: "url" }],
     ["email", { identifier: "email" }],
     ["date-time", { args: [tsObject(["offset", true])], identifier: "datetime" }],
+    ["date", { identifier: "date" }],
     ["ipv4", { args: [tsObject(["version", "v4"])], identifier: "ip" }],
     ["ipv6", { args: [tsObject(["version", "v6"])], identifier: "ip" }],
   ])(

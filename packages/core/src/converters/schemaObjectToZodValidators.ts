@@ -11,6 +11,7 @@ import {
 import { noop } from "../lib/utils";
 
 type ZodValidatorMethod =
+  | "date"
   | "datetime"
   | "default"
   | "email"
@@ -144,6 +145,7 @@ function buildZodStringValidators(schema: SchemaObject): ZodValidatorCall[] {
     .with("hostname", "uri", () => ({ identifier: "url" }))
     .with("email", () => ({ identifier: "email" }))
     .with("date-time", () => ({ args: [tsObject(["offset", true])], identifier: "datetime" }))
+    .with("date", () => ({ identifier: "date" }))
     .with("ipv4", () => ({ args: [tsObject(["version", "v4"])], identifier: "ip" }))
     .with("ipv6", () => ({ args: [tsObject(["version", "v6"])], identifier: "ip" }))
     .otherwise(noop);
