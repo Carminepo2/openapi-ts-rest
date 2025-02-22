@@ -1,5 +1,11 @@
 # @openapi-ts-rest/core
 
+## 0.1.5
+
+### Patch Changes
+
+- [#145](https://github.com/Carminepo2/openapi-ts-rest/pull/145) [`37f1d17`](https://github.com/Carminepo2/openapi-ts-rest/commit/37f1d17dcddc661f5a50722d6258d2194575c721) Thanks [@renovate](https://github.com/apps/renovate)! - Bump packages minor versions
+
 ## 0.1.4
 
 ### Patch Changes
