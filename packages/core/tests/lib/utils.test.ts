@@ -79,6 +79,12 @@ describe("utils", () => {
       const ast = tsObject();
       expect(astToString(ast)).toBe("{}\n");
     });
+
+    it("should decode unicode escape sequences", () => {
+      const stringLiteral = tsObject(["summary", "\u3053\u3093\u306b\u3061\u306f"]);
+      const result = astToString(stringLiteral);
+      expect(result).toStrictEqual(`{ "summary": "こんにちは" }\n`);
+    });
   });
 
   describe("AstTsWriter", () => {
