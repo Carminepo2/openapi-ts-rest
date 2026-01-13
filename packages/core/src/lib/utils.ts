@@ -41,7 +41,11 @@ export function astToString(
     ...formatOptions,
   });
 
-  return printer.printFile(sourceFile);
+  const result = printer.printFile(sourceFile);
+  
+  return result.replace(/\\u([0-9a-fA-F]{4})/g, (_, code) =>
+    String.fromCharCode(parseInt(code, 16))
+  );
 }
 
 /**
