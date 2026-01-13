@@ -1,5 +1,15 @@
 # @openapi-ts-rest/core
 
+## 0.2.0
+
+### Minor Changes
+
+- [#155](https://github.com/Carminepo2/openapi-ts-rest/pull/155) [`1e4b58c`](https://github.com/Carminepo2/openapi-ts-rest/commit/1e4b58c504084771ef4679bf690ceb32c00b2e99) Thanks [@Carminepo2](https://github.com/Carminepo2)! - Added open-api string "format: date" support
+
+### Patch Changes
+
+- [#145](https://github.com/Carminepo2/openapi-ts-rest/pull/145) [`37f1d17`](https://github.com/Carminepo2/openapi-ts-rest/commit/37f1d17dcddc661f5a50722d6258d2194575c721) Thanks [@renovate](https://github.com/apps/renovate)! - Bump packages minor versions
+
 ## 0.1.4
 
 ### Patch Changes
