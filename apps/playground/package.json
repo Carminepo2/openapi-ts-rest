@@ -46,6 +46,6 @@
     "rollup-plugin-replace": "^2.2.0",
     "start-server-and-test": "^2.0.4",
     "tailwindcss": "^3.4.3",
-    "vite": "^5.2.11"
+    "vite": "^6.0.0"
   }
 }
